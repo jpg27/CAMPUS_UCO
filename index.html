@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus UCO</title>
+  <link rel="stylesheet" href="estilos/main.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="header-logo">UCO</div>
+      <div class="header-texto">
+        <h1>Campus UCO</h1>
+        <p>Universidad Católica de Oriente</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA: INICIO -->
+  <div class="pantalla activa" id="inicio">
+    <div class="inicio-titulo">Campus UCO</div>
+    <div class="inicio-sub">Explora la universidad · Gana logros · Compite</div>
+    <button class="boton-principal" onclick="mostrarPantalla('mapa')">
+      Explorar campus
+    </button>
+    <button class="boton-secundario" onclick="mostrarPantalla('carrera')">
+      Unirse a la carrera
+    </button>
+  </div>
+
+  <!-- PANTALLA: MAPA -->
+  <div class="pantalla" id="mapa">
+    <div class="mapa-placeholder">
+      <span>🗺️</span>
+      <p>Aquí irá el mapa 3D del campus</p>
+      <p style="font-size:12px; opacity:0.7">Por ahora toca un edificio para probar:</p>
+      <div id="botones-edificios" style="display:flex; flex-wrap:wrap; justify-content:center; gap:4px; max-width:340px;"></div>
+    </div>
+  </div>
+
+  <!-- PANTALLA: LOGROS -->
+  <div class="pantalla" id="logros">
+    <div class="pantalla-titulo">Tus logros</div>
+    <div class="pantalla-sub">Escanea edificios para desbloquearlos</div>
+    <div id="lista-logros"></div>
+  </div>
+
+  <!-- PANTALLA: CARRERA -->
+  <div class="pantalla" id="carrera">
+    <div class="carrera-banner">
+      <h2>Carrera de observación</h2>
+      <p>Escanea todos los edificios del campus lo más rápido que puedas</p>
+      <button class="boton-carrera" onclick="mostrarPantalla('ingresar-carrera')">
+        Ingresar con código
+      </button>
+    </div>
+    <div class="pantalla-titulo">¿Cómo funciona?</div>
+    <br>
+    <p style="color:#555; font-size:13px; line-height:1.8">
+      1. El administrador activa una sesión de carrera<br>
+      2. Ingresa el código y tu nombre<br>
+      3. Tu cronómetro inicia al escanear el primer edificio<br>
+      4. ¡El que escanee todos primero gana!
+    </p>
+  </div>
+
+  <!-- PANTALLA: INGRESAR A LA CARRERA -->
+  <div class="pantalla" id="ingresar-carrera">
+    <div class="ingreso-card">
+
+      <div class="ingreso-icono">🏁</div>
+      <h2 class="ingreso-titulo">Unirse a la carrera</h2>
+      <p class="ingreso-sub">Ingresa el código que te dio tu administrador y tu nombre</p>
+
+      <div class="campo-grupo">
+        <label class="campo-label">Código de sesión</label>
+        <input
+          class="campo-input"
+          id="input-codigo"
+          type="text"
+          placeholder="Ej: UCO-2025"
+          maxlength="20"
+        />
+      </div>
+
+      <div class="campo-grupo">
+        <label class="campo-label">Tu nombre</label>
+        <input
+          class="campo-input"
+          id="input-nombre"
+          type="text"
+          placeholder="Ej: Valentina Ríos"
+          maxlength="40"
+        />
+      </div>
+
+      <div class="ingreso-error oculto" id="ingreso-error">
+        Por favor completa todos los campos
+      </div>
+
+      <button class="boton-principal" onclick="ingresarCarrera()">
+        Unirme ahora
+      </button>
+
+      <button class="boton-volver" onclick="mostrarPantalla('carrera')">
+        ← Volver
+      </button>
+
+    </div>
+  </div>
+
+  <!-- PANTALLA: EN CARRERA -->
+  <div class="pantalla" id="en-carrera">
+    <div class="carrera-activa-header">
+      <div class="carrera-activa-nombre" id="carrera-nombre-usuario">
+        Hola 👋
+      </div>
+      <div class="carrera-activa-sub">¡La carrera ha comenzado!</div>
+    </div>
+
+    <div class="cronometro-card">
+      <div class="cronometro-label">Tu tiempo</div>
+      <div class="cronometro-display" id="cronometro">
+        Esperando primer escaneo...
+      </div>
+      <div class="cronometro-sub">
+        El cronómetro inicia cuando escanees tu primer edificio
+      </div>
+    </div>
+
+    <div class="progreso-card">
+      <div class="progreso-titulo">Tu progreso</div>
+      <div class="progreso-barra-wrap">
+        <div class="progreso-barra">
+          <div class="progreso-relleno" id="progreso-relleno" style="width: 0%"></div>
+        </div>
+        <span class="progreso-texto" id="progreso-texto">0 / 7 edificios</span>
+      </div>
+    </div>
+
+    <button class="boton-principal" onclick="mostrarPantalla('mapa')">
+      Ir al mapa a escanear
+    </button>
+
+    <button class="boton-volver" onclick="salirDeCarrera()">
+      Salir de la carrera
+    </button>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay" onclick="cerrarPanelEdificio()"></div>
+
+  <!-- PANEL DE EDIFICIO -->
+  <div class="panel-edificio" id="panel-edificio">
+    <div class="panel-handle"></div>
+    <button class="panel-cerrar" onclick="cerrarPanelEdificio()">✕</button>
+    <div class="panel-edificio-header">
+      <div class="panel-edificio-icono" id="panel-icono">🏗️</div>
+      <div>
+        <div class="panel-edificio-nombre" id="panel-nombre">Facultad de Ingeniería</div>
+        <span class="panel-edificio-tag tag-pendiente" id="panel-tag">🔒 Escanea para desbloquear</span>
+      </div>
+    </div>
+    <p class="panel-edificio-desc" id="panel-desc"></p>
+    <div class="panel-dato">
+      <div class="panel-dato-label">⭐ Dato curioso</div>
+      <div class="panel-dato-texto" id="panel-dato"></div>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN INFERIOR -->
+  <nav class="nav-inferior">
+    <button class="nav-item activo" id="nav-inicio" onclick="mostrarPantalla('inicio')">
+      <span class="nav-icono">🏠</span>
+      <span class="nav-label">Inicio</span>
+    </button>
+    <button class="nav-item" id="nav-mapa" onclick="mostrarPantalla('mapa')">
+      <span class="nav-icono">🗺️</span>
+      <span class="nav-label">Mapa</span>
+    </button>
+    <button class="nav-item" id="nav-logros" onclick="mostrarPantalla('logros')">
+      <span class="nav-icono">🏆</span>
+      <span class="nav-label">Logros</span>
+    </button>
+    <button class="nav-item" id="nav-carrera" onclick="mostrarPantalla('carrera')">
+      <span class="nav-icono">🏁</span>
+      <span class="nav-label">Carrera</span>
+    </button>
+  </nav>
+
+  <script src="scripts/app.js"></script>
+</body>
+</html>
