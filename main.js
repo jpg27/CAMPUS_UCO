@@ -9,7 +9,7 @@ const BLOQUES = [
   },
   {
     nombre: "Bloque COL",
-    archivo: "sprites/Bloque_COL.png",
+    archivo: "sprites/Bloque_Col.png",
     descripcion: "Edificio de laboratorios.",
     x: -2.00, y: 1.55, ancho: 1.90
   },
