@@ -1,11 +1,5 @@
-// ═══════════════════════════════════════════
-// BASE URL — funciona en GitHub Pages y local
-// ═══════════════════════════════════════════
 const BASE = window.BASE_URL || './';
 
-// ═══════════════════════════════════════════
-// DATOS DE CADA BLOQUE
-// ═══════════════════════════════════════════
 const BLOQUES = [
   {
     nombre: "Bloque M",
