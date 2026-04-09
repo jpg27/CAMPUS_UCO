@@ -37,19 +37,19 @@
 <body>
 
   <a href="index.html" style="
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  background: white;
-  color: #3a7a1a;
-  padding: 8px 16px;
-  border-radius: 20px;
-  text-decoration: none;
-  font-family: Arial;
-  font-weight: bold;
-  font-size: 14px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  z-index: 999;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: white;
+    color: #3a7a1a;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-family: Arial;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 999;
   ">← Menú</a>
 
   <div id="info-panel">
@@ -59,6 +59,12 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Base URL para GitHub Pages
+    window.BASE_URL = location.pathname.includes('CAMPUS_UCO') 
+      ? '/CAMPUS_UCO/' 
+      : './';
+  </script>
   <script src="main.js"></script>
 </body>
 </html>

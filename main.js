@@ -1,64 +1,69 @@
 // ═══════════════════════════════════════════
+// BASE URL — funciona en GitHub Pages y local
+// ═══════════════════════════════════════════
+const BASE = window.BASE_URL || './';
+
+// ═══════════════════════════════════════════
 // DATOS DE CADA BLOQUE
 // ═══════════════════════════════════════════
 const BLOQUES = [
   {
     nombre: "Bloque M",
-    archivo: "./sprites/Bloque_M.png",
+    archivo: "sprites/Bloque_M.png",
     descripcion: "Bloque principal de la universidad.",
     x: -1.00, y: 1.75, ancho: 2.1
   },
   {
     nombre: "Bloque COL",
-    archivo: "./sprites/Bloque_COL.png",
+    archivo: "sprites/Bloque_COL.png",
     descripcion: "Edificio de laboratorios.",
     x: -2.00, y: 1.55, ancho: 1.90
   },
   {
     nombre: "Bloque EDC",
-    archivo: "./sprites/bloque_EDC.png",
+    archivo: "sprites/bloque_EDC.png",
     descripcion: "Centro de desarrollo estudiantil.",
     x: -2.55, y: -2.22, ancho: 1.85
   },
   {
     nombre: "Bloque INNOVA",
-    archivo: "./sprites/Bloque_INNOVA.png",
+    archivo: "sprites/Bloque_INNOVA.png",
     descripcion: "Centro de innovación y tecnología.",
     x: 2.38, y: 0.20, ancho: 0.95
   },
   {
     nombre: "Bloque Nuevo",
-    archivo: "./sprites/Bloque_Nuevo_v2.png",
+    archivo: "sprites/Bloque_Nuevo_v2.png",
     descripcion: "Bloque de construcción reciente.",
     x: 1.32, y: -0.12, ancho: 1.65
   },
   {
     nombre: "Edificio J",
-    archivo: "./sprites/Bloque_J.png",
+    archivo: "sprites/Bloque_J.png",
     descripcion: "Edificio administrativo J.",
     x: 0.0, y: -1.10, ancho: 1.2
   },
   {
     nombre: "Bloque D y E",
-    archivo: "./sprites/Bloque_D_E.png",
+    archivo: "sprites/Bloque_D_E.png",
     descripcion: "Bloques de ingeniería.",
     x: 1.99, y: 0.64, ancho: 1.5
   },
   {
     nombre: "Auditorio",
-    archivo: "./sprites/Auditorio.png",
+    archivo: "sprites/Auditorio.png",
     descripcion: "Auditorio principal.",
     x: 0.38, y: 2.07, ancho: 1.15
   },
   {
     nombre: "Capilla",
-    archivo: "./sprites/Capilla.png",
+    archivo: "sprites/Capilla.png",
     descripcion: "Capilla del campus.",
     x: 3.03, y: 0.08, ancho: 0.4
   },
   {
     nombre: "Coliseo",
-    archivo: "./sprites/Coliseo.png",
+    archivo: "sprites/Coliseo.png",
     descripcion: "Coliseo deportivo.",
     x: -2.37, y: 0.50, ancho: 1.3
   }
@@ -96,7 +101,7 @@ window.addEventListener('resize', ajustarCamara);
 // ═══════════════════════════════════════════
 const loader = new THREE.TextureLoader();
 
-loader.load('./sprites/Campus.png', (textura) => {
+loader.load(BASE + 'sprites/Campus.png', (textura) => {
   const proporcionFondo = textura.image.width / textura.image.height;
   const geo   = new THREE.PlaneGeometry(8, 8 / proporcionFondo);
   const mat   = new THREE.MeshBasicMaterial({ map: textura, transparent: true });
@@ -114,7 +119,7 @@ const colorSeleccion     = new THREE.Color(1, 0.85, 0);
 let   bloqueSeleccionado = null;
 
 BLOQUES.forEach((bloque) => {
-  loader.load(bloque.archivo, (textura) => {
+  loader.load(BASE + bloque.archivo, (textura) => {
     const proporcion = textura.image.width / textura.image.height;
     const anchoFinal = bloque.ancho;
     const altoFinal  = anchoFinal / proporcion;
