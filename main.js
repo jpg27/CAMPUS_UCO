@@ -21,7 +21,7 @@ const BLOQUES = [
   },
   {
     nombre: "Bloque EDC",
-    archivo: "sprites/bloque_EDC.png",
+    archivo: "sprites/Bloque_EDC.png",
     descripcion: "Centro de desarrollo estudiantil.",
     x: -2.55, y: -2.22, ancho: 1.85
   },
@@ -101,7 +101,7 @@ window.addEventListener('resize', ajustarCamara);
 // ═══════════════════════════════════════════
 const loader = new THREE.TextureLoader();
 
-loader.load(BASE + 'sprites/Campus.png', (textura) => {
+loader.load(BASE + 'sprites/campus.png', (textura) => {
   const proporcionFondo = textura.image.width / textura.image.height;
   const geo   = new THREE.PlaneGeometry(8, 8 / proporcionFondo);
   const mat   = new THREE.MeshBasicMaterial({ map: textura, transparent: true });
