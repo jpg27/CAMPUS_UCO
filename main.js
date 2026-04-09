@@ -80,10 +80,12 @@ camera.lookAt(0, 0, 0);
 
 function ajustarCamara() {
   const aspect  = window.innerWidth / window.innerHeight;
-  camera.left   = -4 * aspect;
-  camera.right  =  4 * aspect;
-  camera.top    =  4;
-  camera.bottom = -4;
+  const size = aspect < 1 ? 5.5 / aspect : 5.5;
+  
+  camera.left   = -size * aspect;
+  camera.right  =  size * aspect;
+  camera.top    =  size;
+  camera.bottom = -size;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }

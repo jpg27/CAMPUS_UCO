@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AR Campus</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { overflow: hidden; }
+    #btn-menu {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: white;
+      color: #3a7a1a;
+      padding: 8px 16px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-family: Arial;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <a id="btn-menu" href="index.html">← Menú</a>
+
+  <a-scene
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; precision: medium;"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+
+    <a-nft
+      type="nft"
+      url="markers/logouco"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5">
+
+    <a-box
+      position="150 -150 -250"
+      scale="200 200 200"
+      color="#FF6B35"
+      opacity="0.9">
+    </a-box>
+
+    </a-nft>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+</html>
