@@ -7,9 +7,7 @@
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    .mindar-ui-overlay {
-    display: none !important;
-    }
+    .mindar-ui-overlay { display: none !important; }
     * { margin: 0; padding: 0; }
     body { overflow: hidden; }
     #btn-menu {
@@ -35,26 +33,37 @@
   <a-scene
     mindar-image="imageTargetSrc: https://jpg27.github.io/CAMPUS_UCO/mind/targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01; missTolerance: 5; warmupTolerance: 3;"
     color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
+    renderer="colorManagement: true; physicallyCorrectLights: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <img id="card" src="https://jpg27.github.io/CAMPUS_UCO/mind/logouco.jpeg">
+      <a-asset-item id="estrella" src="https://jpg27.github.io/CAMPUS_UCO/models/estrella.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-image
-        src="https://jpg27.github.io/CAMPUS_UCO/mind/logouco.jpeg"
+      <a-gltf-model
+        src="#estrella"
         position="0 0 0.1"
-        width="1"
-        height="1"
+        scale="0.5 0.5 0.5"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
-      </a-image>
+      </a-gltf-model>
     </a-entity>
 
   </a-scene>
+
+  <script>
+    const observer = new MutationObserver(() => {
+      const overlay = document.querySelector('.mindar-ui-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  </script>
+
 </body>
 </html>
