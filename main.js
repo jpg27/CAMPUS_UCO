@@ -5,60 +5,70 @@ const BLOQUES = [
     nombre: "Bloque M",
     archivo: "sprites/Bloque_M.png",
     descripcion: "Bloque principal de la universidad.",
+    icono: "🏫",
     x: -1.00, y: 1.75, ancho: 2.1
   },
   {
     nombre: "Bloque COL",
     archivo: "sprites/Bloque_Col.png",
     descripcion: "Edificio de laboratorios.",
+    icono: "🔬",
     x: -2.00, y: 1.55, ancho: 1.90
   },
   {
     nombre: "Bloque EDC",
     archivo: "sprites/Bloque_EDC.png",
     descripcion: "Centro de desarrollo estudiantil.",
+    icono: "📚",
     x: -2.55, y: -2.22, ancho: 1.85
   },
   {
     nombre: "Bloque INNOVA",
     archivo: "sprites/Bloque_INNOVA.png",
     descripcion: "Centro de innovación y tecnología.",
+    icono: "💡",
     x: 2.38, y: 0.20, ancho: 0.95
   },
   {
     nombre: "Bloque Nuevo",
     archivo: "sprites/Bloque_Nuevo_v2.png",
     descripcion: "Bloque de construcción reciente.",
+    icono: "🏗️",
     x: 1.32, y: -0.12, ancho: 1.65
   },
   {
     nombre: "Edificio J",
     archivo: "sprites/Bloque_J.png",
     descripcion: "Edificio administrativo J.",
+    icono: "🏢",
     x: 0.0, y: -1.10, ancho: 1.2
   },
   {
     nombre: "Bloque D y E",
     archivo: "sprites/Bloque_D_E.png",
     descripcion: "Bloques de ingeniería.",
+    icono: "⚙️",
     x: 1.99, y: 0.64, ancho: 1.5
   },
   {
     nombre: "Auditorio",
     archivo: "sprites/Auditorio.png",
     descripcion: "Auditorio principal.",
+    icono: "🎭",
     x: 0.38, y: 2.07, ancho: 1.15
   },
   {
     nombre: "Capilla",
     archivo: "sprites/Capilla.png",
     descripcion: "Capilla del campus.",
+    icono: "⛪",
     x: 3.03, y: 0.08, ancho: 0.4
   },
   {
     nombre: "Coliseo",
     archivo: "sprites/Coliseo.png",
     descripcion: "Coliseo deportivo.",
+    icono: "🏟️",
     x: -2.37, y: 0.50, ancho: 1.3
   }
 ];
@@ -79,7 +89,8 @@ camera.lookAt(0, 0, 0);
 
 function ajustarCamara() {
   const aspect = window.innerWidth / window.innerHeight;
-  const size   = aspect < 1 ? 5.5 / aspect : 5.5;
+  // Ajuste para que el campus ocupe toda la pantalla
+  const size   = aspect < 1 ? 4.0 / aspect : 4.0;
   camera.left   = -size * aspect;
   camera.right  =  size * aspect;
   camera.top    =  size;
@@ -97,7 +108,9 @@ const loader = new THREE.TextureLoader();
 
 loader.load(BASE + 'sprites/campus.png', (textura) => {
   const proporcionFondo = textura.image.width / textura.image.height;
-  const geo   = new THREE.PlaneGeometry(8, 8 / proporcionFondo);
+  const altoFinal = 8;
+  const anchoFinal = altoFinal * proporcionFondo;
+  const geo   = new THREE.PlaneGeometry(anchoFinal, altoFinal);
   const mat   = new THREE.MeshBasicMaterial({ map: textura, transparent: true });
   const fondo = new THREE.Mesh(geo, mat);
   fondo.position.z = 0;
@@ -213,11 +226,13 @@ window.addEventListener('touchend', (e) => {
 const panel       = document.getElementById('info-panel');
 const panelTitulo = document.getElementById('panel-titulo');
 const panelDesc   = document.getElementById('panel-descripcion');
+const panelIcono  = document.getElementById('panel-icono');
 const btnCerrar   = document.getElementById('cerrar-panel');
 
 function mostrarPanel(datos) {
   panelTitulo.textContent = datos.nombre;
   panelDesc.textContent   = datos.descripcion;
+  panelIcono.textContent  = datos.icono || '🏛️';
   panel.classList.add('visible');
 }
 
