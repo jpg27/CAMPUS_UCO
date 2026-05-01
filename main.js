@@ -6,70 +6,80 @@ const BLOQUES = [
     archivo: "sprites/Bloque_M.png",
     descripcion: "Bloque principal de la universidad.",
     icono: "🏫",
-    x: -1.00, y: 1.75, ancho: 2.1
+    localizacion: "📍 Campus parte alta",
+    x: -1.09, y: 1.91, ancho: 2.3
   },
   {
     nombre: "Bloque COL",
     archivo: "sprites/Bloque_Col.png",
-    descripcion: "Edificio de laboratorios.",
+    descripcion: "Edificio del colegio de la universidad.",
     icono: "🔬",
-    x: -2.00, y: 1.55, ancho: 1.90
+    localizacion: "📍 Campus parte alta",
+    x: -2.18, y: 1.66, ancho: 2.05
   },
   {
     nombre: "Bloque EDC",
     archivo: "sprites/Bloque_EDC.png",
-    descripcion: "Centro de desarrollo estudiantil.",
+    descripcion: "bloque de laboratorios u biblioteca",
     icono: "📚",
-    x: -2.55, y: -2.22, ancho: 1.85
+    localizacion: "📍 Campus parte media",
+    x: -2.76, y: -2.40, ancho: 2.04
   },
   {
     nombre: "Bloque INNOVA",
     archivo: "sprites/Bloque_INNOVA.png",
-    descripcion: "Centro de innovación y tecnología.",
+    descripcion: "Centro de idiomas, sala de sistemas y auditorio",
     icono: "💡",
-    x: 2.38, y: 0.20, ancho: 0.95
+    localizacion: "📍 Campus parte baja",
+    x: 2.60, y: 0.22, ancho: 0.99
   },
   {
     nombre: "Bloque Nuevo",
     archivo: "sprites/Bloque_Nuevo_v2.png",
-    descripcion: "Bloque de construcción reciente.",
+    descripcion: "Bloque en construccion.",
     icono: "🏗️",
-    x: 1.32, y: -0.12, ancho: 1.65
+    localizacion: "📍 Campus parte baja",
+    x: 1.43, y: -0.14, ancho: 1.79
   },
   {
     nombre: "Edificio J",
     archivo: "sprites/Bloque_J.png",
-    descripcion: "Edificio administrativo J.",
+    descripcion: "bloque de salones.",
     icono: "🏢",
-    x: 0.0, y: -1.10, ancho: 1.2
+    localizacion: "📍 Campus parte baja",
+    x: -0.02, y: -1.23, ancho: 1.3
   },
   {
     nombre: "Bloque D y E",
     archivo: "sprites/Bloque_D_E.png",
-    descripcion: "Bloques de ingeniería.",
+    descripcion: "Bloque de deportes.",
     icono: "⚙️",
-    x: 1.99, y: 0.64, ancho: 1.5
+    localizacion: "📍 Campus parte media",
+    x: 2.15, y: 0.66, ancho: 1.6
   },
   {
     nombre: "Auditorio",
     archivo: "sprites/Auditorio.png",
     descripcion: "Auditorio principal.",
     icono: "🎭",
-    x: 0.38, y: 2.07, ancho: 1.15
+    localizacion: "📍Campus parte alta",
+    x: 0.40, y: 2.23, ancho: 1.22
   },
   {
     nombre: "Capilla",
     archivo: "sprites/Capilla.png",
     descripcion: "Capilla del campus.",
     icono: "⛪",
-    x: 3.03, y: 0.08, ancho: 0.4
+    localizacion: "📍 Campus parte baja",
+    x: 3.28, y: 0.09, ancho: 0.4
   },
   {
     nombre: "Coliseo",
     archivo: "sprites/Coliseo.png",
     descripcion: "Coliseo deportivo.",
     icono: "🏟️",
-    x: -2.37, y: 0.50, ancho: 1.3
+    localizacion: "📍 Campus parte alta",
+    x: -2.58, y: 0.55, ancho: 1.4
   }
 ];
 
@@ -227,12 +237,14 @@ const panel       = document.getElementById('info-panel');
 const panelTitulo = document.getElementById('panel-titulo');
 const panelDesc   = document.getElementById('panel-descripcion');
 const panelIcono  = document.getElementById('panel-icono');
+const panelLoc    = document.getElementById('panel-localizacion')
 const btnCerrar   = document.getElementById('cerrar-panel');
 
 function mostrarPanel(datos) {
   panelTitulo.textContent = datos.nombre;
   panelDesc.textContent   = datos.descripcion;
   panelIcono.textContent  = datos.icono || '🏛️';
+  panelLoc.textContent = datos.localizacion;
   panel.classList.add('visible');
 }
 
