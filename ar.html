@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>AR Campus</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <style>
+    .mindar-ui-overlay { display: none !important; }
     * { margin: 0; padding: 0; }
     body { overflow: hidden; }
+
     #btn-menu {
       position: fixed;
       top: 15px;
@@ -24,35 +26,108 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       z-index: 999;
     }
+
+    #logro {
+      position: fixed;
+      bottom: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #1a1a2e, #2a2a5e);
+      border: 2px solid #DAA520;
+      border-radius: 12px;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      width: 85%;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(218,165,32,0.4);
+      transition: bottom 0.5s ease;
+      z-index: 1000;
+    }
+    #logro.visible { bottom: 30px; }
+    #logro-emoji { font-size: 40px; }
+    #logro-texto h3 {
+      color: #DAA520;
+      font-family: Arial;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    #logro-texto p {
+      color: white;
+      font-family: Arial;
+      font-size: 14px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+
   <a id="btn-menu" href="index.html">← Menú</a>
 
+  <div id="logro">
+    <div id="logro-emoji">🏆</div>
+    <div id="logro-texto">
+      <h3>Logro desbloqueado</h3>
+      <p>Felicidades, has obtenido el logro de UCO</p>
+    </div>
+  </div>
+
   <a-scene
+    mindar-image="imageTargetSrc: https://jpg27.github.io/CAMPUS_UCO/mind/targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01; missTolerance: 5; warmupTolerance: 3;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true"
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; precision: medium;"
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+    device-orientation-permission-ui="enabled: false">
 
-    <a-nft
-      type="nft"
-      url="https://jpg27.github.io/CAMPUS_UCO/markers/logouco"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance="0.01"
-      smoothThreshold="5">
+    <a-assets>
+      <a-asset-item id="estrella" src="https://jpg27.github.io/CAMPUS_UCO/models/estrella.glb"></a-asset-item>
+    </a-assets>
 
-      <a-box
-        position="150 -200 -250"
-        scale="200 200 200"
-        color="#FF6B35"
-        opacity="0.9">
-      </a-box>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    </a-nft>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-gltf-model
+        src="#estrella"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
 
-    <a-entity camera></a-entity>
   </a-scene>
+
+  <script>
+    // Ocultar overlay de MindAR
+    const observer = new MutationObserver(() => {
+      const overlay = document.querySelector('.mindar-ui-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Mostrar logro cuando detecta el marcador
+    let logroMostrado = false;
+
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      const target = document.querySelector('[mindar-image-target]');
+
+      target.addEventListener('targetFound', () => {
+        if (!logroMostrado) {
+          logroMostrado = true;
+          const logro = document.getElementById('logro');
+          logro.classList.add('visible');
+          setTimeout(() => {
+            logro.classList.remove('visible');
+          }, 10000);
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>

@@ -5,61 +5,81 @@ const BLOQUES = [
     nombre: "Bloque M",
     archivo: "sprites/Bloque_M.png",
     descripcion: "Bloque principal de la universidad.",
-    x: -1.00, y: 1.75, ancho: 2.1
+    icono: "🏫",
+    localizacion: "📍 Campus parte alta",
+    x: -1.09, y: 1.91, ancho: 2.3
   },
   {
     nombre: "Bloque COL",
     archivo: "sprites/Bloque_Col.png",
-    descripcion: "Edificio de laboratorios.",
-    x: -2.00, y: 1.55, ancho: 1.90
+    descripcion: "Edificio del colegio de la universidad.",
+    icono: "🔬",
+    localizacion: "📍 Campus parte alta",
+    x: -2.18, y: 1.66, ancho: 2.05
   },
   {
     nombre: "Bloque EDC",
     archivo: "sprites/Bloque_EDC.png",
-    descripcion: "Centro de desarrollo estudiantil.",
-    x: -2.55, y: -2.22, ancho: 1.85
+    descripcion: "bloque de laboratorios u biblioteca",
+    icono: "📚",
+    localizacion: "📍 Campus parte media",
+    x: -2.76, y: -2.40, ancho: 2.04
   },
   {
     nombre: "Bloque INNOVA",
     archivo: "sprites/Bloque_INNOVA.png",
-    descripcion: "Centro de innovación y tecnología.",
-    x: 2.38, y: 0.20, ancho: 0.95
+    descripcion: "Centro de idiomas, sala de sistemas y auditorio",
+    icono: "💡",
+    localizacion: "📍 Campus parte baja",
+    x: 2.60, y: 0.22, ancho: 0.99
   },
   {
     nombre: "Bloque Nuevo",
     archivo: "sprites/Bloque_Nuevo_v2.png",
-    descripcion: "Bloque de construcción reciente.",
-    x: 1.32, y: -0.12, ancho: 1.65
+    descripcion: "Bloque en construccion.",
+    icono: "🏗️",
+    localizacion: "📍 Campus parte baja",
+    x: 1.43, y: -0.14, ancho: 1.79
   },
   {
     nombre: "Edificio J",
     archivo: "sprites/Bloque_J.png",
-    descripcion: "Edificio administrativo J.",
-    x: 0.0, y: -1.10, ancho: 1.2
+    descripcion: "bloque de salones.",
+    icono: "🏢",
+    localizacion: "📍 Campus parte baja",
+    x: -0.02, y: -1.23, ancho: 1.3
   },
   {
     nombre: "Bloque D y E",
     archivo: "sprites/Bloque_D_E.png",
-    descripcion: "Bloques de ingeniería.",
-    x: 1.99, y: 0.64, ancho: 1.5
+    descripcion: "Bloque de deportes.",
+    icono: "⚙️",
+    localizacion: "📍 Campus parte media",
+    x: 2.15, y: 0.66, ancho: 1.6
   },
   {
     nombre: "Auditorio",
     archivo: "sprites/Auditorio.png",
     descripcion: "Auditorio principal.",
-    x: 0.38, y: 2.07, ancho: 1.15
+    icono: "🎭",
+    localizacion: "📍Campus parte alta",
+    x: 0.40, y: 2.23, ancho: 1.22
   },
   {
     nombre: "Capilla",
     archivo: "sprites/Capilla.png",
     descripcion: "Capilla del campus.",
-    x: 3.03, y: 0.08, ancho: 0.4
+    icono: "⛪",
+    localizacion: "📍 Campus parte baja",
+    x: 3.28, y: 0.09, ancho: 0.4
   },
   {
     nombre: "Coliseo",
     archivo: "sprites/Coliseo.png",
     descripcion: "Coliseo deportivo.",
-    x: -2.37, y: 0.50, ancho: 1.3
+    icono: "🏟️",
+    localizacion: "📍 Campus parte alta",
+    x: -2.58, y: 0.55, ancho: 1.4
   }
 ];
 
@@ -79,7 +99,8 @@ camera.lookAt(0, 0, 0);
 
 function ajustarCamara() {
   const aspect = window.innerWidth / window.innerHeight;
-  const size   = aspect < 1 ? 5.5 / aspect : 5.5;
+  // Ajuste para que el campus ocupe toda la pantalla
+  const size   = aspect < 1 ? 4.0 / aspect : 4.0;
   camera.left   = -size * aspect;
   camera.right  =  size * aspect;
   camera.top    =  size;
@@ -97,7 +118,9 @@ const loader = new THREE.TextureLoader();
 
 loader.load(BASE + 'sprites/campus.png', (textura) => {
   const proporcionFondo = textura.image.width / textura.image.height;
-  const geo   = new THREE.PlaneGeometry(8, 8 / proporcionFondo);
+  const altoFinal = 8;
+  const anchoFinal = altoFinal * proporcionFondo;
+  const geo   = new THREE.PlaneGeometry(anchoFinal, altoFinal);
   const mat   = new THREE.MeshBasicMaterial({ map: textura, transparent: true });
   const fondo = new THREE.Mesh(geo, mat);
   fondo.position.z = 0;
@@ -213,11 +236,15 @@ window.addEventListener('touchend', (e) => {
 const panel       = document.getElementById('info-panel');
 const panelTitulo = document.getElementById('panel-titulo');
 const panelDesc   = document.getElementById('panel-descripcion');
+const panelIcono  = document.getElementById('panel-icono');
+const panelLoc    = document.getElementById('panel-localizacion')
 const btnCerrar   = document.getElementById('cerrar-panel');
 
 function mostrarPanel(datos) {
   panelTitulo.textContent = datos.nombre;
   panelDesc.textContent   = datos.descripcion;
+  panelIcono.textContent  = datos.icono || '🏛️';
+  panelLoc.textContent = datos.localizacion;
   panel.classList.add('visible');
 }
 
