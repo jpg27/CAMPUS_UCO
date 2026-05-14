@@ -327,29 +327,41 @@
     }
 
     function mostrarEspera(nombre, sesion) {
-      document.getElementById('pantalla-form').classList.add('oculto');
-      document.getElementById('pantalla-espera').classList.add('visible');
-      document.getElementById('espera-nombre').textContent = '👋 Hola, ' + nombre;
-      document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
+  document.getElementById('pantalla-form').classList.add('oculto');
+  document.getElementById('pantalla-espera').classList.add('visible');
+  document.getElementById('espera-nombre').textContent = '👋 Hola, ' + nombre;
+  document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
 
-      // Escuchar cuando el admin cambia el estado
-      supabase
-        .channel('sesion-' + sesion.id)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sesiones',
-          filter: `id=eq.${sesion.id}`
-        }, (payload) => {
-          if (payload.new.estado === 'activa') {
-            // Ir al mapa
-            window.location.href = 'mapa.html';
-          } else if (payload.new.estado === 'cerrada') {
-            mostrarError('La sesión fue cerrada por el administrador.');
-          }
-        })
-        .subscribe();
-    }
+  // Si ya está activa, ir directo al mapa
+  if (sesion.estado === 'activa') {
+    setTimeout(() => {
+      window.location.href = 'mapa.html';
+    }, 1500);
+    return;
+  }
+
+  // Escuchar cuando el admin activa
+  supabase
+    .channel('sesion-' + sesion.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'sesiones',
+      filter: `id=eq.${sesion.id}`
+    }, (payload) => {
+      if (payload.new.estado === 'activa') {
+        document.querySelector('.espera-estado').innerHTML = 
+          '<span style="color: #3a7a1a; font-weight: bold;">🚀 ¡Iniciando carrera!</span>';
+        setTimeout(() => {
+          window.location.href = 'mapa.html';
+        }, 1500);
+      } else if (payload.new.estado === 'cerrada') {
+        document.querySelector('.espera-estado').innerHTML = 
+          '<span style="color: #cc0000;">❌ La sesión fue cerrada</span>';
+      }
+    })
+    .subscribe();
+}
 
     // Enter para unirse
     document.getElementById('input-codigo').addEventListener('keyup', (e) => {
