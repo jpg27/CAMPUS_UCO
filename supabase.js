@@ -16,7 +16,7 @@ export async function obtenerSesionPorCodigo(codigo) {
     .from('sesiones')
     .select('*')
     .eq('codigo', codigo.toUpperCase())
-    .eq('estado', 'activa')
+    .in('estado', ['borrador', 'activa'])
     .single();
   if (error) return null;
   return data;
