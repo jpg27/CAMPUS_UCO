@@ -306,9 +306,10 @@
         participanteActual = participante;
         sesionActual = sesion;
 
-        // Guardar en sessionStorage para usar en el mapa AR
-        sessionStorage.setItem('participante', JSON.stringify(participante));
-        sessionStorage.setItem('sesion', JSON.stringify(sesion));
+        // Guardar en sessionStorage para usar en el AR
+        // Cambiar estas líneas al unirse
+        localStorage.setItem('participante', JSON.stringify(participante));
+        localStorage.setItem('sesion', JSON.stringify(sesion));
 
         // Mostrar pantalla de espera o ir directo si ya está activa
         mostrarEspera(nombre, sesion);
@@ -332,10 +333,10 @@
   document.getElementById('espera-nombre').textContent = '👋 Hola, ' + nombre;
   document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
 
-  // Si ya está activa, ir directo al mapa
+  // Si ya está activa, ir directo a la camara
   if (sesion.estado === 'activa') {
     setTimeout(() => {
-      window.location.href = 'mapa.html';
+      window.location.href = 'ar.html';
     }, 1500);
     return;
   }
@@ -353,7 +354,7 @@
         document.querySelector('.espera-estado').innerHTML = 
           '<span style="color: #3a7a1a; font-weight: bold;">🚀 ¡Iniciando carrera!</span>';
         setTimeout(() => {
-          window.location.href = 'mapa.html';
+          window.location.href = 'ar.html';
         }, 1500);
       } else if (payload.new.estado === 'cerrada') {
         document.querySelector('.espera-estado').innerHTML = 

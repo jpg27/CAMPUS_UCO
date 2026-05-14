@@ -183,8 +183,8 @@
     };
 
     // Verificar sesión activa
-    const participanteStr = sessionStorage.getItem('participante');
-    const sesionStr       = sessionStorage.getItem('sesion');
+    const participanteStr = localStorage.getItem('participante');
+    const sesionStr       = localStorage.getItem('sesion');
 
     if (!participanteStr || !sesionStr) {
       document.getElementById('sin-sesion').style.display = 'flex';
