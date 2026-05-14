@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>AR Campus</title>
+  <title>AR - Bloque M</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <style>
@@ -27,6 +27,31 @@
       z-index: 999;
     }
 
+    /* Notificación de escaneo */
+    #notificacion {
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      color: white;
+      border-radius: 16px;
+      padding: 16px 24px;
+      text-align: center;
+      width: 85%;
+      max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      font-family: Arial;
+    }
+
+    #notificacion.visible { top: 20px; }
+    #notificacion .not-icono { font-size: 32px; margin-bottom: 6px; }
+    #notificacion .not-titulo { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+    #notificacion .not-desc { font-size: 13px; opacity: 0.85; }
+
+    /* Logro */
     #logro {
       position: fixed;
       bottom: -150px;
@@ -44,34 +69,80 @@
       box-shadow: 0 4px 20px rgba(218,165,32,0.4);
       transition: bottom 0.5s ease;
       z-index: 1000;
+      font-family: Arial;
     }
     #logro.visible { bottom: 30px; }
     #logro-emoji { font-size: 40px; }
     #logro-texto h3 {
       color: #DAA520;
-      font-family: Arial;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 2px;
       margin-bottom: 4px;
     }
-    #logro-texto p {
-      color: white;
+    #logro-texto p { color: white; font-size: 14px; font-weight: bold; }
+
+    /* Sin sesión */
+    #sin-sesion {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
       font-family: Arial;
-      font-size: 14px;
+    }
+
+    #sin-sesion .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 30px 24px;
+      text-align: center;
+      max-width: 320px;
+      margin: 20px;
+    }
+
+    #sin-sesion .modal h2 { color: #1a2e1a; margin-bottom: 10px; }
+    #sin-sesion .modal p { color: #666; font-size: 14px; margin-bottom: 20px; }
+
+    #sin-sesion .modal a {
+      display: block;
+      padding: 14px;
+      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
+      color: white;
+      border-radius: 12px;
+      text-decoration: none;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <a id="btn-menu" href="index.html">← Menú</a>
+  <a id="btn-menu" href="mapa.html">← Mapa</a>
 
+  <!-- Modal si no hay sesión activa -->
+  <div id="sin-sesion" style="display:none;">
+    <div class="modal">
+      <h2>⚠️ Sin sesión</h2>
+      <p>No estás unido a ninguna carrera. Únete primero para poder escanear edificios.</p>
+      <a href="carrera.html">🚀 Unirse a la carrera</a>
+    </div>
+  </div>
+
+  <!-- Notificación de escaneo exitoso -->
+  <div id="notificacion">
+    <div class="not-icono">✅</div>
+    <div class="not-titulo" id="not-titulo">Edificio escaneado</div>
+    <div class="not-desc" id="not-desc">Registro guardado</div>
+  </div>
+
+  <!-- Logro -->
   <div id="logro">
     <div id="logro-emoji">🏆</div>
     <div id="logro-texto">
       <h3>Logro desbloqueado</h3>
-      <p>Felicidades, has obtenido el logro de UCO</p>
+      <p id="logro-mensaje">Felicidades, has obtenido el logro de UCO</p>
     </div>
   </div>
 
@@ -88,7 +159,8 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
+    <!-- Marcador 0 → Bloque M -->
+    <a-entity mindar-image-target="targetIndex: 0" id="target-bloque-m">
       <a-gltf-model
         src="#estrella"
         position="0 0 0.1"
@@ -99,8 +171,29 @@
 
   </a-scene>
 
-  <script>
-    // Ocultar overlay de MindAR
+  <script type="module">
+    import { registrarEscaneo } from './supabase.js';
+
+    // Definición de edificios por targetIndex
+    const EDIFICIOS_AR = {
+      0: { id: 'bloque_m', nombre: 'Bloque M', icono: '🏫' }
+      // Cuando agregues más marcadores:
+      // 1: { id: 'bloque_col', nombre: 'Bloque COL', icono: '🔬' }
+      // 2: { id: 'bloque_edc', nombre: 'Bloque EDC', icono: '📚' }
+    };
+
+    // Verificar sesión activa
+    const participanteStr = sessionStorage.getItem('participante');
+    const sesionStr       = sessionStorage.getItem('sesion');
+
+    if (!participanteStr || !sesionStr) {
+      document.getElementById('sin-sesion').style.display = 'flex';
+    }
+
+    const participante = participanteStr ? JSON.parse(participanteStr) : null;
+    const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
+
+    // Ocultar overlay MindAR
     const observer = new MutationObserver(() => {
       const overlay = document.querySelector('.mindar-ui-overlay');
       if (overlay) {
@@ -110,23 +203,77 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Mostrar logro cuando detecta el marcador
+    // Logro inicial al detectar cualquier marcador
     let logroMostrado = false;
 
-    document.querySelector('a-scene').addEventListener('loaded', () => {
-      const target = document.querySelector('[mindar-image-target]');
+    // Configurar cada target
+    Object.entries(EDIFICIOS_AR).forEach(([index, edificio]) => {
+      const target = document.querySelector(`[mindar-image-target="targetIndex: ${index}"]`);
+      if (!target) return;
 
-      target.addEventListener('targetFound', () => {
+      target.addEventListener('targetFound', async () => {
+        // Mostrar logro primera vez
         if (!logroMostrado) {
           logroMostrado = true;
-          const logro = document.getElementById('logro');
-          logro.classList.add('visible');
-          setTimeout(() => {
-            logro.classList.remove('visible');
-          }, 10000);
+          mostrarLogro(`¡Encontraste el ${edificio.nombre}!`);
+        }
+
+        // Registrar escaneo si hay sesión
+        if (!participante || !sesion) return;
+
+        try {
+          const resultado = await registrarEscaneo(
+            participante.id,
+            sesion.id,
+            edificio.id,
+            sesion.total_edificios
+          );
+
+          if (resultado.duplicado) {
+            mostrarNotificacion(
+              edificio.icono + ' Ya escaneado',
+              `${edificio.nombre} ya fue registrado anteriormente`,
+              '#856404'
+            );
+            return;
+          }
+
+          // Actualizar sesion en sessionStorage si cambió
+          if (resultado.esUltimo) {
+            mostrarNotificacion(
+              '🎉 ¡Completaste la carrera!',
+              `Has visitado todos los edificios`,
+              '#155724'
+            );
+          } else {
+            mostrarNotificacion(
+              edificio.icono + ' ' + edificio.nombre,
+              `Edificio registrado correctamente`,
+              '#155724'
+            );
+          }
+
+        } catch (e) {
+          mostrarNotificacion('❌ Error', 'No se pudo registrar el escaneo', '#721c24');
         }
       });
     });
+
+    function mostrarNotificacion(titulo, desc, color) {
+      const not = document.getElementById('notificacion');
+      document.getElementById('not-titulo').textContent = titulo;
+      document.getElementById('not-desc').textContent   = desc;
+      not.style.borderTop = `4px solid ${color}`;
+      not.classList.add('visible');
+      setTimeout(() => not.classList.remove('visible'), 4000);
+    }
+
+    function mostrarLogro(mensaje) {
+      document.getElementById('logro-mensaje').textContent = mensaje;
+      const logro = document.getElementById('logro');
+      logro.classList.add('visible');
+      setTimeout(() => logro.classList.remove('visible'), 10000);
+    }
   </script>
 
 </body>
