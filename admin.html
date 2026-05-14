@@ -320,6 +320,10 @@
   </div>
 
   <script type="module">
+    // Verificar que está autenticado
+    if (sessionStorage.getItem('admin_autenticado') !== 'true') {
+    window.location.href = 'login-admin.html';
+    }
     import {
       crearSesion as crearSesionDB,
       activarSesion as activarSesionDB,

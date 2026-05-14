@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: radial-gradient(ellipse at center, #1a2e1a, #0a1a0a);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+
+    .icono { font-size: 48px; margin-bottom: 12px; }
+
+    .titulo {
+      font-size: 22px;
+      font-weight: bold;
+      color: #1a2e1a;
+      margin-bottom: 6px;
+    }
+
+    .subtitulo {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .campo { margin-bottom: 16px; text-align: left; }
+
+    .campo label {
+      display: block;
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .campo input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .campo input:focus { border-color: #3a7a1a; }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: transform 0.1s;
+    }
+
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .error {
+      background: #fff0f0;
+      border: 1px solid #ffcccc;
+      color: #cc0000;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .error.visible { display: block; }
+
+    .volver {
+      display: block;
+      margin-top: 20px;
+      color: #888;
+      text-decoration: none;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icono">🔐</div>
+    <div class="titulo">Acceso Administrador</div>
+    <div class="subtitulo">Solo personal autorizado</div>
+
+    <div class="campo">
+      <label>Usuario</label>
+      <input type="text" id="input-usuario" placeholder="admin">
+    </div>
+
+    <div class="campo">
+      <label>Contraseña</label>
+      <input type="password" id="input-password" placeholder="••••••••">
+    </div>
+
+    <button class="btn-login" id="btn-login" onclick="login()">
+      🔓 Ingresar
+    </button>
+
+    <div class="error" id="mensaje-error">Usuario o contraseña incorrectos</div>
+
+    <a href="index.html" class="volver">← Volver al menú</a>
+  </div>
+
+  <script>
+    // Credenciales del admin — cámbialas por las que quieras
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = 'uco2025';
+
+    window.login = function() {
+      const usuario  = document.getElementById('input-usuario').value.trim();
+      const password = document.getElementById('input-password').value.trim();
+      const btn      = document.getElementById('btn-login');
+      const error    = document.getElementById('mensaje-error');
+
+      error.classList.remove('visible');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+
+      setTimeout(() => {
+        if (usuario === ADMIN_USER && password === ADMIN_PASS) {
+          sessionStorage.setItem('admin_autenticado', 'true');
+          window.location.href = 'admin.html';
+        } else {
+          error.classList.add('visible');
+          btn.disabled = false;
+          btn.textContent = '🔓 Ingresar';
+        }
+      }, 800);
+    };
+
+    // Enter para login
+    document.getElementById('input-password').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') window.login();
+    });
+    document.getElementById('input-usuario').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') document.getElementById('input-password').focus();
+    });
+  </script>
+
+</body>
+</html>
