@@ -116,7 +116,8 @@ export async function registrarEscaneo(participanteId, sesionId, edificioId, tot
       sesion_id: sesionId,
       edificio_id: edificioId,
       es_primero: esPrimero,
-      es_ultimo: esUltimo
+      es_ultimo: esUltimo,
+      puntos: puntos
     })
     .select()
     .single();
@@ -132,10 +133,9 @@ export async function registrarEscaneo(participanteId, sesionId, edificioId, tot
 }
 
 async function calcularTiempoYPosicion(participanteId, sesionId) {
-  // Obtener primer y último escaneo
   const { data: escaneos } = await supabase
     .from('escaneos')
-    .select('escaneado_en, es_primero, es_ultimo')
+    .select('escaneado_en, es_primero, es_ultimo, puntos')
     .eq('participante_id', participanteId)
     .order('escaneado_en', { ascending: true });
 
@@ -148,19 +148,22 @@ async function calcularTiempoYPosicion(participanteId, sesionId) {
     (new Date(ultimo.escaneado_en) - new Date(primero.escaneado_en)) / 1000
   );
 
-  // Actualizar participante
+  // Sumar puntos de todos los escaneos
+  const puntosTotal = (escaneos || []).reduce((sum, e) => sum + (e.puntos || 0), 0);
+
+  // Actualizar participante con tiempo y puntos
   await supabase
     .from('participantes')
-    .update({ completado: true, tiempo_total: tiempoTotal })
+    .update({ completado: true, tiempo_total: tiempoTotal, puntos_total: puntosTotal })
     .eq('id', participanteId);
 
-  // Recalcular posiciones
+  // Recalcular posiciones por puntos (más puntos = mejor posición)
   const { data: completados } = await supabase
     .from('participantes')
-    .select('id, tiempo_total')
+    .select('id, puntos_total')
     .eq('sesion_id', sesionId)
     .eq('completado', true)
-    .order('tiempo_total', { ascending: true });
+    .order('puntos_total', { ascending: false });
 
   for (let i = 0; i < completados.length; i++) {
     await supabase
