@@ -6,14 +6,8 @@
   <title>Admin - Carrera UCO</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f0f4f0; font-family: Arial, sans-serif; min-height: 100vh; }
 
-    body {
-      background: #f0f4f0;
-      font-family: Arial, sans-serif;
-      min-height: 100vh;
-    }
-
-    /* Header */
     .header {
       background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
       color: white;
@@ -23,18 +17,42 @@
       justify-content: space-between;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
-
     .header h1 { font-size: 20px; }
-    .header span { font-size: 13px; opacity: 0.8; }
-
-    /* Contenido */
-    .contenido {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 24px 16px;
+    .header-btns { display: flex; gap: 12px; align-items: center; }
+    .header-btns a, .header-btns button {
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
     }
 
-    /* Card */
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid #e0e0e0;
+      padding: 0 16px;
+    }
+    .tab {
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: bold;
+      color: #888;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.activo { color: #3a7a1a; border-bottom-color: #3a7a1a; }
+
+    .contenido { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+
+    .pantalla { display: none; }
+    .pantalla.visible { display: block; }
+
     .card {
       background: white;
       border-radius: 16px;
@@ -42,7 +60,6 @@
       margin-bottom: 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
-
     .card h2 {
       color: #1a2e1a;
       font-size: 18px;
@@ -51,9 +68,7 @@
       border-bottom: 2px solid #f0f4f0;
     }
 
-    /* Campos */
     .campo { margin-bottom: 16px; }
-
     .campo label {
       display: block;
       color: #555;
@@ -63,7 +78,6 @@
       letter-spacing: 1px;
       margin-bottom: 6px;
     }
-
     .campo input {
       width: 100%;
       padding: 12px 16px;
@@ -73,17 +87,14 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
     .campo input:focus { border-color: #3a7a1a; }
 
-    /* Edificios checkboxes */
     .edificios-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-top: 8px;
     }
-
     .edificio-check {
       display: flex;
       align-items: center;
@@ -94,14 +105,11 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .edificio-check:hover { border-color: #3a7a1a; background: #f0f8f0; }
     .edificio-check.seleccionado { border-color: #3a7a1a; background: #f0f8f0; }
-
     .edificio-check input { width: auto; }
     .edificio-check span { font-size: 14px; }
 
-    /* Botones */
     .btn {
       padding: 14px 24px;
       border: none;
@@ -111,32 +119,13 @@
       cursor: pointer;
       transition: transform 0.1s, opacity 0.2s;
     }
-
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-crear   { background: linear-gradient(135deg, #3a7a1a, #5a9a2a); color: white; width: 100%; margin-top: 8px; }
+    .btn-activar { background: linear-gradient(135deg, #1a5a9a, #2a7acc); color: white; flex: 1; }
+    .btn-cerrar  { background: linear-gradient(135deg, #9a1a1a, #cc2a2a); color: white; flex: 1; }
+    .btn-fila    { display: flex; gap: 12px; margin-top: 8px; }
 
-    .btn-crear {
-      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white;
-      width: 100%;
-      margin-top: 8px;
-    }
-
-    .btn-activar {
-      background: linear-gradient(135deg, #1a5a9a, #2a7acc);
-      color: white;
-      flex: 1;
-    }
-
-    .btn-cerrar {
-      background: linear-gradient(135deg, #9a1a1a, #cc2a2a);
-      color: white;
-      flex: 1;
-    }
-
-    .btn-fila { display: flex; gap: 12px; margin-top: 8px; }
-
-    /* Estado sesión */
     .estado-badge {
       display: inline-block;
       padding: 4px 14px;
@@ -145,18 +134,32 @@
       font-weight: bold;
       margin-left: 10px;
     }
-
     .estado-borrador { background: #fff3cd; color: #856404; }
     .estado-activa   { background: #d4edda; color: #155724; }
     .estado-cerrada  { background: #f8d7da; color: #721c24; }
 
-    /* Ranking */
-    .ranking-vacio {
+    .codigo-display {
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      color: white;
+      border-radius: 14px;
+      padding: 20px;
       text-align: center;
-      color: #999;
-      padding: 30px;
-      font-size: 15px;
+      margin-bottom: 16px;
     }
+    .codigo-display .label     { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
+    .codigo-display .codigo    { font-size: 36px; font-weight: bold; letter-spacing: 4px; }
+    .codigo-display .nom-sesion { font-size: 14px; opacity: 0.8; margin-top: 6px; }
+
+    .contador { display: flex; gap: 16px; margin-bottom: 16px; }
+    .contador-item {
+      flex: 1;
+      background: #f0f8f0;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .contador-num   { font-size: 28px; font-weight: bold; color: #3a7a1a; }
+    .contador-label { font-size: 12px; color: #888; margin-top: 4px; }
 
     .participante-item {
       display: flex;
@@ -166,72 +169,85 @@
       border-radius: 12px;
       margin-bottom: 8px;
       background: #f8f9f8;
-      transition: background 0.2s;
     }
-
     .participante-item.completado { background: #f0f8f0; }
-    .participante-item.primero { background: linear-gradient(135deg, #fff9e6, #fff3cd); }
-
+    .participante-item.primero    { background: linear-gradient(135deg, #fff9e6, #fff3cd); }
     .pos-badge {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 16px;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 16px; flex-shrink: 0;
     }
-
     .pos-1 { background: #FFD700; color: #333; }
     .pos-2 { background: #C0C0C0; color: #333; }
     .pos-3 { background: #CD7F32; color: white; }
     .pos-n { background: #e0e0e0; color: #555; font-size: 14px; }
-
-    .participante-info { flex: 1; }
+    .participante-info   { flex: 1; }
     .participante-nombre { font-weight: bold; color: #1a2e1a; font-size: 15px; }
     .participante-estado { font-size: 12px; color: #888; margin-top: 2px; }
+    .participante-tiempo { font-weight: bold; color: #3a7a1a; font-size: 15px; }
 
-    .participante-tiempo {
-      font-weight: bold;
+    .ranking-vacio { text-align: center; color: #999; padding: 30px; font-size: 15px; }
+    .seccion-oculta { display: none; }
+
+    /* Historial */
+    .sesion-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      border-left: 4px solid #3a7a1a;
+    }
+    .sesion-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .sesion-card.cerrada { border-left-color: #cc2a2a; }
+    .sesion-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .sesion-nombre { font-weight: bold; font-size: 17px; color: #1a2e1a; }
+    .sesion-codigo { font-size: 13px; color: #888; margin-top: 2px; }
+    .sesion-stats  {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #555;
+    }
+    .sesion-stats span { display: flex; align-items: center; gap: 4px; }
+
+    /* Detalle sesión */
+    #detalle-sesion { display: none; }
+    #detalle-sesion.visible { display: block; }
+
+    .btn-volver {
+      background: none;
+      border: none;
       color: #3a7a1a;
       font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 16px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    /* Código de sesión destacado */
-    .codigo-display {
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      color: white;
+    .ganador-card {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
       border-radius: 14px;
       padding: 20px;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
-
-    .codigo-display .label { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
-    .codigo-display .codigo { font-size: 36px; font-weight: bold; letter-spacing: 4px; }
-    .codigo-display .nombre-sesion { font-size: 14px; opacity: 0.8; margin-top: 6px; }
-
-    /* Contador */
-    .contador {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .contador-item {
-      flex: 1;
-      background: #f0f8f0;
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-    }
-
-    .contador-num { font-size: 28px; font-weight: bold; color: #3a7a1a; }
-    .contador-label { font-size: 12px; color: #888; margin-top: 4px; }
-
-    .seccion-oculta { display: none; }
+    .ganador-card .trofeo { font-size: 48px; margin-bottom: 8px; }
+    .ganador-card .nombre { font-size: 22px; font-weight: bold; color: #1a1a1a; }
+    .ganador-card .stats  { font-size: 14px; color: #333; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -239,98 +255,120 @@
   <div class="header">
     <div>
       <h1>🏆 Panel Administrador</h1>
-      <span>Universidad Católica de Oriente</span>
     </div>
-    <a href="index.html" style="color:white; text-decoration:none; font-size:13px;">← Salir</a>
+    <div class="header-btns">
+      <button onclick="cerrarAdmin()">🚪 Cerrar sesión</button>
+      <a href="index.html">← Salir</a>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">➕ Nueva carrera</div>
+    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</div>
   </div>
 
   <div class="contenido">
 
-    <!-- Crear sesión -->
-    <div class="card" id="card-crear">
-      <h2>➕ Crear nueva sesión</h2>
+    <!-- ═══ TAB: NUEVA CARRERA ═══ -->
+    <div class="pantalla visible" id="pantalla-nueva">
 
-      <div class="campo">
-        <label>Nombre de la sesión</label>
-        <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
+      <!-- Crear sesión -->
+      <div class="card" id="card-crear">
+        <h2>➕ Crear nueva sesión</h2>
+        <div class="campo">
+          <label>Nombre de la sesión</label>
+          <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
+        </div>
+        <div class="campo">
+          <label>Código de acceso</label>
+          <input type="text" id="codigo-sesion" placeholder="Ej: UCO-2025" style="text-transform:uppercase;">
+        </div>
+        <div class="campo">
+          <label>Edificios incluidos</label>
+          <div class="edificios-grid" id="edificios-grid"></div>
+        </div>
+        <button class="btn btn-crear" onclick="crearSesion()">✅ Crear sesión</button>
       </div>
 
-      <div class="campo">
-        <label>Código de acceso</label>
-        <input type="text" id="codigo-sesion" placeholder="Ej: UCO-2025" style="text-transform:uppercase;">
+      <!-- Control sesión activa -->
+      <div class="card seccion-oculta" id="card-control">
+        <h2>
+          🎮 Sesión actual
+          <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
+        </h2>
+        <div class="codigo-display">
+          <div class="label">Código para estudiantes</div>
+          <div class="codigo"    id="display-codigo">---</div>
+          <div class="nom-sesion" id="display-nombre"></div>
+        </div>
+        <div class="btn-fila">
+          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">▶️ Activar sesión</button>
+          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled>⏹️ Cerrar sesión</button>
+        </div>
       </div>
 
-      <div class="campo">
-        <label>Edificios incluidos</label>
-        <div class="edificios-grid" id="edificios-grid"></div>
+      <!-- Ranking en tiempo real -->
+      <div class="card seccion-oculta" id="card-ranking">
+        <h2>🏅 Ranking en tiempo real</h2>
+        <div class="contador">
+          <div class="contador-item">
+            <div class="contador-num"   id="cnt-unidos">0</div>
+            <div class="contador-label">Unidos</div>
+          </div>
+          <div class="contador-item">
+            <div class="contador-num"   id="cnt-completados">0</div>
+            <div class="contador-label">Completaron</div>
+          </div>
+          <div class="contador-item">
+            <div class="contador-num"   id="cnt-edificios">0</div>
+            <div class="contador-label">Edificios</div>
+          </div>
+        </div>
+        <div id="lista-ranking">
+          <div class="ranking-vacio">Esperando participantes...</div>
+        </div>
       </div>
 
-      <button class="btn btn-crear" onclick="crearSesion()">
-        ✅ Crear sesión
-      </button>
     </div>
 
-    <!-- Control de sesión activa -->
-    <div class="card seccion-oculta" id="card-control">
-      <h2>
-        🎮 Sesión actual
-        <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
-      </h2>
+    <!-- ═══ TAB: HISTORIAL ═══ -->
+    <div class="pantalla" id="pantalla-historial">
 
-      <div class="codigo-display">
-        <div class="label">Código para estudiantes</div>
-        <div class="codigo" id="display-codigo">---</div>
-        <div class="nombre-sesion" id="display-nombre"></div>
+      <!-- Lista de sesiones -->
+      <div id="lista-sesiones">
+        <div class="ranking-vacio">Cargando historial...</div>
       </div>
 
-      <div class="btn-fila">
-        <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">
-          ▶️ Activar sesión
-        </button>
-        <button class="btn btn-cerrar" id="btn-cerrar" onclick="cerrarSesion()" disabled>
-          ⏹️ Cerrar sesión
-        </button>
-      </div>
-    </div>
-
-    <!-- Ranking en tiempo real -->
-    <div class="card seccion-oculta" id="card-ranking">
-      <h2>🏅 Ranking en tiempo real</h2>
-
-      <div class="contador">
-        <div class="contador-item">
-          <div class="contador-num" id="cnt-unidos">0</div>
-          <div class="contador-label">Unidos</div>
-        </div>
-        <div class="contador-item">
-          <div class="contador-num" id="cnt-completados">0</div>
-          <div class="contador-label">Completaron</div>
-        </div>
-        <div class="contador-item">
-          <div class="contador-num" id="cnt-edificios">0</div>
-          <div class="contador-label">Edificios</div>
-        </div>
+      <!-- Detalle de una sesión -->
+      <div id="detalle-sesion">
+        <button class="btn-volver" onclick="volverHistorial()">← Volver al historial</button>
+        <div id="detalle-contenido"></div>
       </div>
 
-      <div id="lista-ranking">
-        <div class="ranking-vacio">Esperando participantes...</div>
-      </div>
     </div>
 
   </div>
 
   <script type="module">
-    // Verificar que está autenticado
-    if (sessionStorage.getItem('admin_autenticado') !== 'true') {
-    window.location.href = 'login-admin.html';
-    }
     import {
       crearSesion as crearSesionDB,
       activarSesion as activarSesionDB,
       cerrarSesion as cerrarSesionDB,
       obtenerParticipantes,
-      escucharParticipantes
+      escucharParticipantes,
+      supabase
     } from './supabase.js';
+
+    // Verificar autenticación
+    if (sessionStorage.getItem('admin_autenticado') !== 'true') {
+      window.location.href = 'login-admin.html';
+    }
+
+    window.cerrarAdmin = function() {
+      sessionStorage.removeItem('admin_autenticado');
+      window.location.href = 'login-admin.html';
+    };
 
     const EDIFICIOS = [
       { id: 'bloque_m',      nombre: '🏫 Bloque M' },
@@ -346,44 +384,47 @@
     ];
 
     let sesionActual = null;
-    let suscripcion = null;
+    let suscripcion  = null;
 
-    // Renderizar checkboxes de edificios
+    // ═══════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════
+    window.cambiarTab = function(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+      document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('visible'));
+      document.getElementById('tab-' + tab).classList.add('activo');
+      document.getElementById('pantalla-' + tab).classList.add('visible');
+      if (tab === 'historial') cargarHistorial();
+    };
+
+    // ═══════════════════════════════════
+    // EDIFICIOS CHECKBOXES
+    // ═══════════════════════════════════
     const grid = document.getElementById('edificios-grid');
     EDIFICIOS.forEach(e => {
       const div = document.createElement('div');
-      div.className = 'edificio-check';
-      div.innerHTML = `
-        <input type="checkbox" id="ed-${e.id}" value="${e.id}" checked>
-        <span>${e.nombre}</span>
-      `;
+      div.className = 'edificio-check seleccionado';
+      div.innerHTML = `<input type="checkbox" id="ed-${e.id}" value="${e.id}" checked><span>${e.nombre}</span>`;
       div.addEventListener('click', () => {
         const cb = div.querySelector('input');
         cb.checked = !cb.checked;
         div.classList.toggle('seleccionado', cb.checked);
       });
-      div.classList.add('seleccionado');
       grid.appendChild(div);
     });
 
-    // Crear sesión
+    // ═══════════════════════════════════
+    // CREAR SESIÓN
+    // ═══════════════════════════════════
     window.crearSesion = async function() {
       const nombre = document.getElementById('nombre-sesion').value.trim();
       const codigo = document.getElementById('codigo-sesion').value.trim();
-
-      if (!nombre || !codigo) {
-        alert('Por favor completa el nombre y código de la sesión');
-        return;
-      }
+      if (!nombre || !codigo) { alert('Completa nombre y código'); return; }
 
       const edificiosSeleccionados = EDIFICIOS.filter(e =>
         document.getElementById('ed-' + e.id)?.checked
       );
-
-      if (edificiosSeleccionados.length === 0) {
-        alert('Selecciona al menos un edificio');
-        return;
-      }
+      if (edificiosSeleccionados.length === 0) { alert('Selecciona al menos un edificio'); return; }
 
       try {
         sesionActual = await crearSesionDB(nombre, codigo, edificiosSeleccionados);
@@ -394,7 +435,9 @@
       }
     };
 
-    // Activar sesión
+    // ═══════════════════════════════════
+    // ACTIVAR / CERRAR SESIÓN
+    // ═══════════════════════════════════
     window.activarSesion = async function() {
       if (!sesionActual) return;
       try {
@@ -402,24 +445,28 @@
         sesionActual.estado = 'activa';
         actualizarBadge('activa');
         document.getElementById('btn-activar').disabled = true;
-        document.getElementById('btn-cerrar').disabled = false;
-      } catch (e) {
-        alert('Error al activar la sesión');
-      }
+        document.getElementById('btn-cerrar').disabled  = false;
+      } catch (e) { alert('Error al activar la sesión'); }
     };
 
-    // Cerrar sesión
     window.cerrarSesion = async function() {
       if (!sesionActual) return;
-      if (!confirm('¿Cerrar la sesión? Los participantes no podrán seguir escaneando.')) return;
+      if (!confirm('¿Cerrar la sesión?')) return;
       try {
         await cerrarSesionDB(sesionActual.id);
         sesionActual.estado = 'cerrada';
         actualizarBadge('cerrada');
         document.getElementById('btn-cerrar').disabled = true;
-      } catch (e) {
-        alert('Error al cerrar la sesión');
-      }
+        // Volver a mostrar formulario para nueva sesión
+        setTimeout(() => {
+          document.getElementById('card-control').classList.add('seccion-oculta');
+          document.getElementById('card-ranking').classList.add('seccion-oculta');
+          document.getElementById('card-crear').style.display = 'block';
+          document.getElementById('nombre-sesion').value = '';
+          document.getElementById('codigo-sesion').value = '';
+          sesionActual = null;
+        }, 2000);
+      } catch (e) { alert('Error al cerrar la sesión'); }
     };
 
     function mostrarControlSesion() {
@@ -428,54 +475,173 @@
       document.getElementById('card-ranking').classList.remove('seccion-oculta');
       document.getElementById('display-codigo').textContent = sesionActual.codigo;
       document.getElementById('display-nombre').textContent = sesionActual.nombre;
-      document.getElementById('cnt-edificios').textContent = sesionActual.total_edificios;
+      document.getElementById('cnt-edificios').textContent  = sesionActual.total_edificios;
     }
 
     function actualizarBadge(estado) {
       const badge = document.getElementById('badge-estado');
       badge.textContent = estado.charAt(0).toUpperCase() + estado.slice(1);
-      badge.className = 'estado-badge estado-' + estado;
+      badge.className   = 'estado-badge estado-' + estado;
     }
 
     function iniciarRanking() {
-      suscripcion = escucharParticipantes(sesionActual.id, () => {
-        cargarRanking();
-      });
+      suscripcion = escucharParticipantes(sesionActual.id, () => cargarRanking());
       cargarRanking();
     }
 
     async function cargarRanking() {
       const participantes = await obtenerParticipantes(sesionActual.id);
       const completados   = participantes.filter(p => p.completado).length;
-
       document.getElementById('cnt-unidos').textContent      = participantes.length;
       document.getElementById('cnt-completados').textContent = completados;
 
       const lista = document.getElementById('lista-ranking');
-
       if (participantes.length === 0) {
         lista.innerHTML = '<div class="ranking-vacio">Esperando participantes...</div>';
         return;
       }
 
       lista.innerHTML = participantes.map(p => {
-        const pos    = p.posicion;
-        const emoji  = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos || '⏳';
-        const clase  = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
+        const pos   = p.posicion;
+        const emoji = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos || '⏳';
+        const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
         const tiempo = p.tiempo_total ? formatearTiempo(p.tiempo_total) : 'En carrera...';
+        const puntos = p.puntos_total ? `⭐ ${p.puntos_total} pts` : '';
 
         return `
           <div class="participante-item ${clase}">
             <div class="pos-badge ${pos <= 3 ? 'pos-' + pos : 'pos-n'}">${emoji}</div>
             <div class="participante-info">
               <div class="participante-nombre">${p.nombre}</div>
-              <div class="participante-estado">${p.completado ? '✅ Completó el recorrido' : '🏃 En carrera'}</div>
+              <div class="participante-estado">${p.completado ? '✅ Completó · ' + puntos : '🏃 En carrera'}</div>
             </div>
             <div class="participante-tiempo">${tiempo}</div>
           </div>
         `;
       }).join('');
     }
+
+    // ═══════════════════════════════════
+    // HISTORIAL
+    // ═══════════════════════════════════
+    async function cargarHistorial() {
+      const { data: sesiones } = await supabase
+        .from('sesiones')
+        .select('*')
+        .order('creada_en', { ascending: false });
+
+      const lista = document.getElementById('lista-sesiones');
+      document.getElementById('detalle-sesion').classList.remove('visible');
+
+      if (!sesiones || sesiones.length === 0) {
+        lista.innerHTML = '<div class="ranking-vacio">No hay sesiones registradas</div>';
+        return;
+      }
+
+      lista.innerHTML = sesiones.map(s => `
+        <div class="sesion-card ${s.estado === 'cerrada' ? 'cerrada' : ''}" onclick="verDetalleSesion('${s.id}')">
+          <div class="sesion-card-header">
+            <div>
+              <div class="sesion-nombre">${s.nombre}</div>
+              <div class="sesion-codigo">Código: ${s.codigo}</div>
+            </div>
+            <span class="estado-badge estado-${s.estado}">${s.estado}</span>
+          </div>
+          <div class="sesion-stats">
+            <span>🏛️ ${s.total_edificios} edificios</span>
+            <span>📅 ${new Date(s.creada_en).toLocaleDateString('es-CO')}</span>
+            ${s.activada_en ? `<span>▶️ ${new Date(s.activada_en).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.verDetalleSesion = async function(sesionId) {
+      document.getElementById('lista-sesiones').style.display = 'none';
+      document.getElementById('detalle-sesion').classList.add('visible');
+
+      const { data: sesion } = await supabase
+        .from('sesiones').select('*').eq('id', sesionId).single();
+
+      const { data: participantes } = await supabase
+        .from('participantes').select('*').eq('sesion_id', sesionId)
+        .order('posicion', { ascending: true, nullsFirst: false });
+
+      const { data: edificios } = await supabase
+        .from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden');
+
+      const completados = (participantes || []).filter(p => p.completado);
+      const ganador     = completados[0];
+
+      let html = `
+        <div class="card">
+          <h2>${sesion.nombre} <span class="estado-badge estado-${sesion.estado}">${sesion.estado}</span></h2>
+          <div style="color:#555; font-size:14px; margin-bottom:16px;">
+            Código: <strong>${sesion.codigo}</strong> · 
+            ${sesion.total_edificios} edificios · 
+            ${(participantes||[]).length} participantes
+          </div>
+      `;
+
+      if (ganador) {
+        html += `
+          <div class="ganador-card">
+            <div class="trofeo">🏆</div>
+            <div class="nombre">🥇 ${ganador.nombre}</div>
+            <div class="stats">
+              ⭐ ${ganador.puntos_total || 0} puntos · ⏱️ ${formatearTiempo(ganador.tiempo_total || 0)}
+            </div>
+          </div>
+        `;
+      }
+
+      html += `<h3 style="color:#1a2e1a; margin-bottom:12px;">Ranking final</h3>`;
+
+      if (!participantes || participantes.length === 0) {
+        html += '<div class="ranking-vacio">Sin participantes</div>';
+      } else {
+        html += participantes.map(p => {
+          const pos   = p.posicion;
+          const emoji = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos ? `#${pos}` : '⏳';
+          const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
+          return `
+            <div class="participante-item ${clase}">
+              <div class="pos-badge ${pos <= 3 ? 'pos-' + pos : 'pos-n'}">${emoji}</div>
+              <div class="participante-info">
+                <div class="participante-nombre">${p.nombre}</div>
+                <div class="participante-estado">
+                  ${p.completado
+                    ? `✅ ⭐ ${p.puntos_total || 0} pts · ⏱️ ${formatearTiempo(p.tiempo_total || 0)}`
+                    : '❌ No completó'}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      html += `</div>`;
+
+      if (edificios && edificios.length > 0) {
+        html += `
+          <div class="card">
+            <h2>🏛️ Edificios de la sesión</h2>
+            ${edificios.map(e => `
+              <div style="padding:10px; border-bottom:1px solid #f0f0f0; font-size:14px; color:#333;">
+                ${e.orden}. ${e.nombre}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      document.getElementById('detalle-contenido').innerHTML = html;
+    };
+
+    window.volverHistorial = function() {
+      document.getElementById('lista-sesiones').style.display = 'block';
+      document.getElementById('detalle-sesion').classList.remove('visible');
+    };
 
     function formatearTiempo(segundos) {
       const m = Math.floor(segundos / 60);

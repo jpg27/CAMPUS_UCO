@@ -451,8 +451,8 @@
         .order('orden');
 
       const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
-      const total         = edificiosSesion ? edificiosSesion.length : 0;
-      const completados   = escaneadosIds.length;
+      const total       = edificiosSesion ? edificiosSesion.length : sesion.total_edificios;
+      const completados = Math.min(escaneadosIds.length, total);
       const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
 
       document.getElementById('logros-texto-progreso').textContent = `${completados} / ${total} edificios`;
