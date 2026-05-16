@@ -11,7 +11,6 @@
     * { margin: 0; padding: 0; }
     body { overflow: hidden; font-family: Arial, sans-serif; }
 
-    /* Botones superiores */
     .btn-top {
       position: fixed;
       top: 15px;
@@ -27,10 +26,9 @@
       cursor: pointer;
     }
 
-    #btn-mapa  { left: 15px;  color: #3a7a1a; }
+    #btn-mapa   { left: 15px;  color: #3a7a1a; }
     #btn-logros { right: 15px; color: #1a1a5e; }
 
-    /* Puntos */
     #display-puntos {
       position: fixed;
       top: 15px;
@@ -46,7 +44,6 @@
       z-index: 999;
     }
 
-    /* Notificación */
     #notificacion {
       position: fixed;
       top: -140px;
@@ -64,17 +61,11 @@
       z-index: 1000;
     }
     #notificacion.visible { top: 70px; }
-    #notificacion .not-icono { font-size: 32px; margin-bottom: 6px; }
+    #notificacion .not-icono  { font-size: 32px; margin-bottom: 6px; }
     #notificacion .not-titulo { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-    #notificacion .not-desc { font-size: 13px; opacity: 0.85; }
-    #notificacion .not-puntos {
-      margin-top: 8px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #FFD700;
-    }
+    #notificacion .not-desc   { font-size: 13px; opacity: 0.85; }
+    #notificacion .not-puntos { margin-top: 8px; font-size: 20px; font-weight: bold; color: #FFD700; }
 
-    /* Panel logros */
     #panel-logros {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -102,7 +93,6 @@
       align-items: center;
       margin-bottom: 16px;
     }
-
     .logros-header h2 { color: #1a2e1a; font-size: 20px; }
 
     .btn-cerrar-logros {
@@ -116,7 +106,6 @@
     }
 
     .barra-container { margin-bottom: 20px; }
-
     .barra-labels {
       display: flex;
       justify-content: space-between;
@@ -124,14 +113,12 @@
       color: #555;
       margin-bottom: 6px;
     }
-
     .barra-bg {
       background: #e0e0e0;
       border-radius: 10px;
       height: 12px;
       overflow: hidden;
     }
-
     .barra-fill {
       background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
       height: 100%;
@@ -146,8 +133,7 @@
       text-align: center;
       margin-bottom: 16px;
     }
-
-    .puntos-total .num { font-size: 36px; font-weight: bold; color: #1a1a1a; }
+    .puntos-total .num   { font-size: 36px; font-weight: bold; color: #1a1a1a; }
     .puntos-total .label { font-size: 13px; color: #555; }
 
     .edificio-logro {
@@ -160,19 +146,13 @@
       border: 2px solid #e0e0e0;
       background: #f8f8f8;
     }
-
-    .edificio-logro.done {
-      border-color: #3a7a1a;
-      background: #f0f8f0;
-    }
-
-    .edificio-logro .icono { font-size: 28px; }
-    .edificio-logro .info { flex: 1; }
+    .edificio-logro.done { border-color: #3a7a1a; background: #f0f8f0; }
+    .edificio-logro .icono  { font-size: 28px; }
+    .edificio-logro .info   { flex: 1; }
     .edificio-logro .nombre { font-weight: bold; color: #1a2e1a; font-size: 15px; }
-    .edificio-logro .sub { font-size: 12px; color: #888; margin-top: 2px; }
+    .edificio-logro .sub    { font-size: 12px; color: #888; margin-top: 2px; }
     .edificio-logro .trofeo { font-size: 24px; }
 
-    /* Sin sesión */
     #sin-sesion {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -182,7 +162,6 @@
       justify-content: center;
       z-index: 2000;
     }
-
     .sin-sesion-modal {
       background: white;
       border-radius: 20px;
@@ -191,9 +170,8 @@
       max-width: 320px;
       margin: 20px;
     }
-
     .sin-sesion-modal h2 { color: #1a2e1a; margin-bottom: 10px; }
-    .sin-sesion-modal p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    .sin-sesion-modal p  { color: #666; font-size: 14px; margin-bottom: 20px; }
     .sin-sesion-modal a {
       display: block;
       padding: 14px;
@@ -211,7 +189,6 @@
   <div id="display-puntos">⭐ 1000</div>
   <button class="btn-top" id="btn-logros" onclick="abrirLogros()">🏆 Logros</button>
 
-  <!-- Sin sesión -->
   <div id="sin-sesion">
     <div class="sin-sesion-modal">
       <h2>⚠️ Sin sesión</h2>
@@ -220,27 +197,23 @@
     </div>
   </div>
 
-  <!-- Notificación -->
   <div id="notificacion">
-    <div class="not-icono" id="not-icono">✅</div>
+    <div class="not-icono"  id="not-icono">✅</div>
     <div class="not-titulo" id="not-titulo">Edificio escaneado</div>
-    <div class="not-desc"  id="not-desc">Registro guardado</div>
+    <div class="not-desc"   id="not-desc">Registro guardado</div>
     <div class="not-puntos" id="not-puntos"></div>
   </div>
 
-  <!-- Panel logros -->
   <div id="panel-logros">
     <div class="logros-contenido">
       <div class="logros-header">
         <h2>🏆 Mis logros</h2>
         <button class="btn-cerrar-logros" onclick="cerrarLogros()">✕</button>
       </div>
-
       <div class="puntos-total">
-        <div class="num" id="logros-puntos">1000</div>
+        <div class="num"   id="logros-puntos">1000</div>
         <div class="label">puntos acumulados</div>
       </div>
-
       <div class="barra-container">
         <div class="barra-labels">
           <span>Progreso</span>
@@ -250,7 +223,6 @@
           <div class="barra-fill" id="logros-barra" style="width:0%"></div>
         </div>
       </div>
-
       <div id="logros-lista"></div>
     </div>
   </div>
@@ -314,7 +286,7 @@
     // ═══════════════════════════════════
     const PUNTOS_INICIO   = 1000;
     const PUNTOS_POR_TICK = 1;
-    const MS_POR_TICK     = 10000; // cada 10 segundos
+    const MS_POR_TICK     = 10000;
 
     let puntosActuales = PUNTOS_INICIO;
     let intervalo      = null;
@@ -324,14 +296,21 @@
       if (iniciado) return;
       iniciado = true;
 
-      // Recuperar puntos guardados si volvió del mapa
-      const ptsGuardados = localStorage.getItem('puntos_actuales');
-      const tsGuardado   = localStorage.getItem('puntos_timestamp');
+      const ptsGuardados   = localStorage.getItem('puntos_actuales');
+      const tsGuardado     = localStorage.getItem('puntos_timestamp');
+      const sesionGuardada = localStorage.getItem('puntos_sesion');
 
-      if (ptsGuardados && tsGuardado) {
+      if (ptsGuardados && tsGuardado && sesionGuardada === sesion?.id) {
+        // Volvió del mapa en la misma sesión — continuar desde donde estaba
         const segundosTranscurridos = Math.floor((Date.now() - parseInt(tsGuardado)) / 1000);
         const ticksTranscurridos    = Math.floor(segundosTranscurridos / (MS_POR_TICK / 1000));
         puntosActuales = Math.max(0, parseInt(ptsGuardados) - (ticksTranscurridos * PUNTOS_POR_TICK));
+      } else {
+        // Primera vez o sesión nueva — empezar desde 1000
+        puntosActuales = PUNTOS_INICIO;
+        localStorage.removeItem('puntos_actuales');
+        localStorage.removeItem('puntos_timestamp');
+        localStorage.removeItem('puntos_sesion');
       }
 
       actualizarDisplayPuntos();
@@ -339,8 +318,9 @@
       intervalo = setInterval(() => {
         puntosActuales = Math.max(0, puntosActuales - PUNTOS_POR_TICK);
         actualizarDisplayPuntos();
-        localStorage.setItem('puntos_actuales', puntosActuales);
+        localStorage.setItem('puntos_actuales',  puntosActuales);
         localStorage.setItem('puntos_timestamp', Date.now());
+        localStorage.setItem('puntos_sesion',    sesion?.id);
       }, MS_POR_TICK);
     }
 
@@ -356,15 +336,14 @@
       }
     }
 
-    // Iniciar cuando la escena cargue
     document.querySelector('a-scene').addEventListener('loaded', () => {
       if (participante && sesion) iniciarCronometro();
     });
 
-    // Guardar puntos al ir al mapa
     document.getElementById('btn-mapa').addEventListener('click', () => {
-      localStorage.setItem('puntos_actuales', puntosActuales);
+      localStorage.setItem('puntos_actuales',  puntosActuales);
       localStorage.setItem('puntos_timestamp', Date.now());
+      localStorage.setItem('puntos_sesion',    sesion?.id);
       detenerCronometro();
     });
 
@@ -411,30 +390,31 @@
           if (resultado.esUltimo) {
             mostrarNotificacion(
               '🎉 ¡Completaste la carrera!',
-              `Has visitado todos los edificios`,
+              'Has visitado todos los edificios',
               puntosActuales
             );
           } else {
             mostrarNotificacion(
               edificio.icono + ' ' + edificio.nombre,
-              `Edificio registrado — sigue al siguiente`,
+              'Edificio registrado — sigue al siguiente',
               puntosActuales
             );
           }
 
           // Reiniciar puntos para el siguiente edificio
           setTimeout(() => {
+            localStorage.removeItem('puntos_actuales');
+            localStorage.removeItem('puntos_timestamp');
+            localStorage.removeItem('puntos_sesion');
             puntosActuales = PUNTOS_INICIO;
             actualizarDisplayPuntos();
-            localStorage.setItem('puntos_actuales', puntosActuales);
-            localStorage.setItem('puntos_timestamp', Date.now());
-            iniciarCronometro();
             iniciado = false;
             iniciarCronometro();
           }, 3000);
 
         } catch (e) {
-          mostrarNotificacion('❌ Error', 'No se pudo registrar', null);
+          console.error('Error al registrar:', e);
+          mostrarNotificacion('❌ Error', 'No se pudo registrar el escaneo', null);
         }
       });
     });
@@ -443,7 +423,7 @@
       document.getElementById('not-titulo').textContent = titulo;
       document.getElementById('not-desc').textContent   = desc;
       const notPuntos = document.getElementById('not-puntos');
-      notPuntos.textContent = puntos !== null ? '+' + puntos + ' puntos' : '';
+      notPuntos.textContent = puntos !== null ? '⭐ ' + puntos + ' puntos guardados' : '';
       document.getElementById('notificacion').classList.add('visible');
       setTimeout(() => {
         document.getElementById('notificacion').classList.remove('visible');
@@ -488,8 +468,10 @@
         const escaneado = escaneadosIds.includes(ed.edificio_id);
         const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
         const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
-        const hora      = escaneo ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : null;
-        const puntos    = escaneo?.puntos || 0;
+        const hora      = escaneo
+          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+          : null;
+        const pts = escaneo?.puntos || 0;
 
         return `
           <div class="edificio-logro ${escaneado ? 'done' : ''}">
@@ -497,7 +479,7 @@
             <div class="info">
               <div class="nombre">${info.nombre}</div>
               <div class="sub">
-                ${escaneado ? `✅ ${hora} · ⭐ ${puntos} pts` : '⏳ Pendiente'}
+                ${escaneado ? `✅ ${hora} · ⭐ ${pts} pts` : '⏳ Pendiente'}
               </div>
             </div>
             <div class="trofeo">${escaneado ? '🏆' : '🔒'}</div>

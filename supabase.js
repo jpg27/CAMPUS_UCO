@@ -89,7 +89,7 @@ export async function obtenerParticipantes(sesionId) {
 // ═══════════════════════════════════════════
 // FUNCIONES DE ESCANEOS
 // ═══════════════════════════════════════════
-export async function registrarEscaneo(participanteId, sesionId, edificioId, totalEdificios) {
+export async function registrarEscaneo(participanteId, sesionId, edificioId, totalEdificios, puntos = 0) {
   // Verificar si ya escaneó este edificio
   const { data: yaEscaneado } = await supabase
     .from('escaneos')
