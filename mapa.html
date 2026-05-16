@@ -128,5 +128,171 @@
       : './';
   </script>
   <script src="main.js"></script>
+
+  <!-- Botón de progreso -->
+<button id="btn-progreso" onclick="verProgreso()" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: Arial;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 999;
+">🏆 Mis logros</button>
+
+<!-- Panel de progreso -->
+<div id="panel-progreso" style="
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+">
+  <div style="
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+  ">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="color:#1a2e1a; font-family:Arial;">🏆 Mis logros</h2>
+      <button onclick="cerrarProgreso()" style="
+        background: #f0f0f0;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        cursor: pointer;
+      ">✕</button>
+    </div>
+
+    <div id="barra-progreso-container" style="margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; font-family:Arial; font-size:13px; color:#555; margin-bottom:6px;">
+        <span>Progreso</span>
+        <span id="texto-progreso">0 / 0 edificios</span>
+      </div>
+      <div style="background:#e0e0e0; border-radius:10px; height:12px; overflow:hidden;">
+        <div id="barra-progreso" style="
+          background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
+          height: 100%;
+          border-radius: 10px;
+          width: 0%;
+          transition: width 0.5s ease;
+        "></div>
+      </div>
+    </div>
+
+    <div id="lista-logros"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from './supabase.js';
+
+  const participanteStr = localStorage.getItem('participante');
+  const sesionStr       = localStorage.getItem('sesion');
+
+  if (!participanteStr || !sesionStr) {
+    document.getElementById('btn-progreso').style.display = 'none';
+  }
+
+  const participante = participanteStr ? JSON.parse(participanteStr) : null;
+  const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
+
+  const EDIFICIOS_INFO = {
+    bloque_m:      { nombre: 'Bloque M',      icono: '🏫' },
+    bloque_col:    { nombre: 'Bloque COL',    icono: '🔬' },
+    bloque_edc:    { nombre: 'Bloque EDC',    icono: '📚' },
+    bloque_innova: { nombre: 'Bloque INNOVA', icono: '💡' },
+    bloque_nuevo:  { nombre: 'Bloque Nuevo',  icono: '🏗️' },
+    edificio_j:    { nombre: 'Edificio J',    icono: '🏢' },
+    bloque_de:     { nombre: 'Bloque D y E',  icono: '⚙️' },
+    auditorio:     { nombre: 'Auditorio',     icono: '🎭' },
+    capilla:       { nombre: 'Capilla',       icono: '⛪' },
+    coliseo:       { nombre: 'Coliseo',       icono: '🏟️' }
+  };
+
+  window.verProgreso = async function() {
+    const panel = document.getElementById('panel-progreso');
+    panel.style.display = 'flex';
+
+    if (!participante || !sesion) return;
+
+    // Obtener escaneos del participante
+    const { data: escaneos } = await supabase
+      .from('escaneos')
+      .select('edificio_id, escaneado_en')
+      .eq('participante_id', participante.id);
+
+    // Obtener edificios de la sesión
+    const { data: edificiosSesion } = await supabase
+      .from('edificios_sesion')
+      .select('*')
+      .eq('sesion_id', sesion.id)
+      .order('orden');
+
+    const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
+    const total         = edificiosSesion ? edificiosSesion.length : 0;
+    const completados   = escaneadosIds.length;
+    const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
+
+    document.getElementById('texto-progreso').textContent = `${completados} / ${total} edificios`;
+    document.getElementById('barra-progreso').style.width = porcentaje + '%';
+
+    const lista = document.getElementById('lista-logros');
+    if (!edificiosSesion || edificiosSesion.length === 0) {
+      lista.innerHTML = '<p style="text-align:center; color:#888; font-family:Arial;">No hay edificios en esta sesión</p>';
+      return;
+    }
+
+    lista.innerHTML = edificiosSesion.map(ed => {
+      const escaneado = escaneadosIds.includes(ed.edificio_id);
+      const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
+      const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
+      const hora      = escaneo ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : null;
+
+      return `
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 14px 16px;
+          border-radius: 14px;
+          margin-bottom: 10px;
+          background: ${escaneado ? '#f0f8f0' : '#f8f8f8'};
+          border: 2px solid ${escaneado ? '#3a7a1a' : '#e0e0e0'};
+          font-family: Arial;
+        ">
+          <div style="font-size: 28px;">${info.icono}</div>
+          <div style="flex: 1;">
+            <div style="font-weight: bold; color: #1a2e1a; font-size: 15px;">${info.nombre}</div>
+            <div style="font-size: 12px; color: #888; margin-top: 2px;">
+              ${escaneado ? '✅ Escaneado a las ' + hora : '⏳ Pendiente'}
+            </div>
+          </div>
+          <div style="font-size: 24px;">${escaneado ? '🏆' : '🔒'}</div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.cerrarProgreso = function() {
+    document.getElementById('panel-progreso').style.display = 'none';
+  };
+</script>
+
 </body>
 </html>
