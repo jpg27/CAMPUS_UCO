@@ -244,16 +244,16 @@
 <body>
 
   <div class="header">
-    <div><h1>🏆 Panel Administrador</h1></div>
+    <div><h1>Panel Administrador</h1></div>
     <div class="header-btns">
-      <button onclick="cerrarAdmin()">🚪 Cerrar sesión</button>
+      <button onclick="cerrarAdmin()">Cerrar sesión</button>
       <a href="index.html">← Salir</a>
     </div>
   </div>
 
   <div class="tabs">
-    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">➕ Nueva carrera</div>
-    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</div>
+    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">Nueva carrera</div>
+    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">Historial</div>
   </div>
 
   <div class="contenido">
@@ -262,7 +262,7 @@
     <div class="pantalla visible" id="pantalla-nueva">
 
       <div class="card" id="card-crear">
-        <h2>➕ Crear nueva sesión</h2>
+        <h2>Crear nueva sesión</h2>
         <div class="campo">
           <label>Nombre de la sesión</label>
           <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
@@ -275,12 +275,12 @@
           <label>Edificios incluidos</label>
           <div class="edificios-grid" id="edificios-grid"></div>
         </div>
-        <button class="btn btn-crear" onclick="crearSesion()">✅ Crear sesión</button>
+        <button class="btn btn-crear" onclick="crearSesion()">Crear sesión</button>
       </div>
 
       <div class="card seccion-oculta" id="card-control">
         <h2>
-          🎮 Sesión actual
+           Sesión actual
           <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
         </h2>
         <div class="codigo-display">
@@ -289,8 +289,8 @@
           <div class="nom-sesion" id="display-nombre"></div>
         </div>
         <div class="btn-fila">
-          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">▶️ Activar sesión</button>
-          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled>⏹️ Cerrar sesión</button>
+          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()"> Activar sesión</button>
+          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled> Cerrar sesión</button>
         </div>
       </div>
 

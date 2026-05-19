@@ -236,7 +236,7 @@
       </div>
 
       <button class="btn-unirse" id="btn-unirse" onclick="unirse()">
-        🚀 Unirse a la carrera
+         Unirse a la carrera
       </button>
 
       <div class="error" id="mensaje-error"></div>
@@ -296,7 +296,7 @@
         if (!sesion) {
           mostrarError('Código incorrecto o la sesión no está activa todavía. Espera a que el administrador la inicie.');
           btn.disabled = false;
-          btn.textContent = '🚀 Unirse a la carrera';
+          btn.textContent = ' Unirse a la carrera';
           return;
         }
 
@@ -317,7 +317,7 @@
       } catch (e) {
         mostrarError('Ocurrió un error. Intenta de nuevo.');
         btn.disabled = false;
-        btn.textContent = '🚀 Unirse a la carrera';
+        btn.textContent = ' Unirse a la carrera';
       }
     };
 
@@ -352,13 +352,13 @@
     }, (payload) => {
       if (payload.new.estado === 'activa') {
         document.querySelector('.espera-estado').innerHTML = 
-          '<span style="color: #3a7a1a; font-weight: bold;">🚀 ¡Iniciando carrera!</span>';
+          '<span style="color: #3a7a1a; font-weight: bold;"> ¡Iniciando carrera!</span>';
         setTimeout(() => {
           window.location.href = 'ar.html';
         }, 1500);
       } else if (payload.new.estado === 'cerrada') {
         document.querySelector('.espera-estado').innerHTML = 
-          '<span style="color: #cc0000;">❌ La sesión fue cerrada</span>';
+          '<span style="color: #cc0000;"> La sesión fue cerrada</span>';
       }
     })
     .subscribe();
