@@ -17,7 +17,7 @@ export async function obtenerSesionPorCodigo(codigo) {
     .select('*')
     .eq('codigo', codigo.toUpperCase())
     .in('estado', ['borrador', 'activa'])
-    .single();
+    .maybeSingle();
   if (error) return null;
   return data;
 }
