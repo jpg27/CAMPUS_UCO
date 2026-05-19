@@ -30,7 +30,6 @@
       cursor: pointer;
     }
 
-    /* Tabs */
     .tabs {
       display: flex;
       background: white;
@@ -146,8 +145,8 @@
       text-align: center;
       margin-bottom: 16px;
     }
-    .codigo-display .label     { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
-    .codigo-display .codigo    { font-size: 36px; font-weight: bold; letter-spacing: 4px; }
+    .codigo-display .label      { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
+    .codigo-display .codigo     { font-size: 36px; font-weight: bold; letter-spacing: 4px; }
     .codigo-display .nom-sesion { font-size: 14px; opacity: 0.8; margin-top: 6px; }
 
     .contador { display: flex; gap: 16px; margin-bottom: 16px; }
@@ -190,7 +189,6 @@
     .ranking-vacio { text-align: center; color: #999; padding: 30px; font-size: 15px; }
     .seccion-oculta { display: none; }
 
-    /* Historial */
     .sesion-card {
       background: white;
       border-radius: 14px;
@@ -211,16 +209,9 @@
     }
     .sesion-nombre { font-weight: bold; font-size: 17px; color: #1a2e1a; }
     .sesion-codigo { font-size: 13px; color: #888; margin-top: 2px; }
-    .sesion-stats  {
-      display: flex;
-      gap: 16px;
-      margin-top: 10px;
-      font-size: 13px;
-      color: #555;
-    }
+    .sesion-stats  { display: flex; gap: 16px; margin-top: 10px; font-size: 13px; color: #555; }
     .sesion-stats span { display: flex; align-items: center; gap: 4px; }
 
-    /* Detalle sesión */
     #detalle-sesion { display: none; }
     #detalle-sesion.visible { display: block; }
 
@@ -253,16 +244,13 @@
 <body>
 
   <div class="header">
-    <div>
-      <h1>🏆 Panel Administrador</h1>
-    </div>
+    <div><h1>🏆 Panel Administrador</h1></div>
     <div class="header-btns">
       <button onclick="cerrarAdmin()">🚪 Cerrar sesión</button>
       <a href="index.html">← Salir</a>
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">➕ Nueva carrera</div>
     <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</div>
@@ -270,10 +258,9 @@
 
   <div class="contenido">
 
-    <!-- ═══ TAB: NUEVA CARRERA ═══ -->
+    <!-- TAB: NUEVA CARRERA -->
     <div class="pantalla visible" id="pantalla-nueva">
 
-      <!-- Crear sesión -->
       <div class="card" id="card-crear">
         <h2>➕ Crear nueva sesión</h2>
         <div class="campo">
@@ -291,7 +278,6 @@
         <button class="btn btn-crear" onclick="crearSesion()">✅ Crear sesión</button>
       </div>
 
-      <!-- Control sesión activa -->
       <div class="card seccion-oculta" id="card-control">
         <h2>
           🎮 Sesión actual
@@ -299,7 +285,7 @@
         </h2>
         <div class="codigo-display">
           <div class="label">Código para estudiantes</div>
-          <div class="codigo"    id="display-codigo">---</div>
+          <div class="codigo"     id="display-codigo">---</div>
           <div class="nom-sesion" id="display-nombre"></div>
         </div>
         <div class="btn-fila">
@@ -308,7 +294,6 @@
         </div>
       </div>
 
-      <!-- Ranking en tiempo real -->
       <div class="card seccion-oculta" id="card-ranking">
         <h2>🏅 Ranking en tiempo real</h2>
         <div class="contador">
@@ -332,20 +317,15 @@
 
     </div>
 
-    <!-- ═══ TAB: HISTORIAL ═══ -->
+    <!-- TAB: HISTORIAL -->
     <div class="pantalla" id="pantalla-historial">
-
-      <!-- Lista de sesiones -->
       <div id="lista-sesiones">
         <div class="ranking-vacio">Cargando historial...</div>
       </div>
-
-      <!-- Detalle de una sesión -->
       <div id="detalle-sesion">
         <button class="btn-volver" onclick="volverHistorial()">← Volver al historial</button>
         <div id="detalle-contenido"></div>
       </div>
-
     </div>
 
   </div>
@@ -360,7 +340,6 @@
       supabase
     } from './supabase.js';
 
-    // Verificar autenticación
     if (sessionStorage.getItem('admin_autenticado') !== 'true') {
       window.location.href = 'login-admin.html';
     }
@@ -386,9 +365,7 @@
     let sesionActual = null;
     let suscripcion  = null;
 
-    // ═══════════════════════════════════
     // TABS
-    // ═══════════════════════════════════
     window.cambiarTab = function(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('visible'));
@@ -397,9 +374,7 @@
       if (tab === 'historial') cargarHistorial();
     };
 
-    // ═══════════════════════════════════
     // EDIFICIOS CHECKBOXES
-    // ═══════════════════════════════════
     const grid = document.getElementById('edificios-grid');
     EDIFICIOS.forEach(e => {
       const div = document.createElement('div');
@@ -413,9 +388,7 @@
       grid.appendChild(div);
     });
 
-    // ═══════════════════════════════════
     // CREAR SESIÓN
-    // ═══════════════════════════════════
     window.crearSesion = async function() {
       const nombre = document.getElementById('nombre-sesion').value.trim();
       const codigo = document.getElementById('codigo-sesion').value.trim();
@@ -435,9 +408,7 @@
       }
     };
 
-    // ═══════════════════════════════════
-    // ACTIVAR / CERRAR SESIÓN
-    // ═══════════════════════════════════
+    // ACTIVAR SESIÓN
     window.activarSesion = async function() {
       if (!sesionActual) return;
       try {
@@ -449,6 +420,7 @@
       } catch (e) { alert('Error al activar la sesión'); }
     };
 
+    // CERRAR SESIÓN
     window.cerrarSesion = async function() {
       if (!sesionActual) return;
       if (!confirm('¿Cerrar la sesión?')) return;
@@ -457,15 +429,30 @@
         sesionActual.estado = 'cerrada';
         actualizarBadge('cerrada');
         document.getElementById('btn-cerrar').disabled = true;
-        // Volver a mostrar formulario para nueva sesión
+
         setTimeout(() => {
+          // Resetear todo para nueva sesión
+          sesionActual = null;
+          if (suscripcion) {
+            suscripcion.unsubscribe();
+            suscripcion = null;
+          }
           document.getElementById('card-control').classList.add('seccion-oculta');
           document.getElementById('card-ranking').classList.add('seccion-oculta');
           document.getElementById('card-crear').style.display = 'block';
           document.getElementById('nombre-sesion').value = '';
           document.getElementById('codigo-sesion').value = '';
-          sesionActual = null;
-        }, 2000);
+          document.getElementById('btn-activar').disabled = false;
+          document.getElementById('btn-cerrar').disabled  = true;
+          document.getElementById('lista-ranking').innerHTML =
+            '<div class="ranking-vacio">Esperando participantes...</div>';
+          document.getElementById('cnt-unidos').textContent      = '0';
+          document.getElementById('cnt-completados').textContent = '0';
+          document.getElementById('cnt-edificios').textContent   = '0';
+          document.getElementById('badge-estado').textContent    = 'Borrador';
+          document.getElementById('badge-estado').className      = 'estado-badge estado-borrador';
+        }, 1500);
+
       } catch (e) { alert('Error al cerrar la sesión'); }
     };
 
@@ -502,9 +489,9 @@
       }
 
       lista.innerHTML = participantes.map(p => {
-        const pos   = p.posicion;
-        const emoji = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos || '⏳';
-        const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
+        const pos    = p.posicion;
+        const emoji  = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos || '⏳';
+        const clase  = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
         const tiempo = p.tiempo_total ? formatearTiempo(p.tiempo_total) : 'En carrera...';
         const puntos = p.puntos_total ? `⭐ ${p.puntos_total} pts` : '';
 
@@ -513,7 +500,9 @@
             <div class="pos-badge ${pos <= 3 ? 'pos-' + pos : 'pos-n'}">${emoji}</div>
             <div class="participante-info">
               <div class="participante-nombre">${p.nombre}</div>
-              <div class="participante-estado">${p.completado ? '✅ Completó · ' + puntos : '🏃 En carrera'}</div>
+              <div class="participante-estado">
+                ${p.completado ? '✅ Completó · ' + puntos : '🏃 En carrera'}
+              </div>
             </div>
             <div class="participante-tiempo">${tiempo}</div>
           </div>
@@ -521,9 +510,7 @@
       }).join('');
     }
 
-    // ═══════════════════════════════════
     // HISTORIAL
-    // ═══════════════════════════════════
     async function cargarHistorial() {
       const { data: sesiones } = await supabase
         .from('sesiones')
@@ -539,7 +526,8 @@
       }
 
       lista.innerHTML = sesiones.map(s => `
-        <div class="sesion-card ${s.estado === 'cerrada' ? 'cerrada' : ''}" onclick="verDetalleSesion('${s.id}')">
+        <div class="sesion-card ${s.estado === 'cerrada' ? 'cerrada' : ''}"
+             onclick="verDetalleSesion('${s.id}')">
           <div class="sesion-card-header">
             <div>
               <div class="sesion-nombre">${s.nombre}</div>
@@ -550,7 +538,9 @@
           <div class="sesion-stats">
             <span>🏛️ ${s.total_edificios} edificios</span>
             <span>📅 ${new Date(s.creada_en).toLocaleDateString('es-CO')}</span>
-            ${s.activada_en ? `<span>▶️ ${new Date(s.activada_en).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})}</span>` : ''}
+            ${s.activada_en
+              ? `<span>▶️ ${new Date(s.activada_en).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})}</span>`
+              : ''}
           </div>
         </div>
       `).join('');
@@ -575,10 +565,12 @@
 
       let html = `
         <div class="card">
-          <h2>${sesion.nombre} <span class="estado-badge estado-${sesion.estado}">${sesion.estado}</span></h2>
+          <h2>${sesion.nombre}
+            <span class="estado-badge estado-${sesion.estado}">${sesion.estado}</span>
+          </h2>
           <div style="color:#555; font-size:14px; margin-bottom:16px;">
-            Código: <strong>${sesion.codigo}</strong> · 
-            ${sesion.total_edificios} edificios · 
+            Código: <strong>${sesion.codigo}</strong> ·
+            ${sesion.total_edificios} edificios ·
             ${(participantes||[]).length} participantes
           </div>
       `;
