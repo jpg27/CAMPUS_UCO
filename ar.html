@@ -211,7 +211,7 @@
         <button class="btn-cerrar-logros" onclick="cerrarLogros()">✕</button>
       </div>
       <div class="puntos-total">
-        <div class="num"   id="logros-puntos">1000</div>
+        <div class="num"   id="logros-puntos">0</div>
         <div class="label">puntos acumulados</div>
       </div>
       <div class="barra-container">
@@ -301,12 +301,10 @@
       const sesionGuardada = localStorage.getItem('puntos_sesion');
 
       if (ptsGuardados && tsGuardado && sesionGuardada === sesion?.id) {
-        // Volvió del mapa en la misma sesión — continuar desde donde estaba
         const segundosTranscurridos = Math.floor((Date.now() - parseInt(tsGuardado)) / 1000);
         const ticksTranscurridos    = Math.floor(segundosTranscurridos / (MS_POR_TICK / 1000));
         puntosActuales = Math.max(0, parseInt(ptsGuardados) - (ticksTranscurridos * PUNTOS_POR_TICK));
       } else {
-        // Primera vez o sesión nueva — empezar desde 1000
         puntosActuales = PUNTOS_INICIO;
         localStorage.removeItem('puntos_actuales');
         localStorage.removeItem('puntos_timestamp');
@@ -326,7 +324,6 @@
 
     function actualizarDisplayPuntos() {
       document.getElementById('display-puntos').textContent = '⭐ ' + puntosActuales;
-      document.getElementById('logros-puntos').textContent  = puntosActuales;
     }
 
     function detenerCronometro() {
@@ -401,7 +398,6 @@
             );
           }
 
-          // Reiniciar puntos para el siguiente edificio
           setTimeout(() => {
             localStorage.removeItem('puntos_actuales');
             localStorage.removeItem('puntos_timestamp');
@@ -431,36 +427,48 @@
     }
 
     // ═══════════════════════════════════
-    // PANEL DE LOGROS
+    // PANEL DE LOGROS — carga desde Supabase
     // ═══════════════════════════════════
     window.abrirLogros = async function() {
       document.getElementById('panel-logros').classList.add('visible');
-      actualizarDisplayPuntos();
+      document.getElementById('logros-lista').innerHTML =
+        '<p style="text-align:center;color:#888;padding:20px;">Cargando...</p>';
 
-      if (!participante || !sesion) return;
+      if (!participante || !sesion) {
+        document.getElementById('logros-puntos').textContent = '0';
+        return;
+      }
 
+      // Cargar escaneos reales desde Supabase
       const { data: escaneos } = await supabase
         .from('escaneos')
         .select('edificio_id, escaneado_en, puntos')
         .eq('participante_id', participante.id);
 
+      // Cargar edificios de la sesión desde Supabase
       const { data: edificiosSesion } = await supabase
         .from('edificios_sesion')
         .select('*')
         .eq('sesion_id', sesion.id)
         .order('orden');
 
+      // Puntos acumulados = suma de puntos de cada escaneo real
+      const puntosAcumulados = (escaneos || [])
+        .reduce((sum, e) => sum + (e.puntos || 0), 0);
+
       const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
-      const total       = edificiosSesion ? edificiosSesion.length : sesion.total_edificios;
-      const completados = Math.min(escaneadosIds.length, total);
+      const total         = edificiosSesion ? edificiosSesion.length : sesion.total_edificios;
+      const completados   = Math.min(escaneadosIds.length, total);
       const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
 
+      document.getElementById('logros-puntos').textContent         = puntosAcumulados;
       document.getElementById('logros-texto-progreso').textContent = `${completados} / ${total} edificios`;
-      document.getElementById('logros-barra').style.width = porcentaje + '%';
+      document.getElementById('logros-barra').style.width          = porcentaje + '%';
 
       const lista = document.getElementById('logros-lista');
+
       if (!edificiosSesion || edificiosSesion.length === 0) {
-        lista.innerHTML = '<p style="text-align:center;color:#888;">No hay edificios</p>';
+        lista.innerHTML = '<p style="text-align:center;color:#888;">No hay edificios en esta sesión</p>';
         return;
       }
 
@@ -469,7 +477,9 @@
         const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
         const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
         const hora      = escaneo
-          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', {
+              hour: '2-digit', minute: '2-digit'
+            })
           : null;
         const pts = escaneo?.puntos || 0;
 
@@ -479,7 +489,9 @@
             <div class="info">
               <div class="nombre">${info.nombre}</div>
               <div class="sub">
-                ${escaneado ? `✅ ${hora} · ⭐ ${pts} pts` : '⏳ Pendiente'}
+                ${escaneado
+                  ? `✅ ${hora} · ⭐ ${pts} pts`
+                  : '⏳ Pendiente'}
               </div>
             </div>
             <div class="trofeo">${escaneado ? '🏆' : '🔒'}</div>
