@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>AR - Campus UCO</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+  <script src="./mindar.js"></script>
   <style>
     .mindar-ui-overlay { display: none !important; }
     * { margin: 0; padding: 0; }
@@ -443,7 +443,8 @@
       const { data: escaneos } = await supabase
         .from('escaneos')
         .select('edificio_id, escaneado_en, puntos')
-        .eq('participante_id', participante.id);
+        .eq('participante_id', participante.id)
+        .eq('sesion_id', sesion.id);
 
       // Cargar edificios de la sesión desde Supabase
       const { data: edificiosSesion } = await supabase
