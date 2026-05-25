@@ -91,7 +91,6 @@
       border: 1px solid rgba(255,255,255,0.2);
     }
 
-    /* Modal sesión cerrada */
     #sesion-cerrada {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -127,7 +126,7 @@
 
   <a id="btn-menu" href="index.html">← Menú</a>
 
-  <a href="ar.html" style="
+  <a id="btn-ar" href="ar.html" style="
     position: fixed;
     top: 15px;
     right: 15px;
@@ -142,6 +141,24 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     z-index: 999;
   ">📷 AR</a>
+
+  <!-- Display de puntos (solo visible si hay sesión) -->
+  <div id="display-puntos-mapa" style="
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #DAA520, #FFD700);
+    color: #1a1a1a;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    z-index: 999;
+    font-family: Arial;
+    display: none;
+  ">⭐ 1000</div>
 
   <!-- Modal sesión cerrada -->
   <div id="sesion-cerrada">
@@ -210,8 +227,8 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2 style="color:#1a2e1a; font-family:Arial;">🏆 Mis logros</h2>
         <button onclick="cerrarProgreso()" style="
-          background: #f0f0f0; border: none; border-radius: 50%;
-          width: 32px; height: 32px; font-size: 16px; cursor: pointer;
+          background:#f0f0f0; border:none; border-radius:50%;
+          width:32px; height:32px; font-size:16px; cursor:pointer;
         ">✕</button>
       </div>
       <div style="margin-bottom:20px;">
@@ -222,7 +239,7 @@
         <div style="background:#e0e0e0; border-radius:10px; height:12px; overflow:hidden;">
           <div id="barra-progreso" style="
             background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-            height: 100%; border-radius: 10px; width: 0%;
+            height:100%; border-radius:10px; width:0%;
             transition: width 0.5s ease;
           "></div>
         </div>
@@ -245,6 +262,50 @@
     const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
 
     // ═══════════════════════════════════
+    // CRONÓMETRO DE PUNTOS EN MAPA
+    // ═══════════════════════════════════
+    const PUNTOS_INICIO   = 1000;
+    const PUNTOS_POR_TICK = 1;
+    const MS_POR_TICK     = 10000;
+
+    let puntosActuales = PUNTOS_INICIO;
+    let intervalMapa   = null;
+
+    if (sesion && participante) {
+      const ptsGuardados   = localStorage.getItem('puntos_actuales');
+      const tsGuardado     = localStorage.getItem('puntos_timestamp');
+      const sesionGuardada = localStorage.getItem('puntos_sesion');
+
+      if (ptsGuardados && tsGuardado && sesionGuardada === sesion.id) {
+        const segundosTranscurridos = Math.floor((Date.now() - parseInt(tsGuardado)) / 1000);
+        const ticksTranscurridos    = Math.floor(segundosTranscurridos / (MS_POR_TICK / 1000));
+        puntosActuales = Math.max(0, parseInt(ptsGuardados) - (ticksTranscurridos * PUNTOS_POR_TICK));
+      }
+
+      // Mostrar display y valor inicial
+      const displayPuntos = document.getElementById('display-puntos-mapa');
+      displayPuntos.style.display = 'block';
+      displayPuntos.textContent   = '⭐ ' + puntosActuales;
+
+      // Seguir bajando mientras está en el mapa
+      intervalMapa = setInterval(() => {
+        puntosActuales = Math.max(0, puntosActuales - PUNTOS_POR_TICK);
+        displayPuntos.textContent = '⭐ ' + puntosActuales;
+        localStorage.setItem('puntos_actuales',  puntosActuales);
+        localStorage.setItem('puntos_timestamp', Date.now());
+        localStorage.setItem('puntos_sesion',    sesion.id);
+      }, MS_POR_TICK);
+
+      // Al volver al AR guardar puntos actualizados
+      document.getElementById('btn-ar').addEventListener('click', () => {
+        localStorage.setItem('puntos_actuales',  puntosActuales);
+        localStorage.setItem('puntos_timestamp', Date.now());
+        localStorage.setItem('puntos_sesion',    sesion.id);
+        clearInterval(intervalMapa);
+      });
+    }
+
+    // ═══════════════════════════════════
     // ESCUCHAR CIERRE DE SESIÓN
     // ═══════════════════════════════════
     if (sesion) {
@@ -257,6 +318,7 @@
           filter: `id=eq.${sesion.id}`
         }, (payload) => {
           if (payload.new.estado === 'cerrada') {
+            clearInterval(intervalMapa);
             localStorage.removeItem('participante');
             localStorage.removeItem('sesion');
             localStorage.removeItem('puntos_actuales');
@@ -268,6 +330,9 @@
         .subscribe();
     }
 
+    // ═══════════════════════════════════
+    // PANEL DE LOGROS
+    // ═══════════════════════════════════
     const EDIFICIOS_INFO = {
       bloque_m:      { nombre: 'Bloque M',      icono: '🏫' },
       bloque_col:    { nombre: 'Bloque COL',    icono: '🔬' },
