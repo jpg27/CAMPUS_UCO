@@ -6,8 +6,6 @@
   <title>AR - Campus UCO</title>
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="./mindar.js"></script>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
   <style>
     .mindar-ui-overlay { display: none !important; }
     * { margin: 0; padding: 0; }
@@ -27,7 +25,6 @@
       border: none;
       cursor: pointer;
     }
-
     #btn-mapa   { left: 15px;  color: #3a7a1a; }
     #btn-logros { right: 15px; color: #1a1a5e; }
 
@@ -88,7 +85,6 @@
       max-height: 80vh;
       overflow-y: auto;
     }
-
     .logros-header {
       display: flex;
       justify-content: space-between;
@@ -96,7 +92,6 @@
       margin-bottom: 16px;
     }
     .logros-header h2 { color: #1a2e1a; font-size: 20px; }
-
     .btn-cerrar-logros {
       background: #f0f0f0;
       border: none;
@@ -106,7 +101,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     .barra-container { margin-bottom: 20px; }
     .barra-labels {
       display: flex;
@@ -127,7 +121,6 @@
       border-radius: 10px;
       transition: width 0.5s ease;
     }
-
     .puntos-total {
       background: linear-gradient(135deg, #DAA520, #FFD700);
       border-radius: 14px;
@@ -137,7 +130,6 @@
     }
     .puntos-total .num   { font-size: 36px; font-weight: bold; color: #1a1a1a; }
     .puntos-total .label { font-size: 13px; color: #555; }
-
     .edificio-logro {
       display: flex;
       align-items: center;
@@ -195,7 +187,7 @@
     <div class="sin-sesion-modal">
       <h2>⚠️ Sin sesión</h2>
       <p>No estás unido a ninguna carrera.</p>
-      <a href="carrera.html"> Unirse a la carrera</a>
+      <a href="carrera.html">🚀 Unirse a la carrera</a>
     </div>
   </div>
 
@@ -282,6 +274,36 @@
 
     const participante = participanteStr ? JSON.parse(participanteStr) : null;
     const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
+
+    // ═══════════════════════════════════
+    // ESCUCHAR CIERRE DE SESIÓN
+    // ═══════════════════════════════════
+    if (sesion) {
+      supabase
+        .channel('sesion-ar-' + sesion.id)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'sesiones',
+          filter: `id=eq.${sesion.id}`
+        }, (payload) => {
+          if (payload.new.estado === 'cerrada') {
+            detenerCronometro();
+            localStorage.removeItem('participante');
+            localStorage.removeItem('sesion');
+            localStorage.removeItem('puntos_actuales');
+            localStorage.removeItem('puntos_timestamp');
+            localStorage.removeItem('puntos_sesion');
+            const modal = document.querySelector('.sin-sesion-modal');
+            modal.querySelector('h2').textContent = '⏹️ Carrera finalizada';
+            modal.querySelector('p').textContent  = 'El administrador cerró la carrera.';
+            modal.querySelector('a').textContent  = '🏠 Ir al inicio';
+            modal.querySelector('a').href         = 'index.html';
+            document.getElementById('sin-sesion').style.display = 'flex';
+          }
+        })
+        .subscribe();
+    }
 
     // ═══════════════════════════════════
     // SISTEMA DE PUNTOS
@@ -412,7 +434,7 @@
 
         } catch (e) {
           console.error('Error al registrar:', e);
-          mostrarNotificacion(' Error', 'No se pudo registrar el escaneo', null);
+          mostrarNotificacion('❌ Error', 'No se pudo registrar el escaneo', null);
         }
       });
     });
@@ -429,7 +451,7 @@
     }
 
     // ═══════════════════════════════════
-    // PANEL DE LOGROS — carga desde Supabase
+    // PANEL DE LOGROS
     // ═══════════════════════════════════
     window.abrirLogros = async function() {
       document.getElementById('panel-logros').classList.add('visible');
@@ -441,21 +463,18 @@
         return;
       }
 
-      // Cargar escaneos reales desde Supabase
       const { data: escaneos } = await supabase
         .from('escaneos')
         .select('edificio_id, escaneado_en, puntos')
         .eq('participante_id', participante.id)
         .eq('sesion_id', sesion.id);
 
-      // Cargar edificios de la sesión desde Supabase
       const { data: edificiosSesion } = await supabase
         .from('edificios_sesion')
         .select('*')
         .eq('sesion_id', sesion.id)
         .order('orden');
 
-      // Puntos acumulados = suma de puntos de cada escaneo real
       const puntosAcumulados = (escaneos || [])
         .reduce((sum, e) => sum + (e.puntos || 0), 0);
 
@@ -480,9 +499,7 @@
         const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
         const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
         const hora      = escaneo
-          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', {
-              hour: '2-digit', minute: '2-digit'
-            })
+          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
           : null;
         const pts = escaneo?.puntos || 0;
 
@@ -491,11 +508,7 @@
             <div class="icono">${info.icono}</div>
             <div class="info">
               <div class="nombre">${info.nombre}</div>
-              <div class="sub">
-                ${escaneado
-                  ? `✅ ${hora} · ⭐ ${pts} pts`
-                  : '⏳ Pendiente'}
-              </div>
+              <div class="sub">${escaneado ? `✅ ${hora} · ⭐ ${pts} pts` : '⏳ Pendiente'}</div>
             </div>
             <div class="trofeo">${escaneado ? '🏆' : '🔒'}</div>
           </div>
