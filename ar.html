@@ -234,7 +234,34 @@
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="target-bloque-m">
+    <a-entity mindar-image-target="targetIndex: 0" id="target-auditorio">
+      <a-gltf-model
+        src="#estrella"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 1" id="target-bloque-innova">
+      <a-gltf-model
+        src="#estrella"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 2" id="target-capilla">
+      <a-gltf-model
+        src="#estrella"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 3" id="target-bloque-m">
       <a-gltf-model
         src="#estrella"
         position="0 0 0.1"
@@ -249,7 +276,10 @@
     import { registrarEscaneo, supabase } from './supabase.js';
 
     const EDIFICIOS_AR = {
-      0: { id: 'bloque_m', nombre: 'Bloque M', icono: '🏫' }
+      0: { id: 'auditorio', nombre: 'Auditorio', icono: '🎭' },
+      1: { id: 'bloque_innova', nombre: 'Bloque INNOVA', icono: '💡'},
+      2: { id: 'capilla', nombre: 'Capilla', icono: '⛪'},
+      3: { id: 'bloque_m', nombre: 'Bloque M', icono: '🏫'}
     };
 
     const EDIFICIOS_INFO = {
