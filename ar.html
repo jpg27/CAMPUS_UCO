@@ -185,9 +185,9 @@
 
   <div id="sin-sesion">
     <div class="sin-sesion-modal">
-      <h2>⚠️ Sin sesión</h2>
+      <h2>Sin sesión</h2>
       <p>No estás unido a ninguna carrera.</p>
-      <a href="carrera.html">🚀 Unirse a la carrera</a>
+      <a href="carrera.html"> Unirse a la carrera</a>
     </div>
   </div>
 
@@ -279,31 +279,51 @@
     // ESCUCHAR CIERRE DE SESIÓN
     // ═══════════════════════════════════
     if (sesion) {
-      supabase
-        .channel('sesion-ar-' + sesion.id)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sesiones',
-          filter: `id=eq.${sesion.id}`
-        }, (payload) => {
-          if (payload.new.estado === 'cerrada') {
-            detenerCronometro();
-            localStorage.removeItem('participante');
-            localStorage.removeItem('sesion');
-            localStorage.removeItem('puntos_actuales');
-            localStorage.removeItem('puntos_timestamp');
-            localStorage.removeItem('puntos_sesion');
-            const modal = document.querySelector('.sin-sesion-modal');
-            modal.querySelector('h2').textContent = '⏹️ Carrera finalizada';
-            modal.querySelector('p').textContent  = 'El administrador cerró la carrera.';
-            modal.querySelector('a').textContent  = '🏠 Ir al inicio';
-            modal.querySelector('a').href         = 'index.html';
-            document.getElementById('sin-sesion').style.display = 'flex';
-          }
-        })
-        .subscribe();
-    }
+    supabase
+    .channel('sesion-ar-' + sesion.id)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'sesiones',
+      filter: `id=eq.${sesion.id}`
+    }, (payload) => {
+      if (payload.new.estado === 'cerrada') {
+        detenerCronometro();
+        localStorage.removeItem('participante');
+        localStorage.removeItem('sesion');
+        localStorage.removeItem('puntos_actuales');
+        localStorage.removeItem('puntos_timestamp');
+        localStorage.removeItem('puntos_sesion');
+
+        // Detener MindAR y la cámara
+        const escena = document.querySelector('a-scene');
+        if (escena && escena.systems['mindar-image-system']) {
+          escena.systems['mindar-image-system'].stop();
+        }
+
+        // Detener todos los targets para que no disparen eventos
+        document.querySelectorAll('[mindar-image-target]').forEach(t => {
+          t.setAttribute('visible', 'false');
+        });
+
+        // Apagar la cámara del dispositivo
+        const video = document.querySelector('video');
+        if (video && video.srcObject) {
+          video.srcObject.getTracks().forEach(track => track.stop());
+          video.srcObject = null;
+        }
+
+        // Mostrar modal
+        const modal = document.querySelector('.sin-sesion-modal');
+        modal.querySelector('h2').textContent = ' Carrera finalizada';
+        modal.querySelector('p').textContent  = 'El administrador cerró la carrera.';
+        modal.querySelector('a').textContent  = 'Ir al inicio';
+        modal.querySelector('a').href         = 'index.html';
+        document.getElementById('sin-sesion').style.display = 'flex';
+      }
+    })
+    .subscribe();
+}
 
     // ═══════════════════════════════════
     // SISTEMA DE PUNTOS
