@@ -35,6 +35,7 @@
       background: white;
       border-bottom: 2px solid #e0e0e0;
       padding: 0 16px;
+      overflow-x: auto;
     }
     .tab {
       padding: 14px 20px;
@@ -44,6 +45,7 @@
       cursor: pointer;
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .tab.activo { color: #3a7a1a; border-bottom-color: #3a7a1a; }
 
@@ -77,7 +79,7 @@
       letter-spacing: 1px;
       margin-bottom: 6px;
     }
-    .campo input {
+    .campo input, .campo select, .campo textarea {
       width: 100%;
       padding: 12px 16px;
       border: 2px solid #e0e0e0;
@@ -85,8 +87,12 @@
       font-size: 15px;
       outline: none;
       transition: border-color 0.2s;
+      font-family: Arial;
     }
-    .campo input:focus { border-color: #3a7a1a; }
+    .campo input:focus,
+    .campo select:focus,
+    .campo textarea:focus { border-color: #3a7a1a; }
+    .campo textarea { resize: vertical; min-height: 80px; }
 
     .edificios-grid {
       display: grid;
@@ -120,10 +126,30 @@
     }
     .btn:active { transform: scale(0.98); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-crear   { background: linear-gradient(135deg, #3a7a1a, #5a9a2a); color: white; width: 100%; margin-top: 8px; }
-    .btn-activar { background: linear-gradient(135deg, #1a5a9a, #2a7acc); color: white; flex: 1; }
-    .btn-cerrar  { background: linear-gradient(135deg, #9a1a1a, #cc2a2a); color: white; flex: 1; }
-    .btn-fila    { display: flex; gap: 12px; margin-top: 8px; }
+    .btn-crear    { background: linear-gradient(135deg, #3a7a1a, #5a9a2a); color: white; width: 100%; margin-top: 8px; }
+    .btn-activar  { background: linear-gradient(135deg, #1a5a9a, #2a7acc); color: white; flex: 1; }
+    .btn-cerrar   { background: linear-gradient(135deg, #9a1a1a, #cc2a2a); color: white; flex: 1; }
+    .btn-fila     { display: flex; gap: 12px; margin-top: 8px; }
+    .btn-secundario {
+      background: #f0f4f0;
+      color: #3a7a1a;
+      border: 2px solid #3a7a1a;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-peligro {
+      background: #fff0f0;
+      color: #cc2a2a;
+      border: 2px solid #cc2a2a;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
     .estado-badge {
       display: inline-block;
@@ -210,7 +236,6 @@
     .sesion-nombre { font-weight: bold; font-size: 17px; color: #1a2e1a; }
     .sesion-codigo { font-size: 13px; color: #888; margin-top: 2px; }
     .sesion-stats  { display: flex; gap: 16px; margin-top: 10px; font-size: 13px; color: #555; }
-    .sesion-stats span { display: flex; align-items: center; gap: 4px; }
 
     #detalle-sesion { display: none; }
     #detalle-sesion.visible { display: block; }
@@ -239,31 +264,62 @@
     .ganador-card .trofeo { font-size: 48px; margin-bottom: 8px; }
     .ganador-card .nombre { font-size: 22px; font-weight: bold; color: #1a1a1a; }
     .ganador-card .stats  { font-size: 14px; color: #333; margin-top: 6px; }
+
+    /* Preguntas */
+    .pregunta-item {
+      background: #f8f9f8;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #3a7a1a;
+    }
+    .pregunta-item .preg-texto { font-weight: bold; color: #1a2e1a; font-size: 15px; margin-bottom: 8px; }
+    .pregunta-item .preg-opciones { font-size: 13px; color: #555; line-height: 1.8; }
+    .pregunta-item .preg-opciones span.correcta { color: #2e7d32; font-weight: bold; }
+    .pregunta-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .preg-edificio-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .preg-edificio-btn {
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .preg-edificio-btn:hover    { border-color: #3a7a1a; background: #f0f8f0; }
+    .preg-edificio-btn.activo   { border-color: #3a7a1a; background: #f0f8f0; font-weight: bold; color: #1a2e1a; }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <div><h1>Panel Administrador</h1></div>
+    <div><h1>🏆 Panel Administrador</h1></div>
     <div class="header-btns">
-      <button onclick="cerrarAdmin()">Cerrar sesión</button>
+      <button onclick="cerrarAdmin()">🚪 Cerrar sesión</button>
       <a href="index.html">← Salir</a>
     </div>
   </div>
 
   <div class="tabs">
-    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">Nueva carrera</div>
-    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">Historial</div>
-    <div class="tab" id="tab-preguntas" onclick="cambiarTab('preguntas')">❓ Preguntas</div>
+    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">➕ Nueva carrera</div>
+    <div class="tab"        id="tab-preguntas" onclick="cambiarTab('preguntas')">❓ Preguntas</div>
+    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</div>
   </div>
 
   <div class="contenido">
 
-    <!-- TAB: NUEVA CARRERA -->
+    <!-- ═══ TAB: NUEVA CARRERA ═══ -->
     <div class="pantalla visible" id="pantalla-nueva">
 
       <div class="card" id="card-crear">
-        <h2>Crear nueva sesión</h2>
+        <h2>➕ Crear nueva sesión</h2>
         <div class="campo">
           <label>Nombre de la sesión</label>
           <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
@@ -276,12 +332,12 @@
           <label>Edificios incluidos</label>
           <div class="edificios-grid" id="edificios-grid"></div>
         </div>
-        <button class="btn btn-crear" onclick="crearSesion()">Crear sesión</button>
+        <button class="btn btn-crear" onclick="crearSesion()">✅ Crear sesión</button>
       </div>
 
       <div class="card seccion-oculta" id="card-control">
         <h2>
-           Sesión actual
+          🎮 Sesión actual
           <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
         </h2>
         <div class="codigo-display">
@@ -290,8 +346,8 @@
           <div class="nom-sesion" id="display-nombre"></div>
         </div>
         <div class="btn-fila">
-          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()"> Activar sesión</button>
-          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled> Cerrar sesión</button>
+          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">▶️ Activar sesión</button>
+          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled>⏹️ Cerrar sesión</button>
         </div>
       </div>
 
@@ -318,7 +374,61 @@
 
     </div>
 
-    <!-- TAB: HISTORIAL -->
+    <!-- ═══ TAB: PREGUNTAS ═══ -->
+    <div class="pantalla" id="pantalla-preguntas">
+
+      <div class="card">
+        <h2>❓ Gestionar preguntas por edificio</h2>
+
+        <div class="campo">
+          <label>Selecciona el edificio</label>
+          <div class="preg-edificio-selector" id="preg-edificio-selector"></div>
+        </div>
+
+        <div id="seccion-preguntas-edificio" style="display:none;">
+          <div id="lista-preguntas-edificio" style="margin-bottom:20px;"></div>
+
+          <div style="border-top: 2px solid #f0f4f0; padding-top: 20px;">
+            <h3 style="color:#1a2e1a; font-size:16px; margin-bottom:16px;">➕ Nueva pregunta</h3>
+
+            <div class="campo">
+              <label>Pregunta</label>
+              <textarea id="nueva-pregunta" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
+            </div>
+            <div class="campo">
+              <label>Opción A</label>
+              <input type="text" id="nueva-opcion-a" placeholder="Ingeniería">
+            </div>
+            <div class="campo">
+              <label>Opción B</label>
+              <input type="text" id="nueva-opcion-b" placeholder="Agronomía">
+            </div>
+            <div class="campo">
+              <label>Opción C</label>
+              <input type="text" id="nueva-opcion-c" placeholder="Enfermería">
+            </div>
+            <div class="campo">
+              <label>Opción D</label>
+              <input type="text" id="nueva-opcion-d" placeholder="Deportes">
+            </div>
+            <div class="campo">
+              <label>Respuesta correcta</label>
+              <select id="nueva-respuesta-correcta">
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+
+            <button class="btn btn-crear" onclick="guardarPregunta()">💾 Guardar pregunta</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ TAB: HISTORIAL ═══ -->
     <div class="pantalla" id="pantalla-historial">
       <div id="lista-sesiones">
         <div class="ranking-vacio">Cargando historial...</div>
@@ -338,6 +448,9 @@
       cerrarSesion as cerrarSesionDB,
       obtenerParticipantes,
       escucharParticipantes,
+      obtenerPreguntas,
+      crearPregunta,
+      eliminarPregunta,
       supabase
     } from './supabase.js';
 
@@ -363,19 +476,25 @@
       { id: 'coliseo',       nombre: '🏟️ Coliseo' }
     ];
 
-    let sesionActual = null;
-    let suscripcion  = null;
+    let sesionActual        = null;
+    let suscripcion         = null;
+    let edificioSeleccionado = null;
 
+    // ═══════════════════════════════════
     // TABS
+    // ═══════════════════════════════════
     window.cambiarTab = function(tab) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('visible'));
       document.getElementById('tab-' + tab).classList.add('activo');
       document.getElementById('pantalla-' + tab).classList.add('visible');
       if (tab === 'historial') cargarHistorial();
+      if (tab === 'preguntas') iniciarTabPreguntas();
     };
 
-    // EDIFICIOS CHECKBOXES
+    // ═══════════════════════════════════
+    // EDIFICIOS CHECKBOXES (nueva carrera)
+    // ═══════════════════════════════════
     const grid = document.getElementById('edificios-grid');
     EDIFICIOS.forEach(e => {
       const div = document.createElement('div');
@@ -389,7 +508,108 @@
       grid.appendChild(div);
     });
 
+    // ═══════════════════════════════════
+    // TAB PREGUNTAS — selector de edificio
+    // ═══════════════════════════════════
+    function iniciarTabPreguntas() {
+      const selector = document.getElementById('preg-edificio-selector');
+      selector.innerHTML = '';
+      EDIFICIOS.forEach(e => {
+        const btn = document.createElement('button');
+        btn.className   = 'preg-edificio-btn';
+        btn.textContent = e.nombre;
+        btn.onclick     = () => seleccionarEdificioPreguntas(e, btn);
+        selector.appendChild(btn);
+      });
+      document.getElementById('seccion-preguntas-edificio').style.display = 'none';
+    }
+
+    async function seleccionarEdificioPreguntas(edificio, btnEl) {
+      document.querySelectorAll('.preg-edificio-btn').forEach(b => b.classList.remove('activo'));
+      btnEl.classList.add('activo');
+      edificioSeleccionado = edificio;
+      document.getElementById('seccion-preguntas-edificio').style.display = 'block';
+      await cargarPreguntasEdificio(edificio.id);
+    }
+
+    async function cargarPreguntasEdificio(edificioId) {
+      const lista = document.getElementById('lista-preguntas-edificio');
+      lista.innerHTML = '<p style="color:#888;font-size:14px;">Cargando...</p>';
+
+      const preguntas = await obtenerPreguntas(edificioId);
+
+      if (preguntas.length === 0) {
+        lista.innerHTML = '<p style="color:#888;font-size:14px;text-align:center;padding:16px;">No hay preguntas para este edificio</p>';
+        return;
+      }
+
+      lista.innerHTML = preguntas.map(p => `
+        <div class="pregunta-item">
+          <div class="pregunta-item-header">
+            <div class="preg-texto">${p.pregunta}</div>
+            <button class="btn-peligro" onclick="borrarPregunta('${p.id}')">🗑️ Eliminar</button>
+          </div>
+          <div class="preg-opciones">
+            <span class="${p.respuesta_correcta === 'a' ? 'correcta' : ''}">A) ${p.opcion_a}</span><br>
+            <span class="${p.respuesta_correcta === 'b' ? 'correcta' : ''}">B) ${p.opcion_b}</span><br>
+            <span class="${p.respuesta_correcta === 'c' ? 'correcta' : ''}">C) ${p.opcion_c}</span><br>
+            <span class="${p.respuesta_correcta === 'd' ? 'correcta' : ''}">D) ${p.opcion_d}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.guardarPregunta = async function() {
+      if (!edificioSeleccionado) { alert('Selecciona un edificio primero'); return; }
+
+      const pregunta = document.getElementById('nueva-pregunta').value.trim();
+      const opA      = document.getElementById('nueva-opcion-a').value.trim();
+      const opB      = document.getElementById('nueva-opcion-b').value.trim();
+      const opC      = document.getElementById('nueva-opcion-c').value.trim();
+      const opD      = document.getElementById('nueva-opcion-d').value.trim();
+      const correcta = document.getElementById('nueva-respuesta-correcta').value;
+
+      if (!pregunta || !opA || !opB || !opC || !opD) {
+        alert('Completa todos los campos');
+        return;
+      }
+
+      try {
+        await crearPregunta(
+          edificioSeleccionado.id,
+          pregunta,
+          { a: opA, b: opB, c: opC, d: opD },
+          correcta
+        );
+
+        // Limpiar campos
+        document.getElementById('nueva-pregunta').value    = '';
+        document.getElementById('nueva-opcion-a').value   = '';
+        document.getElementById('nueva-opcion-b').value   = '';
+        document.getElementById('nueva-opcion-c').value   = '';
+        document.getElementById('nueva-opcion-d').value   = '';
+        document.getElementById('nueva-respuesta-correcta').value = 'a';
+
+        await cargarPreguntasEdificio(edificioSeleccionado.id);
+        alert('✅ Pregunta guardada correctamente');
+      } catch (e) {
+        alert('Error al guardar la pregunta');
+      }
+    };
+
+    window.borrarPregunta = async function(preguntaId) {
+      if (!confirm('¿Eliminar esta pregunta?')) return;
+      try {
+        await eliminarPregunta(preguntaId);
+        await cargarPreguntasEdificio(edificioSeleccionado.id);
+      } catch (e) {
+        alert('Error al eliminar la pregunta');
+      }
+    };
+
+    // ═══════════════════════════════════
     // CREAR SESIÓN
+    // ═══════════════════════════════════
     window.crearSesion = async function() {
       const nombre = document.getElementById('nombre-sesion').value.trim();
       const codigo = document.getElementById('codigo-sesion').value.trim();
@@ -409,7 +629,9 @@
       }
     };
 
+    // ═══════════════════════════════════
     // ACTIVAR SESIÓN
+    // ═══════════════════════════════════
     window.activarSesion = async function() {
       if (!sesionActual) return;
       try {
@@ -421,7 +643,9 @@
       } catch (e) { alert('Error al activar la sesión'); }
     };
 
+    // ═══════════════════════════════════
     // CERRAR SESIÓN
+    // ═══════════════════════════════════
     window.cerrarSesion = async function() {
       if (!sesionActual) return;
       if (!confirm('¿Cerrar la sesión?')) return;
@@ -432,12 +656,8 @@
         document.getElementById('btn-cerrar').disabled = true;
 
         setTimeout(() => {
-          // Resetear todo para nueva sesión
           sesionActual = null;
-          if (suscripcion) {
-            suscripcion.unsubscribe();
-            suscripcion = null;
-          }
+          if (suscripcion) { suscripcion.unsubscribe(); suscripcion = null; }
           document.getElementById('card-control').classList.add('seccion-oculta');
           document.getElementById('card-ranking').classList.add('seccion-oculta');
           document.getElementById('card-crear').style.display = 'block';
@@ -453,7 +673,6 @@
           document.getElementById('badge-estado').textContent    = 'Borrador';
           document.getElementById('badge-estado').className      = 'estado-badge estado-borrador';
         }, 1500);
-
       } catch (e) { alert('Error al cerrar la sesión'); }
     };
 
@@ -511,7 +730,9 @@
       }).join('');
     }
 
+    // ═══════════════════════════════════
     // HISTORIAL
+    // ═══════════════════════════════════
     async function cargarHistorial() {
       const { data: sesiones } = await supabase
         .from('sesiones')
@@ -539,9 +760,6 @@
           <div class="sesion-stats">
             <span>🏛️ ${s.total_edificios} edificios</span>
             <span>📅 ${new Date(s.creada_en).toLocaleDateString('es-CO')}</span>
-            ${s.activada_en
-              ? `<span>▶️ ${new Date(s.activada_en).toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'})}</span>`
-              : ''}
           </div>
         </div>
       `).join('');
@@ -561,8 +779,7 @@
       const { data: edificios } = await supabase
         .from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden');
 
-      const completados = (participantes || []).filter(p => p.completado);
-      const ganador     = completados[0];
+      const ganador = (participantes || []).filter(p => p.completado)[0];
 
       let html = `
         <div class="card">
@@ -581,14 +798,12 @@
           <div class="ganador-card">
             <div class="trofeo">🏆</div>
             <div class="nombre">🥇 ${ganador.nombre}</div>
-            <div class="stats">
-              ⭐ ${ganador.puntos_total || 0} puntos · ⏱️ ${formatearTiempo(ganador.tiempo_total || 0)}
-            </div>
+            <div class="stats">⭐ ${ganador.puntos_total || 0} puntos · ⏱️ ${formatearTiempo(ganador.tiempo_total || 0)}</div>
           </div>
         `;
       }
 
-      html += `<h3 style="color:#1a2e1a; margin-bottom:12px;">Ranking final</h3>`;
+      html += '<h3 style="color:#1a2e1a; margin-bottom:12px;">Ranking final</h3>';
 
       if (!participantes || participantes.length === 0) {
         html += '<div class="ranking-vacio">Sin participantes</div>';
@@ -613,7 +828,7 @@
         }).join('');
       }
 
-      html += `</div>`;
+      html += '</div>';
 
       if (edificios && edificios.length > 0) {
         html += `
