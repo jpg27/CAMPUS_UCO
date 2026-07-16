@@ -65,9 +65,6 @@
     #notificacion .not-desc   { font-size: 13px; opacity: 0.85; }
     #notificacion .not-puntos { margin-top: 8px; font-size: 20px; font-weight: bold; color: #FFD700; }
 
-    /* ═══════════════════════════════════
-       MODAL DE PREGUNTA
-    ═══════════════════════════════════ */
     #modal-pregunta {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -88,7 +85,6 @@
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
-
     .pregunta-header {
       background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
       padding: 18px 20px;
@@ -106,14 +102,12 @@
       font-size: 13px;
       margin-top: 8px;
     }
-
     .pregunta-texto {
       font-size: 16px;
       font-weight: bold;
       color: white;
       line-height: 1.4;
     }
-
     .pregunta-body { padding: 20px; }
 
     .opcion-btn {
@@ -150,16 +144,11 @@
       pointer-events: none;
     }
     .opcion-letra {
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       border-radius: 50%;
       background: #e0e0e0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 13px;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 13px; flex-shrink: 0;
     }
     .opcion-btn.correcta  .opcion-letra { background: #2e7d32; color: white; }
     .opcion-btn.incorrecta .opcion-letra { background: #c62828; color: white; }
@@ -173,7 +162,7 @@
       font-weight: bold;
       font-size: 15px;
     }
-    .resultado-pregunta.correcto  { background: #e8f5e9; color: #1b5e20; display: block; }
+    .resultado-pregunta.correcto   { background: #e8f5e9; color: #1b5e20; display: block; }
     .resultado-pregunta.incorrecto { background: #ffebee; color: #b71c1c; display: block; }
 
     .btn-continuar {
@@ -192,7 +181,6 @@
     }
     .btn-continuar.visible { display: block; }
 
-    /* Panel logros */
     #panel-logros {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -220,46 +208,29 @@
     }
     .logros-header h2 { color: #1a2e1a; font-size: 20px; }
     .btn-cerrar-logros {
-      background: #f0f0f0;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
-      cursor: pointer;
+      background: #f0f0f0; border: none; border-radius: 50%;
+      width: 32px; height: 32px; font-size: 16px; cursor: pointer;
     }
     .barra-container { margin-bottom: 20px; }
     .barra-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 6px;
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #555; margin-bottom: 6px;
     }
     .barra-bg { background: #e0e0e0; border-radius: 10px; height: 12px; overflow: hidden; }
     .barra-fill {
       background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      height: 100%; border-radius: 10px;
-      transition: width 0.5s ease;
+      height: 100%; border-radius: 10px; transition: width 0.5s ease;
     }
     .puntos-total {
       background: linear-gradient(135deg, #DAA520, #FFD700);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-      margin-bottom: 16px;
+      border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 16px;
     }
     .puntos-total .num   { font-size: 36px; font-weight: bold; color: #1a1a1a; }
     .puntos-total .label { font-size: 13px; color: #555; }
     .edificio-logro {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      margin-bottom: 10px;
-      border: 2px solid #e0e0e0;
-      background: #f8f8f8;
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-radius: 14px; margin-bottom: 10px;
+      border: 2px solid #e0e0e0; background: #f8f8f8;
     }
     .edificio-logro.done { border-color: #3a7a1a; background: #f0f8f0; }
     .edificio-logro .icono  { font-size: 28px; }
@@ -278,23 +249,17 @@
       z-index: 2000;
     }
     .sin-sesion-modal {
-      background: white;
-      border-radius: 20px;
-      padding: 30px 24px;
-      text-align: center;
-      max-width: 320px;
-      margin: 20px;
+      background: white; border-radius: 20px;
+      padding: 30px 24px; text-align: center;
+      max-width: 320px; margin: 20px;
     }
     .sin-sesion-modal h2 { color: #1a2e1a; margin-bottom: 10px; }
     .sin-sesion-modal p  { color: #666; font-size: 14px; margin-bottom: 20px; }
     .sin-sesion-modal a {
-      display: block;
-      padding: 14px;
+      display: block; padding: 14px;
       background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white;
-      border-radius: 12px;
-      text-decoration: none;
-      font-weight: bold;
+      color: white; border-radius: 12px;
+      text-decoration: none; font-weight: bold;
     }
   </style>
 </head>
@@ -431,9 +396,10 @@
     const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
 
     // Estado de la pregunta actual
-    let preguntaActual      = null;
-    let edificioActual      = null;
-    let respuestaRegistrada = false;
+    let preguntaActual        = null;
+    let edificioActual        = null;
+    let respuestaRegistrada   = false;
+    let respondioCorrectamente = false; // ← variable para guardar resultado
 
     // ═══════════════════════════════════
     // ESCUCHAR CIERRE DE SESIÓN
@@ -557,13 +523,12 @@
         // Verificar si ya escaneó este edificio
         const { data: yaEscaneado } = await supabase
           .from('escaneos')
-          .select('id, respondio_correctamente')
+          .select('id')
           .eq('participante_id', participante.id)
           .eq('edificio_id', edificio.id)
           .maybeSingle();
 
         if (yaEscaneado) {
-          // Ya escaneó — solo mostrar la estrella sin pregunta
           mostrarNotificacion(
             edificio.icono + ' ' + edificio.nombre,
             'Ya completaste este edificio ✅',
@@ -572,19 +537,20 @@
           return;
         }
 
-        // Buscar pregunta aleatoria para este edificio
+        // Buscar pregunta aleatoria
         const pregunta = await obtenerPreguntaAleatoria(edificio.id);
 
         if (!pregunta) {
-          // No hay preguntas — registrar directamente
+          // Sin preguntas — registrar directamente
           await registrarSinPregunta(edificio);
           return;
         }
 
-        // Mostrar modal de pregunta
-        edificioActual      = edificio;
-        preguntaActual      = pregunta;
-        respuestaRegistrada = false;
+        // Mostrar pregunta
+        edificioActual        = edificio;
+        preguntaActual        = pregunta;
+        respuestaRegistrada   = false;
+        respondioCorrectamente = false;
         mostrarModalPregunta(edificio, pregunta);
       });
     });
@@ -602,13 +568,12 @@
       document.getElementById('texto-c').textContent       = pregunta.opcion_c;
       document.getElementById('texto-d').textContent       = pregunta.opcion_d;
 
-      // Resetear estado visual
       ['a','b','c','d'].forEach(l => {
         const btn = document.getElementById('opcion-' + l);
         btn.className = 'opcion-btn';
         btn.disabled  = false;
       });
-      document.getElementById('resultado-pregunta').className = 'resultado-pregunta';
+      document.getElementById('resultado-pregunta').className   = 'resultado-pregunta';
       document.getElementById('resultado-pregunta').textContent = '';
       document.getElementById('btn-continuar').classList.remove('visible');
 
@@ -617,30 +582,27 @@
 
     window.responder = async function(letra) {
       if (respuestaRegistrada) return;
-      respuestaRegistrada = true;
+      respuestaRegistrada    = true;
+      respondioCorrectamente = preguntaActual.respuesta_correcta === letra; // ← guardar aquí
 
-      const correcta = preguntaActual.respuesta_correcta === letra;
-
-      // Resaltar opciones
       ['a','b','c','d'].forEach(l => {
         const btn = document.getElementById('opcion-' + l);
         if (l === preguntaActual.respuesta_correcta) {
           btn.classList.add('correcta');
-        } else if (l === letra && !correcta) {
+        } else if (l === letra && !respondioCorrectamente) {
           btn.classList.add('incorrecta');
         } else {
           btn.classList.add('deshabilitada');
         }
       });
 
-      // Ajustar puntos
-      if (correcta) {
+      if (respondioCorrectamente) {
         puntosActuales = Math.min(1000, puntosActuales + BONUS_CORRECTO);
-        document.getElementById('resultado-pregunta').className = 'resultado-pregunta correcto';
+        document.getElementById('resultado-pregunta').className   = 'resultado-pregunta correcto';
         document.getElementById('resultado-pregunta').textContent = '🎉 ¡Correcto! +50 puntos';
       } else {
         puntosActuales = Math.max(0, puntosActuales - PENALIZACION);
-        document.getElementById('resultado-pregunta').className = 'resultado-pregunta incorrecto';
+        document.getElementById('resultado-pregunta').className   = 'resultado-pregunta incorrecto';
         document.getElementById('resultado-pregunta').textContent = '❌ Incorrecto. -50 puntos';
       }
 
@@ -659,7 +621,7 @@
           sesion.total_edificios,
           puntosActuales,
           preguntaActual.id,
-          preguntaActual.respuesta_correcta === document.querySelector('.opcion-btn.correcta')?.id?.replace('opcion-','')
+          respondioCorrectamente  // ← usar la variable guardada
         );
 
         if (resultado.esUltimo) {
@@ -672,7 +634,6 @@
           );
         }
 
-        // Reiniciar puntos para siguiente edificio
         setTimeout(() => {
           localStorage.removeItem('puntos_actuales');
           localStorage.removeItem('puntos_timestamp');
@@ -684,7 +645,7 @@
         }, 3000);
 
       } catch (e) {
-        console.error(e);
+        console.error('Error:', e);
         mostrarNotificacion('❌ Error', 'No se pudo registrar el escaneo', null);
         iniciado = false;
         iniciarCronometro();
@@ -783,9 +744,11 @@
         const escaneado = escaneadosIds.includes(ed.edificio_id);
         const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
         const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
-        const hora      = escaneo ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : null;
-        const pts       = escaneo?.puntos || 0;
-        const acierto   = escaneo?.respondio_correctamente;
+        const hora      = escaneo
+          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+          : null;
+        const pts     = escaneo?.puntos || 0;
+        const acierto = escaneo?.respondio_correctamente;
 
         return `
           <div class="edificio-logro ${escaneado ? 'done' : ''}">
