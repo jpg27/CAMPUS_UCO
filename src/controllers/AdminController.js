@@ -6,7 +6,6 @@ import { EDIFICIOS, obtenerEdificioInfo } from '../config.js';
 import { supabase } from '../config.js';
 import { crearSesion as crearSesionDB, activarSesion as activarSesionDB, cerrarSesion as cerrarSesionDB } from '../models/SesionModel.js';
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
-import { escucharParticipantes } from '../models/ParticipanteModel.js';
 import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo } from '../utils/formatters.js';
 
