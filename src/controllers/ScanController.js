@@ -213,7 +213,7 @@ export class ScanController {
     });
 
     // Cerrar logros
-    document.querySelector('.btn-cerrar-logros')?.addEventListener('click', () => {
+    document.getElementById('btn-cerrar-logros')?.addEventListener('click', () => {
       this.view.ocultarLogros();
     });
 

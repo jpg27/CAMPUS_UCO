@@ -267,7 +267,7 @@
 
   <a href="mapa.html" class="btn-top" id="btn-mapa">🗺️ Mapa</a>
   <div id="display-puntos">⭐ 1000</div>
-  <button class="btn-top" id="btn-logros" onclick="abrirLogros()">🏆 Logros</button>
+  <button class="btn-top" id="btn-logros">🏆 Logros</button>
 
   <div id="sin-sesion">
     <div class="sin-sesion-modal">
@@ -293,24 +293,24 @@
         <div class="puntos-info">✅ +0 pts si aciertas · ❌ -100 pts si fallas</div>
       </div>
       <div class="pregunta-body">
-        <button class="opcion-btn" id="opcion-a" onclick="responder('a')">
+        <button class="opcion-btn" id="opcion-a">
           <span class="opcion-letra">A</span>
           <span id="texto-a">Opción A</span>
         </button>
-        <button class="opcion-btn" id="opcion-b" onclick="responder('b')">
+        <button class="opcion-btn" id="opcion-b">
           <span class="opcion-letra">B</span>
           <span id="texto-b">Opción B</span>
         </button>
-        <button class="opcion-btn" id="opcion-c" onclick="responder('c')">
+        <button class="opcion-btn" id="opcion-c">
           <span class="opcion-letra">C</span>
           <span id="texto-c">Opción C</span>
         </button>
-        <button class="opcion-btn" id="opcion-d" onclick="responder('d')">
+        <button class="opcion-btn" id="opcion-d">
           <span class="opcion-letra">D</span>
           <span id="texto-d">Opción D</span>
         </button>
         <div class="resultado-pregunta" id="resultado-pregunta"></div>
-        <button class="btn-continuar" id="btn-continuar" onclick="continuarDespuesdePregunta()">
+        <button class="btn-continuar" id="btn-continuar">
           Continuar →
         </button>
       </div>
@@ -322,7 +322,7 @@
     <div class="logros-contenido">
       <div class="logros-header">
         <h2>🏆 Mis logros</h2>
-        <button class="btn-cerrar-logros" onclick="cerrarLogros()">✕</button>
+        <button class="btn-cerrar-logros" id="btn-cerrar-logros">✕</button>
       </div>
       <div class="puntos-total">
         <div class="num"   id="logros-puntos">0</div>

@@ -6,21 +6,34 @@ import { supabase } from '../config.js';
 const HORAS_CADUCIDAD = 3;
 
 export async function cerrarSesionesCaducadas() {
-  // Buscar sesiones activas hace más de 3 horas
-  const hace3Horas = new Date(Date.now() - HORAS_CADUCIDAD * 60 * 60 * 1000).toISOString();
-  
-  const { data: caducadas } = await supabase
-    .from('sesiones')
-    .select('id')
-    .eq('estado', 'activa')
-    .lt('activada_en', hace3Horas);
+  try {
+    const hace3Horas = new Date(Date.now() - HORAS_CADUCIDAD * 60 * 60 * 1000).toISOString();
     
-  if (caducadas && caducadas.length > 0) {
-    const ids = caducadas.map(s => s.id);
-    await supabase
+    // Buscar sesiones activas
+    const { data: activas, error } = await supabase
       .from('sesiones')
-      .update({ estado: 'cerrada', cerrada_en: new Date().toISOString() })
-      .in('id', ids);
+      .select('id, creada_en, activada_en')
+      .eq('estado', 'activa');
+      
+    if (error || !activas || activas.length === 0) return;
+    
+    // Filtrar las que tienen más de 3 horas (usando activada_en si existe, sino creada_en)
+    const caducadas = activas.filter(s => {
+      const referencia = s.activada_en || s.creada_en;
+      if (!referencia) return false;
+      return new Date(referencia) < new Date(hace3Horas);
+    });
+    
+    if (caducadas.length > 0) {
+      const ids = caducadas.map(s => s.id);
+      await supabase
+        .from('sesiones')
+        .update({ estado: 'cerrada' })
+        .in('id', ids);
+      console.log(`[AutoCierre] ${caducadas.length} sesión(es) cerrada(s) automáticamente.`);
+    }
+  } catch (e) {
+    console.warn('[AutoCierre] Error al verificar sesiones caducadas:', e);
   }
 }
 
