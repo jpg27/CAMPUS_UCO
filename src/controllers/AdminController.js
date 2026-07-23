@@ -4,7 +4,13 @@
 // ═══════════════════════════════════════════
 import { EDIFICIOS, obtenerEdificioInfo } from '../config.js';
 import { supabase } from '../config.js';
-import { crearSesion as crearSesionDB, activarSesion as activarSesionDB, cerrarSesion as cerrarSesionDB } from '../models/SesionModel.js';
+import { 
+  crearSesion as crearSesionDB, 
+  activarSesion as activarSesionDB, 
+  cerrarSesion as cerrarSesionDB,
+  cerrarSesionesCaducadas,
+  eliminarSesion
+} from '../models/SesionModel.js';
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
 import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo } from '../utils/formatters.js';
@@ -20,10 +26,14 @@ export class AdminController {
     this.edificioSeleccionado = null;
   }
 
-  init() {
+  async init() {
     this._initEdificiosGrid();
     this._initTabPreguntas();
     this._exposeWindowFunctions();
+    
+    // Autocierre de sesiones activas (inicial y cada 5 minutos)
+    await cerrarSesionesCaducadas();
+    setInterval(cerrarSesionesCaducadas, 5 * 60 * 1000);
   }
 
   // ── Grid de edificios (nueva carrera) ──
@@ -106,6 +116,18 @@ export class AdminController {
       document.getElementById('pantalla-' + tab).classList.add('visible');
       if (tab === 'historial') this._cargarHistorial();
       if (tab === 'preguntas') this._initTabPreguntas();
+    };
+
+    window.filtrarHistorial = () => {
+      const inicio = document.getElementById('filtro-fecha-inicio').value;
+      const fin = document.getElementById('filtro-fecha-fin').value;
+      this._cargarHistorial(inicio, fin);
+    };
+
+    window.limpiarFiltroHistorial = () => {
+      document.getElementById('filtro-fecha-inicio').value = '';
+      document.getElementById('filtro-fecha-fin').value = '';
+      this._cargarHistorial();
     };
 
     window.crearSesion = async () => {
@@ -281,11 +303,31 @@ export class AdminController {
       }
 
       document.getElementById('detalle-contenido').innerHTML = html;
+      
+      const btnEliminar = document.getElementById('btn-eliminar-sesion');
+      btnEliminar.style.display = 'block';
+      btnEliminar.onclick = async () => {
+        if (confirm('¿Estás seguro de eliminar esta sesión y todos sus datos? Esta acción no se puede deshacer.')) {
+          btnEliminar.disabled = true;
+          btnEliminar.textContent = 'Eliminando...';
+          try {
+            await eliminarSesion(sesionId);
+            alert('Sesión eliminada correctamente');
+            window.volverHistorial();
+            this._cargarHistorial();
+          } catch(e) {
+            alert('Error al eliminar la sesión');
+          }
+          btnEliminar.disabled = false;
+          btnEliminar.textContent = '🗑️ Eliminar sesión';
+        }
+      };
     };
 
     window.volverHistorial = () => {
       document.getElementById('lista-sesiones').style.display = 'block';
       document.getElementById('detalle-sesion').classList.remove('visible');
+      document.getElementById('btn-eliminar-sesion').style.display = 'none';
     };
   }
 
@@ -351,21 +393,30 @@ export class AdminController {
     }).join('');
   }
 
-  async _cargarHistorial() {
-    const { data: sesiones } = await supabase
+  async _cargarHistorial(fechaInicio = null, fechaFin = null) {
+    let query = supabase
       .from('sesiones')
       .select('*')
       .order('creada_en', { ascending: false });
 
-    const lista = document.getElementById('lista-sesiones');
+    if (fechaInicio) {
+      query = query.gte('creada_en', fechaInicio + 'T00:00:00Z');
+    }
+    if (fechaFin) {
+      query = query.lte('creada_en', fechaFin + 'T23:59:59Z');
+    }
+
+    const { data: sesiones } = await query;
+
+    const contenedor = document.getElementById('contenedor-lista-sesiones');
     document.getElementById('detalle-sesion').classList.remove('visible');
 
     if (!sesiones || sesiones.length === 0) {
-      lista.innerHTML = '<div class="ranking-vacio">No hay sesiones registradas</div>';
+      contenedor.innerHTML = '<div class="ranking-vacio">No hay sesiones registradas' + (fechaInicio ? ' en estas fechas' : '') + '</div>';
       return;
     }
 
-    lista.innerHTML = sesiones.map(s => `
+    contenedor.innerHTML = sesiones.map(s => `
       <div class="sesion-card ${s.estado === 'cerrada' ? 'cerrada' : ''}"
            onclick="verDetalleSesion('${s.id}')">
         <div class="sesion-card-header">

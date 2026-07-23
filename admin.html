@@ -431,10 +431,29 @@
     <!-- ═══ TAB: HISTORIAL ═══ -->
     <div class="pantalla" id="pantalla-historial">
       <div id="lista-sesiones">
-        <div class="ranking-vacio">Cargando historial...</div>
+        
+        <div class="card" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+          <div class="campo" style="margin-bottom: 0; flex: 1;">
+            <label>Desde</label>
+            <input type="date" id="filtro-fecha-inicio">
+          </div>
+          <div class="campo" style="margin-bottom: 0; flex: 1;">
+            <label>Hasta</label>
+            <input type="date" id="filtro-fecha-fin">
+          </div>
+          <button class="btn btn-crear" style="width: auto; padding: 14px 20px;" onclick="filtrarHistorial()">🔍 Buscar</button>
+          <button class="btn btn-cerrar" style="width: auto; padding: 14px 20px;" onclick="limpiarFiltroHistorial()">✖️ Limpiar</button>
+        </div>
+
+        <div id="contenedor-lista-sesiones">
+          <div class="ranking-vacio">Cargando historial...</div>
+        </div>
       </div>
       <div id="detalle-sesion">
-        <button class="btn-volver" onclick="volverHistorial()">← Volver al historial</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <button class="btn-volver" style="margin-bottom: 0;" onclick="volverHistorial()">← Volver al historial</button>
+          <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none; padding: 10px 16px; font-size: 14px;">🗑️ Eliminar sesión</button>
+        </div>
         <div id="detalle-contenido"></div>
       </div>
     </div>
