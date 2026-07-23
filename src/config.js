@@ -127,8 +127,8 @@ export const PUNTOS = {
   POR_TICK: 1,
   MS_POR_TICK_AR: 10000,
   MS_POR_TICK_MAPA: 5000,
-  BONUS_CORRECTO: 50,
-  PENALIZACION: 50
+  BONUS_CORRECTO: 0,
+  PENALIZACION: 100
 };
 
 // ── Helpers de edificios ──

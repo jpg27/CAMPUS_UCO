@@ -131,6 +131,12 @@ export class ScanController {
 
       this.view.marcarRespuesta(letra, this.preguntaActual.respuesta_correcta);
 
+      if (this.respondioCorrectamente) {
+        // Hacer visible la estrella 3D
+        const model = document.querySelector('a-gltf-model');
+        if (model) model.setAttribute('visible', 'true');
+      }
+
       if (this.puntosController) {
         if (this.respondioCorrectamente) {
           this.puntosController.aplicarBonus();

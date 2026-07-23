@@ -82,10 +82,10 @@ export class ARView {
     const resultado = document.getElementById('resultado-pregunta');
     if (esCorrecta) {
       resultado.className   = 'resultado-pregunta correcto';
-      resultado.textContent = '🎉 ¡Correcto! +50 puntos';
+      resultado.textContent = '🎉 ¡Correcto! No pierdes puntos';
     } else {
       resultado.className   = 'resultado-pregunta incorrecto';
-      resultado.textContent = '❌ Incorrecto. -50 puntos';
+      resultado.textContent = '❌ Incorrecto. -100 puntos';
     }
 
     document.getElementById('btn-continuar').classList.add('visible');
