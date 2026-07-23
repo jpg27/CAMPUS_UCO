@@ -114,7 +114,11 @@ export class AdminController {
       document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('visible'));
       document.getElementById('tab-' + tab).classList.add('activo');
       document.getElementById('pantalla-' + tab).classList.add('visible');
-      if (tab === 'historial') this._cargarHistorial();
+      if (tab === 'historial') {
+        document.getElementById('lista-sesiones').style.display = 'block';
+        document.getElementById('detalle-sesion').classList.remove('visible');
+        this._cargarHistorial();
+      }
       if (tab === 'preguntas') this._initTabPreguntas();
     };
 
