@@ -118,7 +118,14 @@ export const EDIFICIOS = [
 
 // ── Mapeo de target indexes de MindAR a edificios ──
 export const EDIFICIOS_AR = {
-  0: 'bloque_m'
+  0: 'bloque_edc',
+  1: 'edificio_j',
+  2: 'coliseo',
+  3: 'bloque_col',
+  4: 'bloque_m',
+  5: 'auditorio',
+  6: 'bloque_innova',
+  7: 'capilla'
 };
 
 // ── Constantes de puntos ──
