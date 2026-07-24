@@ -117,6 +117,7 @@ export const EDIFICIOS = [
 ];
 
 // ── Mapeo de target indexes de MindAR a edificios ──
+// El orden de estas claves debe coincidir con el orden de los targets en mind/targets.mind.
 export const EDIFICIOS_AR = {
   0: 'bloque_edc',
   1: 'edificio_j',
