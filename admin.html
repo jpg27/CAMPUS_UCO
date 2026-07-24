@@ -96,7 +96,7 @@
 
     .edificios-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
       margin-top: 8px;
     }
@@ -295,6 +295,17 @@
     }
     .preg-edificio-btn:hover    { border-color: #3a7a1a; background: #f0f8f0; }
     .preg-edificio-btn.activo   { border-color: #3a7a1a; background: #f0f8f0; font-weight: bold; color: #1a2e1a; }
+    /* ── Media Queries para Móviles ── */
+    @media (max-width: 600px) {
+      .header { padding: 12px 16px; flex-direction: column; gap: 12px; text-align: center; }
+      .contenido { padding: 16px 12px; }
+      .card { padding: 16px; }
+      .contador { flex-direction: column; gap: 8px; }
+      .btn-fila { flex-direction: column; gap: 8px; }
+      .filtro-container { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+      .filtro-container .campo { width: 100%; margin-bottom: 0 !important; }
+      .filtro-container button { width: 100% !important; margin-top: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -432,7 +443,7 @@
     <div class="pantalla" id="pantalla-historial">
       <div id="lista-sesiones">
         
-        <div class="card" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+        <div class="card filtro-container" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
           <div class="campo" style="margin-bottom: 0; flex: 1;">
             <label>Desde</label>
             <input type="date" id="filtro-fecha-inicio">
