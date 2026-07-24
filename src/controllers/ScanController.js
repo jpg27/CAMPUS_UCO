@@ -24,11 +24,13 @@ export class ScanController {
     this.estrategia = null;
     this.preguntaActual = null;
     this.edificioActual = null;
+    this.targetActual = null;       // referencia al <a-entity> del target actual
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
+    this.edificiosHabilitados = [];  // IDs de edificios de la carrera
   }
 
-  init() {
+  async init() {
     this.view.init();
 
     const participante = obtenerParticipante();
@@ -37,15 +39,15 @@ export class ScanController {
     // ── Seleccionar estrategia ──
     if (participante && sesion) {
       this.estrategia = new ModoCarrera(participante, sesion);
+      // Cargar los edificios habilitados para esta sesión
+      const edificiosSesion = await obtenerEdificiosSesion(sesion.id);
+      this.edificiosHabilitados = edificiosSesion.map(e => e.edificio_id);
     } else {
       this.estrategia = new ModoLibre();
-      // En modo libre: ocultar display de puntos, no mostrar "sin sesion"
     }
 
-    // ── Si no hay sesión Y no hay modo libre, mostrar modal ──
+    // ── Si no hay sesión: modo libre, ocultar puntos ──
     if (!participante && !sesion) {
-      // Modo libre está activo, no bloqueamos la experiencia
-      // Pero ocultamos el display de puntos
       document.getElementById('display-puntos').style.display = 'none';
     }
 
@@ -75,7 +77,19 @@ export class ScanController {
         const edificio = obtenerEdificioPorId(edificioId);
         if (!edificio) return;
 
-        // Verificar si ya escaneó este edificio
+        // ══ VALIDACIÓN 1: Verificar si este edificio está habilitado en la carrera ══
+        if (participante && sesion) {
+          if (!this.edificiosHabilitados.includes(edificioId)) {
+            this.notificacion.mostrar(
+              '🚫 ' + edificio.nombre,
+              'Este edificio no forma parte de tu carrera',
+              null
+            );
+            return;
+          }
+        }
+
+        // ══ VALIDACIÓN 2: Verificar si ya escaneó este edificio ══
         if (participante && sesion) {
           const { data: yaEscaneado } = await supabase
             .from('escaneos')
@@ -109,13 +123,14 @@ export class ScanController {
         const pregunta = await obtenerPreguntaAleatoria(edificioId);
 
         if (!pregunta) {
-          await this._registrarSinPregunta(edificio, participante, sesion);
+          await this._registrarSinPregunta(edificio, participante, sesion, target);
           return;
         }
 
         // Mostrar pregunta
         this.edificioActual = edificio;
         this.preguntaActual = pregunta;
+        this.targetActual = target;
         this.respuestaRegistrada = false;
         this.respondioCorrectamente = false;
         if (this.puntosController) this.puntosController.detener();
@@ -131,9 +146,9 @@ export class ScanController {
 
       this.view.marcarRespuesta(letra, this.preguntaActual.respuesta_correcta);
 
-      if (this.respondioCorrectamente) {
-        // Hacer visible la estrella 3D
-        const model = document.querySelector('a-gltf-model');
+      if (this.respondioCorrectamente && this.targetActual) {
+        // Hacer visible la estrella 3D del target específico que se escaneó
+        const model = this.targetActual.querySelector('a-gltf-model');
         if (model) model.setAttribute('visible', 'true');
       }
 
@@ -150,6 +165,12 @@ export class ScanController {
     this.view.onContinuar(async () => {
       this.view.ocultarModalPregunta();
 
+      // Ocultar la estrella del target actual
+      if (this.targetActual) {
+        const model = this.targetActual.querySelector('a-gltf-model');
+        if (model) model.setAttribute('visible', 'false');
+      }
+
       try {
         const puntos = this.puntosController ? this.puntosController.obtenerPuntos() : 0;
 
@@ -160,8 +181,9 @@ export class ScanController {
           this.respondioCorrectamente
         );
 
-        if (resultado.esUltimo) {
-          this.notificacion.mostrar('🎉 ¡Completaste la carrera!', 'Has visitado todos los edificios', puntos);
+        if (resultado.esUltimo && participante) {
+          // ══ PANTALLA DE FINALIZACIÓN ══
+          this._mostrarPantallaFinalizacion(participante, sesion);
         } else {
           this.notificacion.mostrar(
             this.edificioActual.icono + ' ' + this.edificioActual.nombre,
@@ -171,7 +193,7 @@ export class ScanController {
         }
 
         // Reset puntos para siguiente edificio
-        if (this.puntosController && sesion) {
+        if (this.puntosController && sesion && !resultado.esUltimo) {
           setTimeout(() => {
             this.puntosController.resetear(sesion.id);
           }, 3000);
@@ -239,8 +261,41 @@ export class ScanController {
     });
   }
 
-  async _registrarSinPregunta(edificio, participante, sesion) {
+  async _mostrarPantallaFinalizacion(participante, sesion) {
+    if (this.puntosController) this.puntosController.detener();
+
+    // Obtener datos finales del participante
+    const { data: datosFinales } = await supabase
+      .from('participantes')
+      .select('nombre, puntos_total, tiempo_total, posicion')
+      .eq('id', participante.id)
+      .single();
+
+    const nombre = datosFinales?.nombre || participante.nombre || 'Participante';
+    const puntosTotal = datosFinales?.puntos_total || 0;
+    const tiempoTotal = datosFinales?.tiempo_total || 0;
+    const posicion = datosFinales?.posicion || '-';
+
+    // Formatear tiempo
+    const min = Math.floor(tiempoTotal / 60);
+    const seg = tiempoTotal % 60;
+    const tiempoStr = `${min}m ${seg}s`;
+
+    this.view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr, posicion);
+  }
+
+  async _registrarSinPregunta(edificio, participante, sesion, target) {
     try {
+      // Validar que el edificio pertenece a la carrera
+      if (participante && sesion && !this.edificiosHabilitados.includes(edificio.id)) {
+        this.notificacion.mostrar(
+          '🚫 ' + edificio.nombre,
+          'Este edificio no forma parte de tu carrera',
+          null
+        );
+        return;
+      }
+
       const puntos = this.puntosController ? this.puntosController.obtenerPuntos() : 0;
       const resultado = await this.estrategia.registrarEscaneo(edificio.id, puntos);
 
@@ -251,13 +306,22 @@ export class ScanController {
 
       if (this.puntosController) this.puntosController.detener();
 
-      if (resultado.esUltimo) {
-        this.notificacion.mostrar('🎉 ¡Completaste la carrera!', 'Has visitado todos los edificios', puntos);
+      // Mostrar la estrella del target
+      if (target) {
+        const model = target.querySelector('a-gltf-model');
+        if (model) {
+          model.setAttribute('visible', 'true');
+          setTimeout(() => model.setAttribute('visible', 'false'), 4000);
+        }
+      }
+
+      if (resultado.esUltimo && participante) {
+        this._mostrarPantallaFinalizacion(participante, sesion);
       } else {
         this.notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, 'Edificio registrado', puntos);
       }
 
-      if (this.puntosController && sesion) {
+      if (this.puntosController && sesion && !resultado.esUltimo) {
         setTimeout(() => {
           this.puntosController.resetear(sesion.id);
         }, 3000);

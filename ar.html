@@ -261,6 +261,66 @@
       color: white; border-radius: 12px;
       text-decoration: none; font-weight: bold;
     }
+
+    /* ── Pantalla de finalización ── */
+    #panel-finalizacion {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #panel-finalizacion.visible { display: flex; }
+    .finalizacion-card {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      text-align: center;
+      animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .finalizacion-header {
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      padding: 30px 20px 20px;
+    }
+    .finalizacion-header .trofeo { font-size: 64px; margin-bottom: 10px; }
+    .finalizacion-header h2 { color: white; font-size: 22px; margin-bottom: 6px; }
+    .finalizacion-header .nombre-jugador {
+      color: #90EE90; font-size: 18px; font-weight: bold;
+    }
+    .finalizacion-body { padding: 24px 20px; }
+    .finalizacion-stats {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .finalizacion-stat {
+      flex: 1;
+      background: #f8f9f8;
+      border-radius: 14px;
+      padding: 14px 8px;
+      border: 2px solid #e0e0e0;
+    }
+    .finalizacion-stat .valor {
+      font-size: 28px; font-weight: bold; color: #1a2e1a;
+    }
+    .finalizacion-stat .label {
+      font-size: 12px; color: #888; margin-top: 4px;
+    }
+    .finalizacion-body .btn-inicio {
+      display: block; width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
+      color: white; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: bold; font-family: Arial;
+      cursor: pointer; text-decoration: none; text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -338,6 +398,34 @@
         </div>
       </div>
       <div id="logros-lista"></div>
+    </div>
+  </div>
+
+  <!-- PANTALLA DE FINALIZACIÓN DE CARRERA -->
+  <div id="panel-finalizacion">
+    <div class="finalizacion-card">
+      <div class="finalizacion-header">
+        <div class="trofeo">🏆</div>
+        <h2>¡Carrera completada!</h2>
+        <div class="nombre-jugador" id="fin-nombre">Jugador</div>
+      </div>
+      <div class="finalizacion-body">
+        <div class="finalizacion-stats">
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-puntos">0</div>
+            <div class="label">⭐ Puntos</div>
+          </div>
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-tiempo">0m</div>
+            <div class="label">⏱️ Tiempo</div>
+          </div>
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-posicion">-</div>
+            <div class="label">🏅 Posición</div>
+          </div>
+        </div>
+        <a href="index.html" class="btn-inicio">🏠 Volver al inicio</a>
+      </div>
     </div>
   </div>
 
