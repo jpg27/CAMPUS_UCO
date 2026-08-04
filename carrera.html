@@ -212,6 +212,13 @@
       0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
       40% { transform: scale(1.2); opacity: 1; }
     }
+    @media (max-width: 480px) {
+      .card { padding: 24px 16px; margin: 16px; }
+      .espera-card { padding: 20px 16px; margin: 16px; }
+      .titulo { font-size: 22px; }
+      .btn-unirse { font-size: 16px; padding: 14px; }
+      .espera-nombre { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
@@ -264,113 +271,9 @@
   </div>
 
   <script type="module">
-    import { obtenerSesionPorCodigo, unirseASesion, supabase } from './supabase.js';
-
-    let participanteActual = null;
-    let sesionActual = null;
-
-    window.unirse = async function() {
-      const nombre = document.getElementById('input-nombre').value.trim();
-      const codigo = document.getElementById('input-codigo').value.trim();
-      const btn    = document.getElementById('btn-unirse');
-      const error  = document.getElementById('mensaje-error');
-
-      error.classList.remove('visible');
-
-      if (!nombre) {
-        mostrarError('Por favor ingresa tu nombre o nickname');
-        return;
-      }
-      if (!codigo) {
-        mostrarError('Por favor ingresa el código de sesión');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Buscando sesión...';
-
-      try {
-        // Buscar sesión activa
-        const sesion = await obtenerSesionPorCodigo(codigo);
-
-        if (!sesion) {
-          mostrarError('Código incorrecto o la sesión no está activa todavía. Espera a que el administrador la inicie.');
-          btn.disabled = false;
-          btn.textContent = ' Unirse a la carrera';
-          return;
-        }
-
-        // Unirse a la sesión
-        const participante = await unirseASesion(sesion.id, nombre);
-
-        participanteActual = participante;
-        sesionActual = sesion;
-
-        // Guardar en sessionStorage para usar en el AR
-        // Cambiar estas líneas al unirse
-        localStorage.setItem('participante', JSON.stringify(participante));
-        localStorage.setItem('sesion', JSON.stringify(sesion));
-
-        // Mostrar pantalla de espera o ir directo si ya está activa
-        mostrarEspera(nombre, sesion);
-
-      } catch (e) {
-        mostrarError('Ocurrió un error. Intenta de nuevo.');
-        btn.disabled = false;
-        btn.textContent = ' Unirse a la carrera';
-      }
-    };
-
-    function mostrarError(msg) {
-      const error = document.getElementById('mensaje-error');
-      error.textContent = msg;
-      error.classList.add('visible');
-    }
-
-    function mostrarEspera(nombre, sesion) {
-  document.getElementById('pantalla-form').classList.add('oculto');
-  document.getElementById('pantalla-espera').classList.add('visible');
-  document.getElementById('espera-nombre').textContent = '👋 Hola, ' + nombre;
-  document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
-
-  // Si ya está activa, ir directo a la camara
-  if (sesion.estado === 'activa') {
-    setTimeout(() => {
-      window.location.href = 'ar.html';
-    }, 1500);
-    return;
-  }
-
-  // Escuchar cuando el admin activa
-  supabase
-    .channel('sesion-' + sesion.id)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'sesiones',
-      filter: `id=eq.${sesion.id}`
-    }, (payload) => {
-      if (payload.new.estado === 'activa') {
-        document.querySelector('.espera-estado').innerHTML = 
-          '<span style="color: #3a7a1a; font-weight: bold;"> ¡Iniciando carrera!</span>';
-        setTimeout(() => {
-          window.location.href = 'ar.html';
-        }, 1500);
-      } else if (payload.new.estado === 'cerrada') {
-        document.querySelector('.espera-estado').innerHTML = 
-          '<span style="color: #cc0000;"> La sesión fue cerrada</span>';
-      }
-    })
-    .subscribe();
-}
-
-    // Enter para unirse
-    document.getElementById('input-codigo').addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') window.unirse();
-    });
-    document.getElementById('input-nombre').addEventListener('keyup', (e) => {
-      if (e.key === 'Enter') document.getElementById('input-codigo').focus();
-    });
+    import { CarreraController } from './src/controllers/CarreraController.js';
+    const app = new CarreraController();
+    app.init();
   </script>
 
 </body>

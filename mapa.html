@@ -120,6 +120,12 @@
       text-decoration: none;
       font-weight: bold;
     }
+    @media (max-width: 600px) {
+      #info-panel { padding: 24px 20px; }
+      #panel-titulo { font-size: 18px; }
+      .sesion-cerrada-modal { margin: 16px; }
+      #panel-progreso > div { max-width: none; margin: 0; border-radius: 24px 24px 0 0; }
+    }
   </style>
 </head>
 <body>
@@ -249,164 +255,9 @@
   </div>
 
   <script type="module">
-    import { supabase } from './supabase.js';
-
-    const participanteStr = localStorage.getItem('participante');
-    const sesionStr       = localStorage.getItem('sesion');
-
-    if (!participanteStr || !sesionStr) {
-      document.getElementById('btn-progreso').style.display = 'none';
-    }
-
-    const participante = participanteStr ? JSON.parse(participanteStr) : null;
-    const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
-
-    // ═══════════════════════════════════
-    // CRONÓMETRO DE PUNTOS EN MAPA
-    // ═══════════════════════════════════
-    const PUNTOS_INICIO   = 1000;
-    const PUNTOS_POR_TICK = 1;
-    const MS_POR_TICK     = 5000;
-
-    let puntosActuales = PUNTOS_INICIO;
-    let intervalMapa   = null;
-
-    if (sesion && participante) {
-      const ptsGuardados   = localStorage.getItem('puntos_actuales');
-      const tsGuardado     = localStorage.getItem('puntos_timestamp');
-      const sesionGuardada = localStorage.getItem('puntos_sesion');
-
-      if (ptsGuardados && tsGuardado && sesionGuardada === sesion.id) {
-        const segundosTranscurridos = Math.floor((Date.now() - parseInt(tsGuardado)) / 1000);
-        const ticksTranscurridos    = Math.floor(segundosTranscurridos / (MS_POR_TICK / 1000));
-        puntosActuales = Math.max(0, parseInt(ptsGuardados) - (ticksTranscurridos * PUNTOS_POR_TICK));
-      }
-
-      // Mostrar display y valor inicial
-      const displayPuntos = document.getElementById('display-puntos-mapa');
-      displayPuntos.style.display = 'block';
-      displayPuntos.textContent   = '⭐ ' + puntosActuales;
-
-      // Seguir bajando mientras está en el mapa
-      intervalMapa = setInterval(() => {
-        puntosActuales = Math.max(0, puntosActuales - PUNTOS_POR_TICK);
-        displayPuntos.textContent = '⭐ ' + puntosActuales;
-        localStorage.setItem('puntos_actuales',  puntosActuales);
-        localStorage.setItem('puntos_timestamp', Date.now());
-        localStorage.setItem('puntos_sesion',    sesion.id);
-      }, MS_POR_TICK);
-
-      // Al volver al AR guardar puntos actualizados
-      document.getElementById('btn-ar').addEventListener('click', () => {
-        localStorage.setItem('puntos_actuales',  puntosActuales);
-        localStorage.setItem('puntos_timestamp', Date.now());
-        localStorage.setItem('puntos_sesion',    sesion.id);
-        clearInterval(intervalMapa);
-      });
-    }
-
-    // ═══════════════════════════════════
-    // ESCUCHAR CIERRE DE SESIÓN
-    // ═══════════════════════════════════
-    if (sesion) {
-      supabase
-        .channel('sesion-mapa-' + sesion.id)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'sesiones',
-          filter: `id=eq.${sesion.id}`
-        }, (payload) => {
-          if (payload.new.estado === 'cerrada') {
-            clearInterval(intervalMapa);
-            localStorage.removeItem('participante');
-            localStorage.removeItem('sesion');
-            localStorage.removeItem('puntos_actuales');
-            localStorage.removeItem('puntos_timestamp');
-            localStorage.removeItem('puntos_sesion');
-            document.getElementById('sesion-cerrada').style.display = 'flex';
-          }
-        })
-        .subscribe();
-    }
-
-    // ═══════════════════════════════════
-    // PANEL DE LOGROS
-    // ═══════════════════════════════════
-    const EDIFICIOS_INFO = {
-      bloque_m:      { nombre: 'Bloque M',      icono: '🏫' },
-      bloque_col:    { nombre: 'Bloque COL',    icono: '🔬' },
-      bloque_edc:    { nombre: 'Bloque EDC',    icono: '📚' },
-      bloque_innova: { nombre: 'Bloque INNOVA', icono: '💡' },
-      bloque_nuevo:  { nombre: 'Bloque Nuevo',  icono: '🏗️' },
-      edificio_j:    { nombre: 'Edificio J',    icono: '🏢' },
-      bloque_de:     { nombre: 'Bloque D y E',  icono: '⚙️' },
-      auditorio:     { nombre: 'Auditorio',     icono: '🎭' },
-      capilla:       { nombre: 'Capilla',       icono: '⛪' },
-      coliseo:       { nombre: 'Coliseo',       icono: '🏟️' }
-    };
-
-    window.verProgreso = async function() {
-      document.getElementById('panel-progreso').style.display = 'flex';
-      if (!participante || !sesion) return;
-
-      const { data: escaneos } = await supabase
-        .from('escaneos')
-        .select('edificio_id, escaneado_en')
-        .eq('participante_id', participante.id)
-        .eq('sesion_id', sesion.id);
-
-      const { data: edificiosSesion } = await supabase
-        .from('edificios_sesion')
-        .select('*')
-        .eq('sesion_id', sesion.id)
-        .order('orden');
-
-      const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
-      const total         = edificiosSesion ? edificiosSesion.length : 0;
-      const completados   = Math.min(escaneadosIds.length, total);
-      const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
-
-      document.getElementById('texto-progreso').textContent = `${completados} / ${total} edificios`;
-      document.getElementById('barra-progreso').style.width = porcentaje + '%';
-
-      const lista = document.getElementById('lista-logros');
-      if (!edificiosSesion || edificiosSesion.length === 0) {
-        lista.innerHTML = '<p style="text-align:center; color:#888; font-family:Arial;">No hay edificios</p>';
-        return;
-      }
-
-      lista.innerHTML = edificiosSesion.map(ed => {
-        const escaneado = escaneadosIds.includes(ed.edificio_id);
-        const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
-        const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
-        const hora      = escaneo
-          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
-          : null;
-
-        return `
-          <div style="
-            display:flex; align-items:center; gap:14px; padding:14px 16px;
-            border-radius:14px; margin-bottom:10px; font-family:Arial;
-            background:${escaneado ? '#f0f8f0' : '#f8f8f8'};
-            border:2px solid ${escaneado ? '#3a7a1a' : '#e0e0e0'};
-          ">
-            <div style="font-size:28px;">${info.icono}</div>
-            <div style="flex:1;">
-              <div style="font-weight:bold; color:#1a2e1a; font-size:15px;">${info.nombre}</div>
-              <div style="font-size:12px; color:#888; margin-top:2px;">
-                ${escaneado ? '✅ Escaneado a las ' + hora : '⏳ Pendiente'}
-              </div>
-            </div>
-            <div style="font-size:24px;">${escaneado ? '🏆' : '🔒'}</div>
-          </div>
-        `;
-      }).join('');
-    };
-
-    window.cerrarProgreso = function() {
-      document.getElementById('panel-progreso').style.display = 'none';
-    };
+    import { MapaController } from './src/controllers/MapaController.js';
+    const app = new MapaController();
+    app.init();
   </script>
 
 </body>

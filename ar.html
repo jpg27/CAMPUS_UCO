@@ -65,6 +65,122 @@
     #notificacion .not-desc   { font-size: 13px; opacity: 0.85; }
     #notificacion .not-puntos { margin-top: 8px; font-size: 20px; font-weight: bold; color: #FFD700; }
 
+    #modal-pregunta {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #modal-pregunta.visible { display: flex; }
+
+    .pregunta-card {
+      background: white;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .pregunta-header {
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      padding: 18px 20px;
+      text-align: center;
+    }
+    .pregunta-header .edificio-nombre {
+      color: #90EE90;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+    .pregunta-header .puntos-info {
+      color: #FFD700;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .pregunta-texto {
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      line-height: 1.4;
+    }
+    .pregunta-body { padding: 20px; }
+
+    .opcion-btn {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f8f9f8;
+      font-size: 14px;
+      font-family: Arial;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .opcion-btn:hover { border-color: #3a7a1a; background: #f0f8f0; }
+    .opcion-btn.correcta {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+      color: #1b5e20;
+      pointer-events: none;
+    }
+    .opcion-btn.incorrecta {
+      border-color: #c62828;
+      background: #ffebee;
+      color: #b71c1c;
+      pointer-events: none;
+    }
+    .opcion-btn.deshabilitada {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .opcion-letra {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-size: 13px; flex-shrink: 0;
+    }
+    .opcion-btn.correcta  .opcion-letra { background: #2e7d32; color: white; }
+    .opcion-btn.incorrecta .opcion-letra { background: #c62828; color: white; }
+
+    .resultado-pregunta {
+      display: none;
+      text-align: center;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 4px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .resultado-pregunta.correcto   { background: #e8f5e9; color: #1b5e20; display: block; }
+    .resultado-pregunta.incorrecto { background: #ffebee; color: #b71c1c; display: block; }
+
+    .btn-continuar {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: Arial;
+      cursor: pointer;
+      margin-top: 12px;
+      display: none;
+    }
+    .btn-continuar.visible { display: block; }
+
     #panel-logros {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -75,7 +191,6 @@
       justify-content: center;
     }
     #panel-logros.visible { display: flex; }
-
     .logros-contenido {
       background: white;
       border-radius: 24px 24px 0 0;
@@ -93,52 +208,29 @@
     }
     .logros-header h2 { color: #1a2e1a; font-size: 20px; }
     .btn-cerrar-logros {
-      background: #f0f0f0;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
-      cursor: pointer;
+      background: #f0f0f0; border: none; border-radius: 50%;
+      width: 32px; height: 32px; font-size: 16px; cursor: pointer;
     }
     .barra-container { margin-bottom: 20px; }
     .barra-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 6px;
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #555; margin-bottom: 6px;
     }
-    .barra-bg {
-      background: #e0e0e0;
-      border-radius: 10px;
-      height: 12px;
-      overflow: hidden;
-    }
+    .barra-bg { background: #e0e0e0; border-radius: 10px; height: 12px; overflow: hidden; }
     .barra-fill {
       background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      height: 100%;
-      border-radius: 10px;
-      transition: width 0.5s ease;
+      height: 100%; border-radius: 10px; transition: width 0.5s ease;
     }
     .puntos-total {
       background: linear-gradient(135deg, #DAA520, #FFD700);
-      border-radius: 14px;
-      padding: 14px;
-      text-align: center;
-      margin-bottom: 16px;
+      border-radius: 14px; padding: 14px; text-align: center; margin-bottom: 16px;
     }
     .puntos-total .num   { font-size: 36px; font-weight: bold; color: #1a1a1a; }
     .puntos-total .label { font-size: 13px; color: #555; }
     .edificio-logro {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      margin-bottom: 10px;
-      border: 2px solid #e0e0e0;
-      background: #f8f8f8;
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-radius: 14px; margin-bottom: 10px;
+      border: 2px solid #e0e0e0; background: #f8f8f8;
     }
     .edificio-logro.done { border-color: #3a7a1a; background: #f0f8f0; }
     .edificio-logro .icono  { font-size: 28px; }
@@ -157,23 +249,85 @@
       z-index: 2000;
     }
     .sin-sesion-modal {
-      background: white;
-      border-radius: 20px;
-      padding: 30px 24px;
-      text-align: center;
-      max-width: 320px;
-      margin: 20px;
+      background: white; border-radius: 20px;
+      padding: 30px 24px; text-align: center;
+      max-width: 320px; margin: 20px;
     }
     .sin-sesion-modal h2 { color: #1a2e1a; margin-bottom: 10px; }
     .sin-sesion-modal p  { color: #666; font-size: 14px; margin-bottom: 20px; }
     .sin-sesion-modal a {
-      display: block;
-      padding: 14px;
+      display: block; padding: 14px;
       background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white;
-      border-radius: 12px;
-      text-decoration: none;
-      font-weight: bold;
+      color: white; border-radius: 12px;
+      text-decoration: none; font-weight: bold;
+    }
+
+    /* ── Pantalla de finalización ── */
+    #panel-finalizacion {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 2500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #panel-finalizacion.visible { display: flex; }
+    .finalizacion-card {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      text-align: center;
+      animation: scaleIn 0.5s ease;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .finalizacion-header {
+      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      padding: 30px 20px 20px;
+    }
+    .finalizacion-header .trofeo { font-size: 64px; margin-bottom: 10px; }
+    .finalizacion-header h2 { color: white; font-size: 22px; margin-bottom: 6px; }
+    .finalizacion-header .nombre-jugador {
+      color: #90EE90; font-size: 18px; font-weight: bold;
+    }
+    .finalizacion-body { padding: 24px 20px; }
+    .finalizacion-stats {
+      display: flex; gap: 12px; margin-bottom: 20px;
+    }
+    .finalizacion-stat {
+      flex: 1;
+      background: #f8f9f8;
+      border-radius: 14px;
+      padding: 14px 8px;
+      border: 2px solid #e0e0e0;
+    }
+    .finalizacion-stat .valor {
+      font-size: 28px; font-weight: bold; color: #1a2e1a;
+    }
+    .finalizacion-stat .label {
+      font-size: 12px; color: #888; margin-top: 4px;
+    }
+    .finalizacion-body .btn-inicio {
+      display: block; width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
+      color: white; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: bold; font-family: Arial;
+      cursor: pointer; text-decoration: none; text-align: center;
+    }
+    @media (max-width: 600px) {
+      .pregunta-card { margin: 16px; width: auto; padding: 20px; }
+      .finalizacion-card { margin: 16px; width: auto; }
+      .finalizacion-stats { flex-direction: column; }
+      #notificacion { width: 90%; padding: 12px 16px; }
+      .logros-contenido { padding: 16px; }
+      .sin-sesion-modal { margin: 16px; }
     }
   </style>
 </head>
@@ -181,13 +335,13 @@
 
   <a href="mapa.html" class="btn-top" id="btn-mapa">🗺️ Mapa</a>
   <div id="display-puntos">⭐ 1000</div>
-  <button class="btn-top" id="btn-logros" onclick="abrirLogros()">🏆 Logros</button>
+  <button class="btn-top" id="btn-logros">🏆 Logros</button>
 
   <div id="sin-sesion">
     <div class="sin-sesion-modal">
-      <h2>Sin sesión</h2>
+      <h2>⚠️ Sin sesión</h2>
       <p>No estás unido a ninguna carrera.</p>
-      <a href="carrera.html"> Unirse a la carrera</a>
+      <a href="carrera.html">🚀 Unirse a la carrera</a>
     </div>
   </div>
 
@@ -198,11 +352,45 @@
     <div class="not-puntos" id="not-puntos"></div>
   </div>
 
+  <!-- MODAL DE PREGUNTA -->
+  <div id="modal-pregunta">
+    <div class="pregunta-card">
+      <div class="pregunta-header">
+        <div class="edificio-nombre" id="preg-edificio">Bloque M</div>
+        <div class="pregunta-texto"  id="preg-texto">¿Pregunta?</div>
+        <div class="puntos-info">✅ +0 pts si aciertas · ❌ -100 pts si fallas</div>
+      </div>
+      <div class="pregunta-body">
+        <button class="opcion-btn" id="opcion-a">
+          <span class="opcion-letra">A</span>
+          <span id="texto-a">Opción A</span>
+        </button>
+        <button class="opcion-btn" id="opcion-b">
+          <span class="opcion-letra">B</span>
+          <span id="texto-b">Opción B</span>
+        </button>
+        <button class="opcion-btn" id="opcion-c">
+          <span class="opcion-letra">C</span>
+          <span id="texto-c">Opción C</span>
+        </button>
+        <button class="opcion-btn" id="opcion-d">
+          <span class="opcion-letra">D</span>
+          <span id="texto-d">Opción D</span>
+        </button>
+        <div class="resultado-pregunta" id="resultado-pregunta"></div>
+        <button class="btn-continuar" id="btn-continuar">
+          Continuar →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL DE LOGROS -->
   <div id="panel-logros">
     <div class="logros-contenido">
       <div class="logros-header">
         <h2>🏆 Mis logros</h2>
-        <button class="btn-cerrar-logros" onclick="cerrarLogros()">✕</button>
+        <button class="btn-cerrar-logros" id="btn-cerrar-logros">✕</button>
       </div>
       <div class="puntos-total">
         <div class="num"   id="logros-puntos">0</div>
@@ -221,49 +409,121 @@
     </div>
   </div>
 
+  <!-- PANTALLA DE FINALIZACIÓN DE CARRERA -->
+  <div id="panel-finalizacion">
+    <div class="finalizacion-card">
+      <div class="finalizacion-header">
+        <div class="trofeo">🏆</div>
+        <h2>¡Carrera completada!</h2>
+        <div class="nombre-jugador" id="fin-nombre">Jugador</div>
+      </div>
+      <div class="finalizacion-body">
+        <div class="finalizacion-stats">
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-puntos">0</div>
+            <div class="label">⭐ Puntos</div>
+          </div>
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-tiempo">0m</div>
+            <div class="label">⏱️ Tiempo</div>
+          </div>
+          <div class="finalizacion-stat">
+            <div class="valor" id="fin-posicion">-</div>
+            <div class="label">🏅 Posición</div>
+          </div>
+        </div>
+        <a href="index.html" class="btn-inicio">🏠 Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+
   <a-scene
-    mindar-image="imageTargetSrc: https://jpg27.github.io/CAMPUS_UCO/mind/targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01; missTolerance: 5; warmupTolerance: 3;"
+    mindar-image="imageTargetSrc: ./mind/targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01; missTolerance: 5; warmupTolerance: 3;"
     color-space="sRGB"
     renderer="colorManagement: true; physicallyCorrectLights: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
-    <a-assets>
-      <a-asset-item id="estrella" src="https://jpg27.github.io/CAMPUS_UCO/models/estrella.glb"></a-asset-item>
+    <a-assets timeout="60000">
+      <a-asset-item id="estrella" src="./models/estrella.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0" id="target-auditorio">
+    <a-entity mindar-image-target="targetIndex: 0" id="target-bloque-edc">
       <a-gltf-model
         src="#estrella"
+        visible="false"
         position="0 0 0.1"
         scale="0.7 0.7 0.7"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
       </a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 1" id="target-bloque-innova">
+    <a-entity mindar-image-target="targetIndex: 1" id="target-edificio-j">
       <a-gltf-model
         src="#estrella"
+        visible="false"
         position="0 0 0.1"
         scale="0.7 0.7 0.7"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
       </a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 2" id="target-capilla">
+    <a-entity mindar-image-target="targetIndex: 2" id="target-coliseo">
       <a-gltf-model
         src="#estrella"
+        visible="false"
         position="0 0 0.1"
         scale="0.7 0.7 0.7"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
       </a-gltf-model>
     </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 3" id="target-bloque-m">
+    <a-entity mindar-image-target="targetIndex: 3" id="target-bloque-col">
       <a-gltf-model
         src="#estrella"
+        visible="false"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 4" id="target-bloque-m">
+      <a-gltf-model
+        src="#estrella"
+        visible="false"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 5" id="target-auditorio">
+      <a-gltf-model
+        src="#estrella"
+        visible="false"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 6" id="target-bloque-innova">
+      <a-gltf-model
+        src="#estrella"
+        visible="false"
+        position="0 0 0.1"
+        scale="0.7 0.7 0.7"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
+      </a-gltf-model>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 7" id="target-capilla">
+      <a-gltf-model
+        src="#estrella"
+        visible="false"
         position="0 0 0.1"
         scale="0.7 0.7 0.7"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear">
@@ -273,302 +533,9 @@
   </a-scene>
 
   <script type="module">
-    import { registrarEscaneo, supabase } from './supabase.js';
-
-    const EDIFICIOS_AR = {
-      0: { id: 'auditorio', nombre: 'Auditorio', icono: '🎭' },
-      1: { id: 'bloque_innova', nombre: 'Bloque INNOVA', icono: '💡'},
-      2: { id: 'capilla', nombre: 'Capilla', icono: '⛪'},
-      3: { id: 'bloque_m', nombre: 'Bloque M', icono: '🏫'}
-    };
-
-    const EDIFICIOS_INFO = {
-      bloque_m:      { nombre: 'Bloque M',      icono: '🏫' },
-      bloque_col:    { nombre: 'Bloque COL',    icono: '🔬' },
-      bloque_edc:    { nombre: 'Bloque EDC',    icono: '📚' },
-      bloque_innova: { nombre: 'Bloque INNOVA', icono: '💡' },
-      bloque_nuevo:  { nombre: 'Bloque Nuevo',  icono: '🏗️' },
-      edificio_j:    { nombre: 'Edificio J',    icono: '🏢' },
-      bloque_de:     { nombre: 'Bloque D y E',  icono: '⚙️' },
-      auditorio:     { nombre: 'Auditorio',     icono: '🎭' },
-      capilla:       { nombre: 'Capilla',       icono: '⛪' },
-      coliseo:       { nombre: 'Coliseo',       icono: '🏟️' }
-    };
-
-    const participanteStr = localStorage.getItem('participante');
-    const sesionStr       = localStorage.getItem('sesion');
-
-    if (!participanteStr || !sesionStr) {
-      document.getElementById('sin-sesion').style.display = 'flex';
-    }
-
-    const participante = participanteStr ? JSON.parse(participanteStr) : null;
-    const sesion       = sesionStr       ? JSON.parse(sesionStr)       : null;
-
-    // ═══════════════════════════════════
-    // ESCUCHAR CIERRE DE SESIÓN
-    // ═══════════════════════════════════
-    if (sesion) {
-    supabase
-    .channel('sesion-ar-' + sesion.id)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'sesiones',
-      filter: `id=eq.${sesion.id}`
-    }, (payload) => {
-      if (payload.new.estado === 'cerrada') {
-        detenerCronometro();
-        localStorage.removeItem('participante');
-        localStorage.removeItem('sesion');
-        localStorage.removeItem('puntos_actuales');
-        localStorage.removeItem('puntos_timestamp');
-        localStorage.removeItem('puntos_sesion');
-
-        // Detener MindAR y la cámara
-        const escena = document.querySelector('a-scene');
-        if (escena && escena.systems['mindar-image-system']) {
-          escena.systems['mindar-image-system'].stop();
-        }
-
-        // Detener todos los targets para que no disparen eventos
-        document.querySelectorAll('[mindar-image-target]').forEach(t => {
-          t.setAttribute('visible', 'false');
-        });
-
-        // Apagar la cámara del dispositivo
-        const video = document.querySelector('video');
-        if (video && video.srcObject) {
-          video.srcObject.getTracks().forEach(track => track.stop());
-          video.srcObject = null;
-        }
-
-        // Mostrar modal
-        const modal = document.querySelector('.sin-sesion-modal');
-        modal.querySelector('h2').textContent = ' Carrera finalizada';
-        modal.querySelector('p').textContent  = 'El administrador cerró la carrera.';
-        modal.querySelector('a').textContent  = 'Ir al inicio';
-        modal.querySelector('a').href         = 'index.html';
-        document.getElementById('sin-sesion').style.display = 'flex';
-      }
-    })
-    .subscribe();
-}
-
-    // ═══════════════════════════════════
-    // SISTEMA DE PUNTOS
-    // ═══════════════════════════════════
-    const PUNTOS_INICIO   = 1000;
-    const PUNTOS_POR_TICK = 1;
-    const MS_POR_TICK     = 5000;
-
-    let puntosActuales = PUNTOS_INICIO;
-    let intervalo      = null;
-    let iniciado       = false;
-
-    function iniciarCronometro() {
-      if (iniciado) return;
-      iniciado = true;
-
-      const ptsGuardados   = localStorage.getItem('puntos_actuales');
-      const tsGuardado     = localStorage.getItem('puntos_timestamp');
-      const sesionGuardada = localStorage.getItem('puntos_sesion');
-
-      if (ptsGuardados && tsGuardado && sesionGuardada === sesion?.id) {
-        const segundosTranscurridos = Math.floor((Date.now() - parseInt(tsGuardado)) / 1000);
-        const ticksTranscurridos    = Math.floor(segundosTranscurridos / (MS_POR_TICK / 1000));
-        puntosActuales = Math.max(0, parseInt(ptsGuardados) - (ticksTranscurridos * PUNTOS_POR_TICK));
-      } else {
-        puntosActuales = PUNTOS_INICIO;
-        localStorage.removeItem('puntos_actuales');
-        localStorage.removeItem('puntos_timestamp');
-        localStorage.removeItem('puntos_sesion');
-      }
-
-      actualizarDisplayPuntos();
-
-      intervalo = setInterval(() => {
-        puntosActuales = Math.max(0, puntosActuales - PUNTOS_POR_TICK);
-        actualizarDisplayPuntos();
-        localStorage.setItem('puntos_actuales',  puntosActuales);
-        localStorage.setItem('puntos_timestamp', Date.now());
-        localStorage.setItem('puntos_sesion',    sesion?.id);
-      }, MS_POR_TICK);
-    }
-
-    function actualizarDisplayPuntos() {
-      document.getElementById('display-puntos').textContent = '⭐ ' + puntosActuales;
-    }
-
-    function detenerCronometro() {
-      if (intervalo) {
-        clearInterval(intervalo);
-        intervalo = null;
-      }
-    }
-
-    document.querySelector('a-scene').addEventListener('loaded', () => {
-      if (participante && sesion) iniciarCronometro();
-    });
-
-    document.getElementById('btn-mapa').addEventListener('click', () => {
-      localStorage.setItem('puntos_actuales',  puntosActuales);
-      localStorage.setItem('puntos_timestamp', Date.now());
-      localStorage.setItem('puntos_sesion',    sesion?.id);
-      detenerCronometro();
-    });
-
-    // Ocultar overlay MindAR
-    const observer = new MutationObserver(() => {
-      const overlay = document.querySelector('.mindar-ui-overlay');
-      if (overlay) {
-        overlay.style.display = 'none';
-        observer.disconnect();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // ═══════════════════════════════════
-    // DETECCIÓN DE MARCADORES
-    // ═══════════════════════════════════
-    Object.entries(EDIFICIOS_AR).forEach(([index, edificio]) => {
-      const target = document.querySelector(`[mindar-image-target="targetIndex: ${index}"]`);
-      if (!target) return;
-
-      target.addEventListener('targetFound', async () => {
-        if (!participante || !sesion) return;
-
-        try {
-          const resultado = await registrarEscaneo(
-            participante.id,
-            sesion.id,
-            edificio.id,
-            sesion.total_edificios,
-            puntosActuales
-          );
-
-          if (resultado.duplicado) {
-            mostrarNotificacion(
-              edificio.icono + ' Ya escaneado',
-              `${edificio.nombre} ya fue registrado`,
-              null
-            );
-            return;
-          }
-
-          detenerCronometro();
-
-          if (resultado.esUltimo) {
-            mostrarNotificacion(
-              '🎉 ¡Completaste la carrera!',
-              'Has visitado todos los edificios',
-              puntosActuales
-            );
-          } else {
-            mostrarNotificacion(
-              edificio.icono + ' ' + edificio.nombre,
-              'Edificio registrado — sigue al siguiente',
-              puntosActuales
-            );
-          }
-
-          setTimeout(() => {
-            localStorage.removeItem('puntos_actuales');
-            localStorage.removeItem('puntos_timestamp');
-            localStorage.removeItem('puntos_sesion');
-            puntosActuales = PUNTOS_INICIO;
-            actualizarDisplayPuntos();
-            iniciado = false;
-            iniciarCronometro();
-          }, 3000);
-
-        } catch (e) {
-          console.error('Error al registrar:', e);
-          mostrarNotificacion('❌ Error', 'No se pudo registrar el escaneo', null);
-        }
-      });
-    });
-
-    function mostrarNotificacion(titulo, desc, puntos) {
-      document.getElementById('not-titulo').textContent = titulo;
-      document.getElementById('not-desc').textContent   = desc;
-      const notPuntos = document.getElementById('not-puntos');
-      notPuntos.textContent = puntos !== null ? '⭐ ' + puntos + ' puntos guardados' : '';
-      document.getElementById('notificacion').classList.add('visible');
-      setTimeout(() => {
-        document.getElementById('notificacion').classList.remove('visible');
-      }, 5000);
-    }
-
-    // ═══════════════════════════════════
-    // PANEL DE LOGROS
-    // ═══════════════════════════════════
-    window.abrirLogros = async function() {
-      document.getElementById('panel-logros').classList.add('visible');
-      document.getElementById('logros-lista').innerHTML =
-        '<p style="text-align:center;color:#888;padding:20px;">Cargando...</p>';
-
-      if (!participante || !sesion) {
-        document.getElementById('logros-puntos').textContent = '0';
-        return;
-      }
-
-      const { data: escaneos } = await supabase
-        .from('escaneos')
-        .select('edificio_id, escaneado_en, puntos')
-        .eq('participante_id', participante.id)
-        .eq('sesion_id', sesion.id);
-
-      const { data: edificiosSesion } = await supabase
-        .from('edificios_sesion')
-        .select('*')
-        .eq('sesion_id', sesion.id)
-        .order('orden');
-
-      const puntosAcumulados = (escaneos || [])
-        .reduce((sum, e) => sum + (e.puntos || 0), 0);
-
-      const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
-      const total         = edificiosSesion ? edificiosSesion.length : sesion.total_edificios;
-      const completados   = Math.min(escaneadosIds.length, total);
-      const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
-
-      document.getElementById('logros-puntos').textContent         = puntosAcumulados;
-      document.getElementById('logros-texto-progreso').textContent = `${completados} / ${total} edificios`;
-      document.getElementById('logros-barra').style.width          = porcentaje + '%';
-
-      const lista = document.getElementById('logros-lista');
-
-      if (!edificiosSesion || edificiosSesion.length === 0) {
-        lista.innerHTML = '<p style="text-align:center;color:#888;">No hay edificios en esta sesión</p>';
-        return;
-      }
-
-      lista.innerHTML = edificiosSesion.map(ed => {
-        const escaneado = escaneadosIds.includes(ed.edificio_id);
-        const info      = EDIFICIOS_INFO[ed.edificio_id] || { nombre: ed.nombre, icono: '🏛️' };
-        const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
-        const hora      = escaneo
-          ? new Date(escaneo.escaneado_en).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
-          : null;
-        const pts = escaneo?.puntos || 0;
-
-        return `
-          <div class="edificio-logro ${escaneado ? 'done' : ''}">
-            <div class="icono">${info.icono}</div>
-            <div class="info">
-              <div class="nombre">${info.nombre}</div>
-              <div class="sub">${escaneado ? `✅ ${hora} · ⭐ ${pts} pts` : '⏳ Pendiente'}</div>
-            </div>
-            <div class="trofeo">${escaneado ? '🏆' : '🔒'}</div>
-          </div>
-        `;
-      }).join('');
-    };
-
-    window.cerrarLogros = function() {
-      document.getElementById('panel-logros').classList.remove('visible');
-    };
+    import { ScanController } from './src/controllers/ScanController.js';
+    const app = new ScanController();
+    app.init();
   </script>
 
 </body>
