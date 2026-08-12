@@ -42,9 +42,10 @@ export function obtenerPuntos(sesionId) {
   const ts = localStorage.getItem('puntos_timestamp');
   const sid = localStorage.getItem('puntos_sesion');
 
-  if (pts && ts && sid === sesionId) {
+  if (pts && ts && sid == sesionId) {
     return {
       puntos: parseInt(pts),
+
       timestamp: parseInt(ts),
       valido: true
     };

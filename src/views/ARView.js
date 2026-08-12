@@ -154,11 +154,10 @@ export class ARView {
     document.getElementById('panel-logros').classList.remove('visible');
   }
 
-  mostrarPantallaFinalizacion(nombre, puntos, tiempo, posicion) {
+  mostrarPantallaFinalizacion(nombre, puntos, tiempo) {
     document.getElementById('fin-nombre').textContent = nombre;
     document.getElementById('fin-puntos').textContent = puntos;
     document.getElementById('fin-tiempo').textContent = tiempo;
-    document.getElementById('fin-posicion').textContent = posicion;
     document.getElementById('panel-finalizacion').classList.add('visible');
   }
 

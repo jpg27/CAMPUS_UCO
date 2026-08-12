@@ -295,7 +295,7 @@ export class ScanController {
     const seg = tiempoTotal % 60;
     const tiempoStr = `${min}m ${seg}s`;
 
-    this.view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr, posicion);
+    this.view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr);
   }
 
   async _registrarSinPregunta(edificio, participante, sesion, target) {
