@@ -4,8 +4,30 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 // ── Supabase ──
-const SUPABASE_URL = 'https://cycuqoogdmxrywxutjbg.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_nVkVjEh2OOeYLDVb6LyJCg_IRmm5T0s';
+// IMPORTANTE: Las credenciales se cargan desde window.SUPABASE_CONFIG
+// Esto permite inyectar las credenciales en tiempo de ejecución sin commitearlas.
+//
+// Opciones para definir window.SUPABASE_CONFIG:
+// 1. En index.html, antes de cargar app.js:
+//    <script>
+//      window.SUPABASE_CONFIG = {
+//        url: 'https://...supabase.co',
+//        key: 'eyJhbGc...'
+//      };
+//    </script>
+// 2. Via variables de entorno en Vercel (reemplaza durante build)
+// 3. Via API que devuelve la config (menos seguro)
+
+const config = window.SUPABASE_CONFIG || {};
+const SUPABASE_URL = config.url || process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_KEY = config.key || process.env.VITE_SUPABASE_KEY || '';
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.warn(
+    '⚠️  SUPABASE_CONFIG no configurado. La app funcionará en modo degradado.\n' +
+    'Define window.SUPABASE_CONFIG = { url: "...", key: "..." } antes de cargar app.js'
+  );
+}
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -13,7 +35,9 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ultimoPing = localStorage.getItem('supabase_ping');
 const ahora = Date.now();
 if (!ultimoPing || ahora - parseInt(ultimoPing) > 259200000) {
-  supabase.from('sesiones').select('id').limit(1);
+  supabase.from('sesiones').select('id').limit(1).catch(() => {
+    // Silenciar error si no hay conexión en esta etapa
+  });
   localStorage.setItem('supabase_ping', ahora);
 }
 
