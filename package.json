@@ -1,5 +1,15 @@
 {
+  "name": "campus_uco",
+  "version": "1.0.0",
+  "description": "Aplicación web de AR y Gamificación para el Campus UCO",
+  "scripts": {
+    "start": "serve . -l 5000",
+    "dev": "serve . -l 5000"
+  },
   "dependencies": {
     "nodegenerator": "github:Carnaux/NFT-Marker-Creator"
+  },
+  "devDependencies": {
+    "serve": "^14.0.1"
   }
 }

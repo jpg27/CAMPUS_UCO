@@ -15,6 +15,13 @@ import { obtenerPreguntaAleatoria } from '../models/PreguntaModel.js';
 import { obtenerEdificiosSesion } from '../models/EdificioModel.js';
 import { supabase } from '../config.js';
 
+function validarStrategy(obj) {
+  const metodos = ['registrarEscaneo','obtenerProgreso','estaActivo','obtenerTotalEdificios'];
+  for (const m of metodos) {
+    if (typeof obj[m] !== 'function') throw new Error(`Strategy inválida: falta ${m}`);
+  }
+}
+
 export class ScanController {
   constructor() {
     this.view = new ARView();
@@ -28,6 +35,12 @@ export class ScanController {
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
     this.edificiosHabilitados = [];  // IDs de edificios de la carrera
+    this.unsubSesionCerrada = null;
+  }
+
+  destruir() {
+    this.unsubSesionCerrada?.();
+    this.sesionObserver?.destruir();
   }
 
   async init() {
@@ -45,6 +58,7 @@ export class ScanController {
     } else {
       this.estrategia = new ModoLibre();
     }
+    validarStrategy(this.estrategia);
 
     // ── Si no hay sesión: modo libre, ocultar puntos ──
     if (!participante && !sesion) {
@@ -60,7 +74,7 @@ export class ScanController {
     // ── Escuchar cierre de sesión ──
     if (sesion) {
       this.sesionObserver = new SesionObserver(sesion.id);
-      eventBus.on(EVENTOS.SESION_CERRADA, () => {
+      this.unsubSesionCerrada = eventBus.on(EVENTOS.SESION_CERRADA, () => {
         if (this.puntosController) this.puntosController.detener();
         limpiarTodo();
         this.view.detenerAR();

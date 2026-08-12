@@ -12,6 +12,14 @@ export class CarreraController {
   constructor() {
     this.view = new CarreraView();
     this.sesionObserver = null;
+    this.unsubSesionActivada = null;
+    this.unsubSesionCerrada = null;
+  }
+
+  destruir() {
+    this.unsubSesionActivada?.();
+    this.unsubSesionCerrada?.();
+    this.sesionObserver?.destruir();
   }
 
   init() {
@@ -65,14 +73,14 @@ export class CarreraController {
       // Escuchar cambios de sesión
       this.sesionObserver = new SesionObserver(sesion.id);
 
-      eventBus.on(EVENTOS.SESION_ACTIVADA, () => {
+      this.unsubSesionActivada = eventBus.on(EVENTOS.SESION_ACTIVADA, () => {
         this.view.mostrarSesionActivada();
         setTimeout(() => {
           window.location.href = 'ar.html';
         }, 1500);
       });
 
-      eventBus.on(EVENTOS.SESION_CERRADA, () => {
+      this.unsubSesionCerrada = eventBus.on(EVENTOS.SESION_CERRADA, () => {
         this.view.mostrarSesionCerrada();
       });
 

@@ -26,6 +26,13 @@ export class AdminController {
     this.edificioSeleccionado = null;
   }
 
+  destruir() {
+    if (this.suscripcion) {
+      supabase.removeChannel(this.suscripcion);
+      this.suscripcion = null;
+    }
+  }
+
   async init() {
     this._initEdificiosGrid();
     this._initTabPreguntas();
