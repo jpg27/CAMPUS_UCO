@@ -44,6 +44,16 @@ export class ARView {
     document.getElementById('sin-sesion').style.display = 'flex';
   }
 
+  ocultarPuntos() {
+    const el = document.getElementById('display-puntos');
+    if (el) el.style.display = 'none';
+  }
+
+  ocultarBotonLogros() {
+    const btn = document.getElementById('btn-logros');
+    if (btn) btn.style.display = 'none';
+  }
+
   mostrarModalPregunta(edificio, pregunta) {
     document.getElementById('preg-edificio').textContent = edificio.icono + ' ' + edificio.nombre;
     document.getElementById('preg-texto').textContent    = pregunta.pregunta;
