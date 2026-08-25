@@ -33,11 +33,18 @@ export class MapaController {
       const display = new PuntosDisplay('display-puntos-mapa');
       this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK_MAPA);
       this.puntosController.iniciar(this.sesion.id);
+
+      // Con carrera activa sí se puede volver a la cámara a seguir escaneando.
+      const btnAr = document.getElementById('btn-ar');
+      if (btnAr) btnAr.style.display = 'inline-block';
     } else {
       const btnProgreso = document.getElementById('btn-progreso');
       if (btnProgreso) btnProgreso.style.display = 'none';
       const dp = document.getElementById('display-puntos-mapa');
       if (dp) dp.style.display = 'none';
+      // Sin carrera activa (Mapa como entrada independiente): nada de cámara.
+      const btnAr = document.getElementById('btn-ar');
+      if (btnAr) btnAr.style.display = 'none';
     }
 
     // ── Escuchar cierre de sesión ──
@@ -72,13 +79,6 @@ export class MapaController {
     document.getElementById('cerrar-panel')?.addEventListener('click', () => {
       this.view.ocultarPanel();
       this.view.deseleccionarBloque();
-    });
-
-    // ── Guardar puntos al ir a AR ──
-    document.getElementById('btn-ar')?.addEventListener('click', () => {
-      if (this.puntosController && this.sesion) {
-        this.puntosController.guardar(this.sesion.id);
-      }
     });
 
     // ── Panel de logros ──
