@@ -31,7 +31,7 @@ export class MapaController {
     // ── Sistema de puntos ──
     if (this.sesion && this.participante) {
       const display = new PuntosDisplay('display-puntos-mapa');
-      this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK_MAPA);
+      this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);
       this.puntosController.iniciar(this.sesion.id);
 
       // Con carrera activa sí se puede volver a la cámara a seguir escaneando.

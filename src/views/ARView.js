@@ -5,10 +5,28 @@
 import { obtenerEdificioInfo } from '../config.js';
 import { formatearHora } from '../utils/formatters.js';
 
+// Desplazamiento (en metros, espacio local del marcador) de cada panel de
+// punto de interés según hacia dónde queda ese punto en el mundo real
+// respecto a donde se escanea el marcador. x: derecha(+)/izquierda(-),
+// y: arriba(+)/abajo(-), z: hacia la cámara para que no quede tapado por el marcador.
+const OFFSET_PUNTOS_INTERES = 0.28;
+const DIRECCIONES_PUNTOS_INTERES = {
+  'arriba':            { x:  0,                        y:  OFFSET_PUNTOS_INTERES,       z: 0.05 },
+  'abajo':             { x:  0,                        y: -OFFSET_PUNTOS_INTERES,       z: 0.05 },
+  'izquierda':         { x: -OFFSET_PUNTOS_INTERES,    y:  0,                            z: 0.05 },
+  'derecha':           { x:  OFFSET_PUNTOS_INTERES,    y:  0,                            z: 0.05 },
+  'arriba-izquierda':  { x: -OFFSET_PUNTOS_INTERES * 0.7, y:  OFFSET_PUNTOS_INTERES * 0.7, z: 0.05 },
+  'arriba-derecha':    { x:  OFFSET_PUNTOS_INTERES * 0.7, y:  OFFSET_PUNTOS_INTERES * 0.7, z: 0.05 },
+  'abajo-izquierda':   { x: -OFFSET_PUNTOS_INTERES * 0.7, y: -OFFSET_PUNTOS_INTERES * 0.7, z: 0.05 },
+  'abajo-derecha':     { x:  OFFSET_PUNTOS_INTERES * 0.7, y: -OFFSET_PUNTOS_INTERES * 0.7, z: 0.05 },
+  'centro':            { x:  0,                        y:  0,                            z: 0.05 }
+};
+
 export class ARView {
   constructor() {
     this._responderCallback = null;
     this._continuarCallback = null;
+    this._panelesInteres = [];
   }
 
   init() {
@@ -42,6 +60,42 @@ export class ARView {
     modal.querySelector('a').textContent  = '🏠 Ir al inicio';
     modal.querySelector('a').href         = 'index.html';
     document.getElementById('sin-sesion').style.display = 'flex';
+  }
+
+  // ── Paneles 3D de puntos de interés (Modo Libre, Cambio 1) ──
+  mostrarPuntosInteres(edificio, targetEntity) {
+    this.ocultarPuntosInteres();
+
+    const puntos = edificio.puntosDeInteres || [];
+    this._panelesInteres = puntos.map(punto => {
+      const offset = DIRECCIONES_PUNTOS_INTERES[punto.direccion] || DIRECCIONES_PUNTOS_INTERES.centro;
+
+      const panel = document.createElement('a-entity');
+      panel.setAttribute('position', `${offset.x} ${offset.y} ${offset.z}`);
+
+      const fondo = document.createElement('a-plane');
+      fondo.setAttribute('width', '0.34');
+      fondo.setAttribute('height', '0.16');
+      fondo.setAttribute('color', '#1a2e1a');
+      fondo.setAttribute('opacity', '0.85');
+      panel.appendChild(fondo);
+
+      const texto = document.createElement('a-text');
+      texto.setAttribute('value', punto.texto);
+      texto.setAttribute('align', 'center');
+      texto.setAttribute('color', '#FFFFFF');
+      texto.setAttribute('width', '0.62');
+      texto.setAttribute('position', '0 0 0.01');
+      panel.appendChild(texto);
+
+      targetEntity.appendChild(panel);
+      return panel;
+    });
+  }
+
+  ocultarPuntosInteres() {
+    this._panelesInteres.forEach(panel => panel.remove());
+    this._panelesInteres = [];
   }
 
   ocultarPuntos() {

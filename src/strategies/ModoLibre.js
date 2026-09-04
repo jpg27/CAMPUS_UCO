@@ -20,9 +20,12 @@ export class ModoLibre extends GameStrategy {
 
   async manejarDeteccion(edificio, targetEntity, contexto) {
     // Modo Libre: sin preguntas, sin control de duplicados, sin persistencia.
-    // (El panel 3D anclado al marcador con puntos de interés llega en el Cambio 1;
-    // por ahora se informa con una notificación simple para no depender de PreguntaModel.)
-    contexto.notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, edificio.descripcion, null);
+    // Panel 3D anclado al marcador con los puntos de interés del edificio (Cambio 1).
+    contexto.view.mostrarPuntosInteres(edificio, targetEntity);
+  }
+
+  manejarPerdida(edificio, targetEntity, contexto) {
+    contexto.view.ocultarPuntosInteres();
   }
 
   tieneLogros() {

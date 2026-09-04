@@ -40,7 +40,7 @@ export class ModoCarrera extends GameStrategy {
     this.edificiosHabilitados = edificiosSesion.map(e => e.edificio_id);
 
     const display = new PuntosDisplay('display-puntos');
-    this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK_AR);
+    this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);
 
     this.sesionObserver = new SesionObserver(this.sesion.id);
     this.unsubSesionCerrada = eventBus.on(EVENTOS.SESION_CERRADA, () => {

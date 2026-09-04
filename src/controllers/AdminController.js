@@ -14,13 +14,10 @@ import {
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
 import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo } from '../utils/formatters.js';
+import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
 
 export class AdminController {
   constructor() {
-    if (sessionStorage.getItem('admin_autenticado') !== 'true') {
-      window.location.href = 'login-admin.html';
-      return;
-    }
     this.sesionActual = null;
     this.suscripcion = null;
     this.edificioSeleccionado = null;
@@ -34,6 +31,15 @@ export class AdminController {
   }
 
   async init() {
+    let sesion = null;
+    try {
+      sesion = await obtenerSesionAdmin();
+    } catch (e) { /* sin sesión */ }
+    if (!sesion) {
+      window.location.href = 'login-admin.html';
+      return;
+    }
+
     this._initEdificiosGrid();
     this._initTabPreguntas();
     this._exposeWindowFunctions();
@@ -111,8 +117,8 @@ export class AdminController {
 
   // ── Exponer funciones al window ──
   _exposeWindowFunctions() {
-    window.cerrarAdmin = () => {
-      sessionStorage.removeItem('admin_autenticado');
+    window.cerrarAdmin = async () => {
+      try { await cerrarSesionAdmin(); } catch (e) { /* seguimos igual al login */ }
       window.location.href = 'login-admin.html';
     };
 

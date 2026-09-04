@@ -31,7 +31,12 @@ export const EDIFICIOS = [
     descripcion: 'Bloque de laboratorios y biblioteca.',
     localizacion: '📍 Campus parte media',
     archivo: 'sprites/Bloque_EDC.png',
-    x: -2.76, y: -2.40, ancho: 2.04
+    x: -2.76, y: -2.40, ancho: 2.04,
+    puntosDeInteres: [
+      { texto: "Biblioteca central", direccion: 'arriba' },
+      { texto: "Laboratorios de sistemas", direccion: 'derecha' },
+      { texto: "Sala de estudio 24 horas", direccion: 'abajo-derecha' }
+    ]
   },
     {
     id: 'edificio_j',
@@ -40,7 +45,11 @@ export const EDIFICIOS = [
     descripcion: 'Bloque de salones.',
     localizacion: '📍 Campus parte baja',
     archivo: 'sprites/Bloque_J.png',
-    x: -0.02, y: -1.23, ancho: 1.3
+    x: -0.02, y: -1.23, ancho: 1.3,
+    puntosDeInteres: [
+      { texto: "Salones de clase - pisos 1 y 2", direccion: 'arriba' },
+      { texto: "Cafetería", direccion: 'izquierda' }
+    ]
   },
     {
     id: 'coliseo',
@@ -49,7 +58,11 @@ export const EDIFICIOS = [
     descripcion: 'Coliseo deportivo.',
     localizacion: '📍 Campus parte alta',
     archivo: 'sprites/Coliseo.png',
-    x: -2.58, y: 0.55, ancho: 1.4
+    x: -2.58, y: 0.55, ancho: 1.4,
+    puntosDeInteres: [
+      { texto: "Canchas múltiples", direccion: 'centro' },
+      { texto: "Gimnasio", direccion: 'arriba-derecha' }
+    ]
   },
   {
     id: 'bloque_col',
@@ -58,7 +71,11 @@ export const EDIFICIOS = [
     descripcion: 'Edificio del colegio de la universidad.',
     localizacion: '📍 Campus parte alta',
     archivo: 'sprites/Bloque_Col.png',
-    x: -2.18, y: 1.66, ancho: 2.05
+    x: -2.18, y: 1.66, ancho: 2.05,
+    puntosDeInteres: [
+      { texto: "Colegio de la universidad", direccion: 'arriba' },
+      { texto: "Zonas verdes", direccion: 'abajo' }
+    ]
   },
   {
     id: 'bloque_m',
@@ -67,7 +84,12 @@ export const EDIFICIOS = [
     descripcion: 'Bloque principal de la universidad.',
     localizacion: '📍 Campus parte alta',
     archivo: 'sprites/Bloque_M.png',
-    x: -1.09, y: 1.91, ancho: 2.3
+    x: -1.09, y: 1.91, ancho: 2.3,
+    puntosDeInteres: [
+      { texto: "Rectoría y administración", direccion: 'arriba' },
+      { texto: "Facultad de Ingeniería", direccion: 'arriba-derecha' },
+      { texto: "Sala de profesores", direccion: 'izquierda' }
+    ]
   },
   {
     id: 'auditorio',
@@ -76,7 +98,11 @@ export const EDIFICIOS = [
     descripcion: 'Auditorio principal.',
     localizacion: '📍 Campus parte alta',
     archivo: 'sprites/Auditorio.png',
-    x: 0.40, y: 2.23, ancho: 1.22
+    x: 0.40, y: 2.23, ancho: 1.22,
+    puntosDeInteres: [
+      { texto: "Auditorio principal", direccion: 'centro' },
+      { texto: "Camerinos", direccion: 'derecha' }
+    ]
   },
   {
     id: 'bloque_innova',
@@ -85,7 +111,11 @@ export const EDIFICIOS = [
     descripcion: 'Centro de idiomas, sala de sistemas y auditorio.',
     localizacion: '📍 Campus parte baja',
     archivo: 'sprites/Bloque_INNOVA.png',
-    x: 2.60, y: 0.22, ancho: 0.99
+    x: 2.60, y: 0.22, ancho: 0.99,
+    puntosDeInteres: [
+      { texto: "Centro de idiomas", direccion: 'arriba' },
+      { texto: "Sala de sistemas", direccion: 'abajo-izquierda' }
+    ]
   },
     {
     id: 'capilla',
@@ -94,7 +124,10 @@ export const EDIFICIOS = [
     descripcion: 'Capilla del campus.',
     localizacion: '📍 Campus parte baja',
     archivo: 'sprites/Capilla.png',
-    x: 3.28, y: 0.09, ancho: 0.4
+    x: 3.28, y: 0.09, ancho: 0.4,
+    puntosDeInteres: [
+      { texto: "Capilla del campus", direccion: 'centro' }
+    ]
   },
   {
     id: 'bloque_nuevo',
@@ -133,8 +166,7 @@ export const EDIFICIOS_AR = {
 export const PUNTOS = {
   INICIO: 1000,
   POR_TICK: 1,
-  MS_POR_TICK_AR: 10000,
-  MS_POR_TICK_MAPA: 5000,
+  MS_POR_TICK: 2000,
   BONUS_CORRECTO: 0,
   PENALIZACION: 100
 };

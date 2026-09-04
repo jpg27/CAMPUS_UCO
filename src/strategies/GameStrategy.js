@@ -23,6 +23,9 @@ export class GameStrategy {
     throw new Error(`${this.constructor.name}.manejarDeteccion() no implementado`);
   }
 
+  /** Se ejecuta cuando MindAR pierde de vista un marcador (targetLost). No obligatorio. */
+  manejarPerdida(edificio, targetEntity, contexto) {}
+
   /** Se ejecuta cuando la escena de A-Frame terminó de cargar. */
   alCargarEscena(contexto) {}
 

@@ -57,6 +57,12 @@ export class ScanController {
         if (!edificio) return;
         await this.estrategia.manejarDeteccion(edificio, target, this.contexto);
       });
+
+      target.addEventListener('targetLost', async () => {
+        const edificio = obtenerEdificioPorId(edificioId);
+        if (!edificio) return;
+        await this.estrategia.manejarPerdida(edificio, target, this.contexto);
+      });
     });
 
     // ── Panel de logros ──
