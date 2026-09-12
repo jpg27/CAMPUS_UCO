@@ -65,122 +65,6 @@
     #notificacion .not-desc   { font-size: 13px; opacity: 0.85; }
     #notificacion .not-puntos { margin-top: 8px; font-size: 20px; font-weight: bold; color: #FFD700; }
 
-    #modal-pregunta {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 1500;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    #modal-pregunta.visible { display: flex; }
-
-    .pregunta-card {
-      background: white;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 420px;
-      overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    }
-    .pregunta-header {
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      padding: 18px 20px;
-      text-align: center;
-    }
-    .pregunta-header .edificio-nombre {
-      color: #90EE90;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 6px;
-    }
-    .pregunta-header .puntos-info {
-      color: #FFD700;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-    .pregunta-texto {
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      line-height: 1.4;
-    }
-    .pregunta-body { padding: 20px; }
-
-    .opcion-btn {
-      width: 100%;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      background: #f8f9f8;
-      font-size: 14px;
-      font-family: Arial;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .opcion-btn:hover { border-color: #3a7a1a; background: #f0f8f0; }
-    .opcion-btn.correcta {
-      border-color: #2e7d32;
-      background: #e8f5e9;
-      color: #1b5e20;
-      pointer-events: none;
-    }
-    .opcion-btn.incorrecta {
-      border-color: #c62828;
-      background: #ffebee;
-      color: #b71c1c;
-      pointer-events: none;
-    }
-    .opcion-btn.deshabilitada {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    .opcion-letra {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: #e0e0e0;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 13px; flex-shrink: 0;
-    }
-    .opcion-btn.correcta  .opcion-letra { background: #2e7d32; color: white; }
-    .opcion-btn.incorrecta .opcion-letra { background: #c62828; color: white; }
-
-    .resultado-pregunta {
-      display: none;
-      text-align: center;
-      padding: 16px;
-      border-radius: 12px;
-      margin-top: 4px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-    .resultado-pregunta.correcto   { background: #e8f5e9; color: #1b5e20; display: block; }
-    .resultado-pregunta.incorrecto { background: #ffebee; color: #b71c1c; display: block; }
-
-    .btn-continuar {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      font-family: Arial;
-      cursor: pointer;
-      margin-top: 12px;
-      display: none;
-    }
-    .btn-continuar.visible { display: block; }
-
     #panel-logros {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -322,7 +206,6 @@
       cursor: pointer; text-decoration: none; text-align: center;
     }
     @media (max-width: 600px) {
-      .pregunta-card { margin: 16px; width: auto; padding: 20px; }
       .finalizacion-card { margin: 16px; width: auto; }
       .finalizacion-stats { flex-direction: column; }
       #notificacion { width: 90%; padding: 12px 16px; }
@@ -352,38 +235,8 @@
     <div class="not-puntos" id="not-puntos"></div>
   </div>
 
-  <!-- MODAL DE PREGUNTA -->
-  <div id="modal-pregunta">
-    <div class="pregunta-card">
-      <div class="pregunta-header">
-        <div class="edificio-nombre" id="preg-edificio">Bloque M</div>
-        <div class="pregunta-texto"  id="preg-texto">¿Pregunta?</div>
-        <div class="puntos-info">✅ +0 pts si aciertas · ❌ -100 pts si fallas</div>
-      </div>
-      <div class="pregunta-body">
-        <button class="opcion-btn" id="opcion-a">
-          <span class="opcion-letra">A</span>
-          <span id="texto-a">Opción A</span>
-        </button>
-        <button class="opcion-btn" id="opcion-b">
-          <span class="opcion-letra">B</span>
-          <span id="texto-b">Opción B</span>
-        </button>
-        <button class="opcion-btn" id="opcion-c">
-          <span class="opcion-letra">C</span>
-          <span id="texto-c">Opción C</span>
-        </button>
-        <button class="opcion-btn" id="opcion-d">
-          <span class="opcion-letra">D</span>
-          <span id="texto-d">Opción D</span>
-        </button>
-        <div class="resultado-pregunta" id="resultado-pregunta"></div>
-        <button class="btn-continuar" id="btn-continuar">
-          Continuar →
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- La pregunta de trivia ahora se muestra en 3D, anclada al marcador
+       AR (ver ARView.mostrarPreguntaAR) en vez de en un modal HTML 2D. -->
 
   <!-- PANEL DE LOGROS -->
   <div id="panel-logros">
@@ -444,7 +297,12 @@
       <a-asset-item id="estrella" src="./models/estrella.glb"></a-asset-item>
     </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+      cursor="rayOrigin: mouse; fuse: false"
+      raycaster="objects: .clickable-opcion, .clickable-continuar; far: 1000">
+    </a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="target-bloque-edc">
       <a-gltf-model

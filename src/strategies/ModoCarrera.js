@@ -87,7 +87,7 @@ export class ModoCarrera extends GameStrategy {
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
     this.puntosController?.detener();
-    view.mostrarModalPregunta(edificio, pregunta);
+    view.mostrarPreguntaAR(edificio, pregunta, targetEntity);
   }
 
   _responder(letra, view) {
@@ -95,7 +95,7 @@ export class ModoCarrera extends GameStrategy {
     this.respuestaRegistrada = true;
     this.respondioCorrectamente = this.preguntaActual.respuesta_correcta === letra;
 
-    view.marcarRespuesta(letra, this.preguntaActual.respuesta_correcta);
+    view.marcarRespuestaAR(letra, this.preguntaActual.respuesta_correcta);
 
     if (this.respondioCorrectamente && this.targetActual) {
       const model = this.targetActual.querySelector('a-gltf-model');
@@ -111,7 +111,7 @@ export class ModoCarrera extends GameStrategy {
 
   async _continuar(contexto) {
     const { view, notificacion } = contexto;
-    view.ocultarModalPregunta();
+    view.ocultarPreguntaAR();
 
     if (this.targetActual) {
       const model = this.targetActual.querySelector('a-gltf-model');

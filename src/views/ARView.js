@@ -27,26 +27,15 @@ export class ARView {
     this._responderCallback = null;
     this._continuarCallback = null;
     this._panelesInteres = [];
+    this._panelPregunta = null;
   }
 
   init() {
-    // Conectar botones de opciones
-    ['a', 'b', 'c', 'd'].forEach(letra => {
-      const btn = document.getElementById('opcion-' + letra);
-      if (btn) {
-        btn.addEventListener('click', () => {
-          if (this._responderCallback) this._responderCallback(letra);
-        });
-      }
-    });
-
-    // Conectar botón continuar
-    const btnContinuar = document.getElementById('btn-continuar');
-    if (btnContinuar) {
-      btnContinuar.addEventListener('click', () => {
-        if (this._continuarCallback) this._continuarCallback();
-      });
-    }
+    // La pregunta de trivia (Modo Carrera) se muestra en un panel 3D
+    // anclado al marcador (ver mostrarPreguntaAR más abajo), no en botones
+    // HTML fijos — por eso aquí no hay nada que conectar de entrada. Los
+    // listeners de cada opción y del botón "Continuar" se agregan cuando
+    // se crea el panel, sobre las entidades 3D correspondientes.
   }
 
   mostrarSinSesion() {
@@ -108,56 +97,126 @@ export class ARView {
     if (btn) btn.style.display = 'none';
   }
 
-  mostrarModalPregunta(edificio, pregunta) {
-    document.getElementById('preg-edificio').textContent = edificio.icono + ' ' + edificio.nombre;
-    document.getElementById('preg-texto').textContent    = pregunta.pregunta;
-    document.getElementById('texto-a').textContent       = pregunta.opcion_a;
-    document.getElementById('texto-b').textContent       = pregunta.opcion_b;
-    document.getElementById('texto-c').textContent       = pregunta.opcion_c;
-    document.getElementById('texto-d').textContent       = pregunta.opcion_d;
+  // ── Panel 3D de pregunta (Modo Carrera) ──
+  // Reemplaza el antiguo modal HTML 2D: la pregunta y sus opciones ahora
+  // son entidades A-Frame ancladas al propio marcador (targetEntity), en el
+  // mismo espíritu que mostrarPuntosInteres() para Modo Libre. El tap sobre
+  // cada opción se resuelve con el cursor+raycaster del <a-camera> (ver
+  // ar.html), que dispara un evento 'click' sobre la entidad tocada.
+  mostrarPreguntaAR(edificio, pregunta, targetEntity) {
+    this.ocultarPreguntaAR();
 
-    // Reset botones
-    ['a', 'b', 'c', 'd'].forEach(l => {
-      const btn = document.getElementById('opcion-' + l);
-      btn.className = 'opcion-btn';
-      btn.disabled  = false;
+    const panel = document.createElement('a-entity');
+    panel.setAttribute('position', '0 0.48 0.05');
+
+    const fondo = document.createElement('a-plane');
+    fondo.setAttribute('width', '0.66');
+    fondo.setAttribute('height', '0.86');
+    fondo.setAttribute('color', '#1a2e1a');
+    fondo.setAttribute('opacity', '0.92');
+    panel.appendChild(fondo);
+
+    const titulo = document.createElement('a-text');
+    titulo.setAttribute('value', edificio.icono + ' ' + edificio.nombre);
+    titulo.setAttribute('align', 'center');
+    titulo.setAttribute('color', '#90EE90');
+    titulo.setAttribute('width', '1.1');
+    titulo.setAttribute('position', '0 0.36 0.01');
+    panel.appendChild(titulo);
+
+    const texto = document.createElement('a-text');
+    texto.setAttribute('value', pregunta.pregunta);
+    texto.setAttribute('align', 'center');
+    texto.setAttribute('color', '#FFFFFF');
+    texto.setAttribute('width', '0.95');
+    texto.setAttribute('wrap-count', '28');
+    texto.setAttribute('position', '0 0.24 0.01');
+    panel.appendChild(texto);
+
+    const opcionesTexto = {
+      a: pregunta.opcion_a, b: pregunta.opcion_b,
+      c: pregunta.opcion_c, d: pregunta.opcion_d
+    };
+    this._opcionesAR = {};
+
+    ['a', 'b', 'c', 'd'].forEach((letra, i) => {
+      const y = 0.10 - i * 0.12;
+
+      const opcion = document.createElement('a-plane');
+      opcion.setAttribute('class', 'clickable-opcion');
+      opcion.setAttribute('width', '0.58');
+      opcion.setAttribute('height', '0.095');
+      opcion.setAttribute('color', '#2a4a1a');
+      opcion.setAttribute('position', `0 ${y} 0.01`);
+
+      const opcionTexto = document.createElement('a-text');
+      opcionTexto.setAttribute('value', letra.toUpperCase() + ') ' + opcionesTexto[letra]);
+      opcionTexto.setAttribute('align', 'center');
+      opcionTexto.setAttribute('color', '#FFFFFF');
+      opcionTexto.setAttribute('width', '1.0');
+      opcionTexto.setAttribute('wrap-count', '32');
+      opcionTexto.setAttribute('position', '0 0 0.01');
+      opcion.appendChild(opcionTexto);
+
+      opcion.addEventListener('click', () => {
+        if (this._responderCallback) this._responderCallback(letra);
+      });
+
+      panel.appendChild(opcion);
+      this._opcionesAR[letra] = opcion;
     });
 
-    document.getElementById('resultado-pregunta').className   = 'resultado-pregunta';
-    document.getElementById('resultado-pregunta').textContent = '';
-    document.getElementById('btn-continuar').classList.remove('visible');
-    document.getElementById('modal-pregunta').classList.add('visible');
+    targetEntity.appendChild(panel);
+    this._panelPregunta = panel;
   }
 
-  marcarRespuesta(letraSeleccionada, letraCorrecta) {
+  marcarRespuestaAR(letraSeleccionada, letraCorrecta) {
     const esCorrecta = letraSeleccionada === letraCorrecta;
 
-    ['a', 'b', 'c', 'd'].forEach(l => {
-      const btn = document.getElementById('opcion-' + l);
-      if (l === letraCorrecta) {
-        btn.classList.add('correcta');
-      } else if (l === letraSeleccionada && !esCorrecta) {
-        btn.classList.add('incorrecta');
+    Object.entries(this._opcionesAR || {}).forEach(([letra, entidad]) => {
+      if (letra === letraCorrecta) {
+        entidad.setAttribute('color', '#2e7d32');
+      } else if (letra === letraSeleccionada) {
+        entidad.setAttribute('color', '#c62828');
       } else {
-        btn.classList.add('deshabilitada');
+        entidad.setAttribute('color', '#12200f');
+        entidad.setAttribute('opacity', '0.5');
       }
     });
 
-    const resultado = document.getElementById('resultado-pregunta');
-    if (esCorrecta) {
-      resultado.className   = 'resultado-pregunta correcto';
-      resultado.textContent = '🎉 ¡Correcto! No pierdes puntos';
-    } else {
-      resultado.className   = 'resultado-pregunta incorrecto';
-      resultado.textContent = '❌ Incorrecto. -100 puntos';
-    }
-
-    document.getElementById('btn-continuar').classList.add('visible');
+    if (this._panelPregunta) this._agregarBotonContinuarAR(this._panelPregunta);
     return esCorrecta;
   }
 
-  ocultarModalPregunta() {
-    document.getElementById('modal-pregunta').classList.remove('visible');
+  ocultarPreguntaAR() {
+    if (this._panelPregunta) {
+      this._panelPregunta.remove();
+      this._panelPregunta = null;
+    }
+    this._opcionesAR = null;
+  }
+
+  _agregarBotonContinuarAR(panel) {
+    const continuar = document.createElement('a-plane');
+    continuar.setAttribute('class', 'clickable-continuar');
+    continuar.setAttribute('width', '0.58');
+    continuar.setAttribute('height', '0.09');
+    continuar.setAttribute('color', '#3a7a1a');
+    continuar.setAttribute('position', '0 -0.40 0.02');
+
+    const texto = document.createElement('a-text');
+    texto.setAttribute('value', 'Continuar →');
+    texto.setAttribute('align', 'center');
+    texto.setAttribute('color', '#FFFFFF');
+    texto.setAttribute('width', '1.0');
+    texto.setAttribute('position', '0 0 0.01');
+    continuar.appendChild(texto);
+
+    continuar.addEventListener('click', () => {
+      if (this._continuarCallback) this._continuarCallback();
+    });
+
+    panel.appendChild(continuar);
   }
 
   onResponder(callback) {
