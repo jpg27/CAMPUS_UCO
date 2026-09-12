@@ -22,12 +22,198 @@ const DIRECCIONES_PUNTOS_INTERES = {
   'centro':            { x:  0,                        y:  0,                            z: 0.05 }
 };
 
+// ═══════════════════════════════════════════
+// Estilo "tarjeta" del panel 3D de pregunta (Modo Carrera)
+// ═══════════════════════════════════════════
+// El panel se dibuja como textura de canvas (no como a-plane de color
+// plano + a-text) para poder tener esquinas redondeadas, degradados y
+// texto multilínea de verdad, como una tarjeta de UI normal. Las 4
+// opciones NO se hornean en esa textura: son planos aparte, calculados
+// para calzar exactamente en el espacio que la tarjeta deja para ellas,
+// porque necesitan seguir siendo entidades individuales que el
+// raycaster del <a-camera> pueda detectar por separado (ver ar.html).
+const PIXEL_SCALE = 3; // sobremuestreo para que no se vea borroso de cerca
+
+const TARJETA = {
+  anchoPx: 420,
+  padX: 22,
+  headerAlto: 52,
+  headerAncho: 232,
+  headerSolape: 22,
+  radioTarjeta: 26,
+  preguntaFuente: 22,
+  preguntaAltoLinea: 27,
+  preguntaGapArriba: 20,
+  infoFuente: 13,
+  infoGapArriba: 10,
+  infoGapAbajo: 18,
+  botonAlto: 58,
+  botonGap: 12,
+  paddingAbajo: 22,
+  anchoMetros: 0.60
+};
+
+const COLOR_OPCION     = ['#1f8066', '#145341'];
+const COLOR_CORRECTA   = ['#3fa142', '#256b28'];
+const COLOR_INCORRECTA = ['#d9453f', '#9c2622'];
+const COLOR_INACTIVA   = ['#5c6560', '#3d4440'];
+const COLOR_CONTINUAR  = ['#1c2430', '#0c1015'];
+
+function trazarRectRedondeado(ctx, x, y, w, h, r) {
+  const radio = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radio, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, radio);
+  ctx.arcTo(x + w, y + h, x,     y + h, radio);
+  ctx.arcTo(x,     y + h, x,     y,     radio);
+  ctx.arcTo(x,     y,     x + w, y,     radio);
+  ctx.closePath();
+}
+
+function partirEnLineas(ctx, texto, anchoMax) {
+  const palabras = texto.split(' ');
+  const lineas = [];
+  let actual = '';
+  palabras.forEach(palabra => {
+    const prueba = actual ? actual + ' ' + palabra : palabra;
+    if (ctx.measureText(prueba).width > anchoMax && actual) {
+      lineas.push(actual);
+      actual = palabra;
+    } else {
+      actual = prueba;
+    }
+  });
+  if (actual) lineas.push(actual);
+  return lineas;
+}
+
+// Textura de la tarjeta: píldora de título + cuerpo con la pregunta.
+// Calcula su propia altura según cuántas líneas necesita la pregunta, y
+// devuelve dónde debe empezar el bloque de 4 opciones (en px del
+// canvas) para que quien las dibuje aparte pueda alinearlas exactas.
+function crearTarjetaPreguntaCanvas(edificio, pregunta) {
+  const t = TARJETA;
+  const medibujo = document.createElement('canvas').getContext('2d');
+  medibujo.font = `bold ${t.preguntaFuente}px Arial`;
+  const lineasPregunta = partirEnLineas(medibujo, pregunta.pregunta, t.anchoPx - t.padX * 2);
+
+  const cardFillTop        = t.headerAlto - t.headerSolape;
+  const contentTop         = cardFillTop + t.preguntaGapArriba;
+  const preguntaAltoBloque = lineasPregunta.length * t.preguntaAltoLinea;
+  const infoTop            = contentTop + preguntaAltoBloque + t.infoGapArriba;
+  const botonesTop         = infoTop + t.infoFuente + t.infoGapAbajo;
+  const botonesAltoBloque  = 4 * t.botonAlto + 3 * t.botonGap;
+  const altoPx             = botonesTop + botonesAltoBloque + t.paddingAbajo;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = t.anchoPx * PIXEL_SCALE;
+  canvas.height = altoPx    * PIXEL_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(PIXEL_SCALE, PIXEL_SCALE);
+
+  // Cuerpo blanco/crema con esquinas redondeadas
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur    = 16;
+  ctx.shadowOffsetY = 8;
+  trazarRectRedondeado(ctx, 6, cardFillTop, t.anchoPx - 12, altoPx - cardFillTop - 6, t.radioTarjeta);
+  ctx.fillStyle = '#f4efe4';
+  ctx.fill();
+  ctx.restore();
+
+  // Píldora del título, flotando sobre el borde superior de la tarjeta
+  const headerX = (t.anchoPx - t.headerAncho) / 2;
+  trazarRectRedondeado(ctx, headerX, 0, t.headerAncho, t.headerAlto, t.headerAlto / 2);
+  const gradHeader = ctx.createLinearGradient(0, 0, 0, t.headerAlto);
+  gradHeader.addColorStop(0, '#1c2430');
+  gradHeader.addColorStop(1, '#0c1015');
+  ctx.fillStyle = gradHeader;
+  ctx.fill();
+
+  // Título en dos tonos: primera palabra en blanco, el resto en verde
+  // (p.ej. "Bloque" blanco + "INNOVA" verde). Si el nombre es una sola
+  // palabra, queda toda en blanco.
+  ctx.font = `bold ${Math.round(t.headerAlto * 0.36)}px Arial`;
+  ctx.textBaseline = 'middle';
+  const partes  = edificio.nombre.split(' ');
+  const primera = partes[0];
+  const resto   = partes.slice(1).join(' ');
+  const anchoPrimera = ctx.measureText(primera).width;
+  const anchoResto   = resto ? ctx.measureText(' ' + resto).width : 0;
+  const x0 = t.anchoPx / 2 - (anchoPrimera + anchoResto) / 2;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(primera, x0, t.headerAlto / 2 + 1);
+  if (resto) {
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText(' ' + resto, x0 + anchoPrimera, t.headerAlto / 2 + 1);
+  }
+
+  // Pregunta
+  ctx.font = `bold ${t.preguntaFuente}px Arial`;
+  ctx.fillStyle = '#182238';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  lineasPregunta.forEach((linea, i) => {
+    ctx.fillText(linea, t.anchoPx / 2, contentTop + (i + 1) * t.preguntaAltoLinea - 6, t.anchoPx - t.padX * 2);
+  });
+
+  // Info de puntos (igual a la que tenía el modal 2D)
+  ctx.font = `${t.infoFuente}px Arial`;
+  ctx.fillStyle = '#8a8a86';
+  ctx.fillText(
+    '✅ +0 pts si aciertas · ❌ -100 pts si fallas',
+    t.anchoPx / 2, infoTop + t.infoFuente, t.anchoPx - t.padX * 2
+  );
+
+  return { canvas, anchoPx: t.anchoPx, altoPx, botonesTop, botonAlto: t.botonAlto, botonGap: t.botonGap, padX: t.padX };
+}
+
+// Textura de una píldora clicable (una opción, o el botón "Continuar").
+function crearPildoraCanvas({ anchoPx, altoPx, texto, colorTop, colorBottom, align = 'left' }) {
+  const canvas = document.createElement('canvas');
+  canvas.width  = anchoPx * PIXEL_SCALE;
+  canvas.height = altoPx  * PIXEL_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(PIXEL_SCALE, PIXEL_SCALE);
+
+  ctx.save();
+  ctx.shadowColor   = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur    = 5;
+  ctx.shadowOffsetY = 3;
+  trazarRectRedondeado(ctx, 0, 0, anchoPx, altoPx, altoPx / 2);
+  const grad = ctx.createLinearGradient(0, 0, 0, altoPx);
+  grad.addColorStop(0, colorTop);
+  grad.addColorStop(1, colorBottom);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.restore();
+
+  // Brillo superior sutil, efecto de bisel
+  trazarRectRedondeado(ctx, 3, 3, anchoPx - 6, altoPx * 0.4, altoPx / 2 - 3);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fill();
+
+  ctx.font = `bold ${Math.round(altoPx * 0.32)}px Arial`;
+  ctx.fillStyle = '#ffffff';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = align;
+  const tx = align === 'center' ? anchoPx / 2 : altoPx * 0.42;
+  ctx.fillText(texto, tx, altoPx / 2 + 1, anchoPx - (align === 'center' ? 32 : altoPx * 0.6));
+
+  return canvas;
+}
+
 export class ARView {
   constructor() {
     this._responderCallback = null;
     this._continuarCallback = null;
     this._panelesInteres = [];
     this._panelPregunta = null;
+    this._opcionesAR = null;
+    this._opcionesTextoAR = null;
+    this._panelAltoMetros = 0;
+    this._pxToM = 0;
   }
 
   init() {
@@ -100,88 +286,85 @@ export class ARView {
   // ── Panel 3D de pregunta (Modo Carrera) ──
   // Reemplaza el antiguo modal HTML 2D: la pregunta y sus opciones ahora
   // son entidades A-Frame ancladas al propio marcador (targetEntity), en el
-  // mismo espíritu que mostrarPuntosInteres() para Modo Libre. El tap sobre
-  // cada opción se resuelve con el cursor+raycaster del <a-camera> (ver
-  // ar.html), que dispara un evento 'click' sobre la entidad tocada.
+  // mismo espíritu que mostrarPuntosInteres() para Modo Libre, pero con
+  // estilo de tarjeta (esquinas redondeadas, píldoras, degradados) en vez
+  // de rectángulos de color plano — ver los helpers de canvas arriba. El
+  // tap sobre cada opción se resuelve con el cursor+raycaster del
+  // <a-camera> (ver ar.html), que dispara un evento 'click' sobre la
+  // entidad tocada.
   mostrarPreguntaAR(edificio, pregunta, targetEntity) {
     this.ocultarPreguntaAR();
 
+    const tarjeta = crearTarjetaPreguntaCanvas(edificio, pregunta);
+    const pxToM = TARJETA.anchoMetros / tarjeta.anchoPx;
+    const altoMetros = tarjeta.altoPx * pxToM;
+
     const panel = document.createElement('a-entity');
-    panel.setAttribute('position', '0 0.48 0.05');
+    panel.setAttribute('position', `0 ${(altoMetros / 2 + 0.06).toFixed(4)} 0.05`);
 
     const fondo = document.createElement('a-plane');
-    fondo.setAttribute('width', '0.66');
-    fondo.setAttribute('height', '0.86');
-    fondo.setAttribute('color', '#1a2e1a');
-    fondo.setAttribute('opacity', '0.92');
+    fondo.setAttribute('width', TARJETA.anchoMetros.toFixed(4));
+    fondo.setAttribute('height', altoMetros.toFixed(4));
+    fondo.setAttribute('position', '0 0 0');
+    fondo.setAttribute('material', { shader: 'flat', src: tarjeta.canvas, transparent: true, alphaTest: 0.05 });
     panel.appendChild(fondo);
-
-    const titulo = document.createElement('a-text');
-    titulo.setAttribute('value', edificio.icono + ' ' + edificio.nombre);
-    titulo.setAttribute('align', 'center');
-    titulo.setAttribute('color', '#90EE90');
-    titulo.setAttribute('width', '1.1');
-    titulo.setAttribute('position', '0 0.36 0.01');
-    panel.appendChild(titulo);
-
-    const texto = document.createElement('a-text');
-    texto.setAttribute('value', pregunta.pregunta);
-    texto.setAttribute('align', 'center');
-    texto.setAttribute('color', '#FFFFFF');
-    texto.setAttribute('width', '0.95');
-    texto.setAttribute('wrap-count', '28');
-    texto.setAttribute('position', '0 0.24 0.01');
-    panel.appendChild(texto);
 
     const opcionesTexto = {
       a: pregunta.opcion_a, b: pregunta.opcion_b,
       c: pregunta.opcion_c, d: pregunta.opcion_d
     };
     this._opcionesAR = {};
+    this._opcionesTextoAR = opcionesTexto;
 
+    const btnAnchoPx = tarjeta.anchoPx - tarjeta.padX * 2;
     ['a', 'b', 'c', 'd'].forEach((letra, i) => {
-      const y = 0.10 - i * 0.12;
+      const centroPx = tarjeta.botonesTop + i * (tarjeta.botonAlto + tarjeta.botonGap) + tarjeta.botonAlto / 2;
+      const y = altoMetros / 2 - centroPx * pxToM;
 
       const opcion = document.createElement('a-plane');
       opcion.setAttribute('class', 'clickable-opcion');
-      opcion.setAttribute('width', '0.58');
-      opcion.setAttribute('height', '0.095');
-      opcion.setAttribute('color', '#2a4a1a');
-      opcion.setAttribute('position', `0 ${y} 0.01`);
-
-      const opcionTexto = document.createElement('a-text');
-      opcionTexto.setAttribute('value', letra.toUpperCase() + ') ' + opcionesTexto[letra]);
-      opcionTexto.setAttribute('align', 'center');
-      opcionTexto.setAttribute('color', '#FFFFFF');
-      opcionTexto.setAttribute('width', '1.0');
-      opcionTexto.setAttribute('wrap-count', '32');
-      opcionTexto.setAttribute('position', '0 0 0.01');
-      opcion.appendChild(opcionTexto);
+      opcion.setAttribute('width', (btnAnchoPx * pxToM).toFixed(4));
+      opcion.setAttribute('height', (tarjeta.botonAlto * pxToM).toFixed(4));
+      opcion.setAttribute('position', `0 ${y.toFixed(4)} 0.01`);
+      opcion.setAttribute('material', {
+        shader: 'flat', transparent: true, alphaTest: 0.05,
+        src: crearPildoraCanvas({
+          anchoPx: btnAnchoPx, altoPx: tarjeta.botonAlto,
+          texto: `${letra.toUpperCase()})  ${opcionesTexto[letra]}`,
+          colorTop: COLOR_OPCION[0], colorBottom: COLOR_OPCION[1]
+        })
+      });
 
       opcion.addEventListener('click', () => {
         if (this._responderCallback) this._responderCallback(letra);
       });
 
       panel.appendChild(opcion);
-      this._opcionesAR[letra] = opcion;
+      this._opcionesAR[letra] = { entidad: opcion, anchoPx: btnAnchoPx, altoPx: tarjeta.botonAlto };
     });
 
     targetEntity.appendChild(panel);
     this._panelPregunta = panel;
+    this._panelAltoMetros = altoMetros;
+    this._pxToM = pxToM;
   }
 
   marcarRespuestaAR(letraSeleccionada, letraCorrecta) {
     const esCorrecta = letraSeleccionada === letraCorrecta;
 
-    Object.entries(this._opcionesAR || {}).forEach(([letra, entidad]) => {
-      if (letra === letraCorrecta) {
-        entidad.setAttribute('color', '#2e7d32');
-      } else if (letra === letraSeleccionada) {
-        entidad.setAttribute('color', '#c62828');
-      } else {
-        entidad.setAttribute('color', '#12200f');
-        entidad.setAttribute('opacity', '0.5');
-      }
+    Object.entries(this._opcionesAR || {}).forEach(([letra, info]) => {
+      let colores = COLOR_INACTIVA;
+      if (letra === letraCorrecta) colores = COLOR_CORRECTA;
+      else if (letra === letraSeleccionada) colores = COLOR_INCORRECTA;
+
+      info.entidad.setAttribute('material', {
+        shader: 'flat', transparent: true, alphaTest: 0.05,
+        src: crearPildoraCanvas({
+          anchoPx: info.anchoPx, altoPx: info.altoPx,
+          texto: `${letra.toUpperCase()})  ${this._opcionesTextoAR[letra]}`,
+          colorTop: colores[0], colorBottom: colores[1]
+        })
+      });
     });
 
     if (this._panelPregunta) this._agregarBotonContinuarAR(this._panelPregunta);
@@ -194,23 +377,25 @@ export class ARView {
       this._panelPregunta = null;
     }
     this._opcionesAR = null;
+    this._opcionesTextoAR = null;
   }
 
   _agregarBotonContinuarAR(panel) {
+    const anchoPx = 260, altoPx = 54;
+    const y = -this._panelAltoMetros / 2 - 0.05 - (altoPx * this._pxToM) / 2;
+
     const continuar = document.createElement('a-plane');
     continuar.setAttribute('class', 'clickable-continuar');
-    continuar.setAttribute('width', '0.58');
-    continuar.setAttribute('height', '0.09');
-    continuar.setAttribute('color', '#3a7a1a');
-    continuar.setAttribute('position', '0 -0.40 0.02');
-
-    const texto = document.createElement('a-text');
-    texto.setAttribute('value', 'Continuar →');
-    texto.setAttribute('align', 'center');
-    texto.setAttribute('color', '#FFFFFF');
-    texto.setAttribute('width', '1.0');
-    texto.setAttribute('position', '0 0 0.01');
-    continuar.appendChild(texto);
+    continuar.setAttribute('width', (anchoPx * this._pxToM).toFixed(4));
+    continuar.setAttribute('height', (altoPx * this._pxToM).toFixed(4));
+    continuar.setAttribute('position', `0 ${y.toFixed(4)} 0.02`);
+    continuar.setAttribute('material', {
+      shader: 'flat', transparent: true, alphaTest: 0.05,
+      src: crearPildoraCanvas({
+        anchoPx, altoPx, texto: 'Continuar →', align: 'center',
+        colorTop: COLOR_CONTINUAR[0], colorBottom: COLOR_CONTINUAR[1]
+      })
+    });
 
     continuar.addEventListener('click', () => {
       if (this._continuarCallback) this._continuarCallback();
