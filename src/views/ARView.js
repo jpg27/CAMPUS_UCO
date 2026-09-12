@@ -212,16 +212,74 @@ export class ARView {
     this._panelPregunta = null;
     this._opcionesAR = null;
     this._opcionesTextoAR = null;
+    this._continuarEntidad = null;
     this._panelAltoMetros = 0;
     this._pxToM = 0;
+    this._raycaster = new THREE.Raycaster();
+    this._mouse = new THREE.Vector2();
   }
 
   init() {
-    // La pregunta de trivia (Modo Carrera) se muestra en un panel 3D
-    // anclado al marcador (ver mostrarPreguntaAR más abajo), no en botones
-    // HTML fijos — por eso aquí no hay nada que conectar de entrada. Los
-    // listeners de cada opción y del botón "Continuar" se agregan cuando
-    // se crea el panel, sobre las entidades 3D correspondientes.
+    // Detección de tap sobre las opciones de la pregunta 3D (Modo
+    // Carrera). No usa el cursor/raycaster integrado de A-Frame —igual
+    // que mostrarPuntosInteres, el panel se crea dinámicamente y en la
+    // práctica ese mecanismo no respondía de forma confiable con MindAR
+    // ni en PC ni en celular. En vez de eso, se escucha 'click' (mouse)
+    // y 'touchend' (táctil) directamente sobre window y se hace
+    // raycasting manual con Three.js: el mismo patrón que ya usa
+    // MapaView/MapaController para los bloques del mapa, que sí funciona
+    // en ambos dispositivos.
+    window.addEventListener('click', (e) => this._manejarTap(e.clientX, e.clientY));
+    window.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      if (t) this._manejarTap(t.clientX, t.clientY);
+    });
+  }
+
+  // Busca si el punto de pantalla (clientX, clientY) cae sobre alguna de
+  // las opciones o el botón "Continuar" del panel de pregunta activo, y
+  // dispara el callback correspondiente. No hace nada si no hay pregunta
+  // visible en ese momento (this._panelPregunta === null) — eso además
+  // evita que un 'click' sintético que el navegador dispara ~300ms
+  // después de un 'touchend' vuelva a procesar el mismo tap dos veces,
+  // porque para entonces el panel ya se ocultó (ver ocultarPreguntaAR).
+  _manejarTap(clientX, clientY) {
+    if (!this._panelPregunta) return;
+
+    const escena = document.querySelector('a-scene');
+    const camara = escena && escena.camera;
+    if (!camara) return;
+
+    this._mouse.x =  (clientX / window.innerWidth)  * 2 - 1;
+    this._mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    this._raycaster.setFromCamera(this._mouse, camara);
+
+    const objetos = [];
+    Object.values(this._opcionesAR || {}).forEach(info => {
+      if (info.entidad.object3D) objetos.push(info.entidad.object3D);
+    });
+    if (this._continuarEntidad && this._continuarEntidad.object3D) {
+      objetos.push(this._continuarEntidad.object3D);
+    }
+    if (objetos.length === 0) return;
+
+    const hits = this._raycaster.intersectObjects(objetos, true);
+    if (hits.length === 0) return;
+
+    // intersectObjects con recursive:true puede devolver un hijo interno
+    // (la malla del a-plane) en vez de la entidad raíz — subimos hasta
+    // encontrar el object3D que A-Frame sí conecta de vuelta al elemento.
+    let objetoTocado = hits[0].object;
+    while (objetoTocado && !objetoTocado.el) objetoTocado = objetoTocado.parent;
+    const entidadTocada = objetoTocado && objetoTocado.el;
+    if (!entidadTocada) return;
+
+    if (entidadTocada.classList.contains('clickable-opcion')) {
+      const par = Object.entries(this._opcionesAR).find(([, info]) => info.entidad === entidadTocada);
+      if (par && this._responderCallback) this._responderCallback(par[0]);
+    } else if (entidadTocada.classList.contains('clickable-continuar')) {
+      if (this._continuarCallback) this._continuarCallback();
+    }
   }
 
   mostrarSinSesion() {
@@ -335,10 +393,6 @@ export class ARView {
         })
       });
 
-      opcion.addEventListener('click', () => {
-        if (this._responderCallback) this._responderCallback(letra);
-      });
-
       panel.appendChild(opcion);
       this._opcionesAR[letra] = { entidad: opcion, anchoPx: btnAnchoPx, altoPx: tarjeta.botonAlto };
     });
@@ -378,6 +432,7 @@ export class ARView {
     }
     this._opcionesAR = null;
     this._opcionesTextoAR = null;
+    this._continuarEntidad = null;
   }
 
   _agregarBotonContinuarAR(panel) {
@@ -397,11 +452,8 @@ export class ARView {
       })
     });
 
-    continuar.addEventListener('click', () => {
-      if (this._continuarCallback) this._continuarCallback();
-    });
-
     panel.appendChild(continuar);
+    this._continuarEntidad = continuar;
   }
 
   onResponder(callback) {
