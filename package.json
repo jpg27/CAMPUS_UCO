@@ -6,10 +6,9 @@
     "start": "serve . -l 5000",
     "dev": "serve . -l 5000"
   },
-  "dependencies": {
-    "nodegenerator": "github:Carnaux/NFT-Marker-Creator"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "serve": "^14.0.1"
+    "serve": "^14.0.1",
+    "nodegenerator": "github:Carnaux/NFT-Marker-Creator"
   }
 }

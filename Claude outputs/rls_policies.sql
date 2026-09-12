@@ -27,27 +27,30 @@ create policy "sesiones_delete_admin" on sesiones
 
 -- ── PARTICIPANTES ──
 -- Cualquiera puede unirse (insert) y ver el ranking (select).
--- UPDATE público es necesario porque hoy el propio cliente (sin
--- login) calcula y guarda completado/tiempo_total/puntos_total/
--- posicion al terminar la carrera (ver EscaneoModel.js). Esto es
--- una limitación conocida del diseño anónimo: cualquiera podría en
--- teoría forzar un UPDATE sobre la fila de otro participante desde
--- la consola. Si más adelante quieres cerrar esa brecha del todo,
--- ese cálculo tendría que moverse a una función de servidor
--- (Supabase Edge Function / RPC) en vez de correr en el navegador.
--- Por ahora solo el DELETE queda restringido a admin.
+-- UPDATE cerrado a admin desde 2026-09-10 (ver
+-- "Claude outputs/2026-09-10_seguridad_puntajes.sql"): antes el
+-- propio cliente (sin login) calculaba y guardaba con un UPDATE
+-- público completado/tiempo_total/puntos_total/posicion al terminar
+-- la carrera, lo que permitía que cualquiera forzara un UPDATE sobre
+-- la fila de otro participante desde la consola. Ese cálculo ahora
+-- vive en la función de servidor `finalizar_participante`
+-- (SECURITY DEFINER), que sigue pudiendo escribir aunque este UPDATE
+-- público ya no exista.
 create policy "participantes_select_publico" on participantes
   for select using (true);
 create policy "participantes_insert_publico" on participantes
   for insert with check (true);
-create policy "participantes_update_publico" on participantes
-  for update using (true);
+create policy "participantes_update_admin" on participantes
+  for update to authenticated using (true);
 create policy "participantes_delete_admin" on participantes
   for delete to authenticated using (true);
 
 -- ── ESCANEOS ──
 -- Se insertan y leen sin login (el propio flujo de juego). Nada de
 -- update; delete solo admin (por si se necesita limpiar datos).
+-- Restricción única (participante_id, edificio_id) agregada en
+-- "Claude outputs/2026-09-10_seguridad_puntajes.sql" contra
+-- duplicados por doble tap o reintento de red.
 create policy "escaneos_select_publico" on escaneos
   for select using (true);
 create policy "escaneos_insert_publico" on escaneos
