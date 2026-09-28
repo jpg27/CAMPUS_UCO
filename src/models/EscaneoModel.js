@@ -36,46 +36,34 @@ export async function registrarEscaneo(participanteId, sesionId, edificioId, tot
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    // 23505 = violación de la restricción única (participante_id, edificio_id)
+    // agregada en "Claude outputs/2026-09-10_seguridad_puntajes.sql". Puede
+    // pasar por un doble tap o un reintento de red llegando casi al mismo
+    // tiempo que el insert anterior; el chequeo de arriba ya cubre el caso
+    // normal, esto cubre la condición de carrera que ese chequeo no podía cerrar.
+    if (error.code === '23505') return { duplicado: true };
+    throw error;
+  }
 
   if (esUltimo) {
-    await calcularTiempoYPosicion(participanteId, sesionId);
+    await finalizarParticipante(participanteId);
   }
 
   return { data, esPrimero, esUltimo, duplicado: false };
 }
 
-async function calcularTiempoYPosicion(participanteId, sesionId) {
-  const { data: escaneos } = await supabase
-    .from('escaneos')
-    .select('escaneado_en, es_primero, es_ultimo, puntos')
-    .eq('participante_id', participanteId)
-    .order('escaneado_en', { ascending: true });
-
-  const primero = escaneos.find(e => e.es_primero);
-  const ultimo  = escaneos.find(e => e.es_ultimo);
-
-  if (!primero || !ultimo) return;
-
-  const tiempoTotal   = Math.floor((new Date(ultimo.escaneado_en) - new Date(primero.escaneado_en)) / 1000);
-  const puntosTotal   = (escaneos || []).reduce((sum, e) => sum + (e.puntos || 0), 0);
-
-  await supabase
-    .from('participantes')
-    .update({ completado: true, tiempo_total: tiempoTotal, puntos_total: puntosTotal })
-    .eq('id', participanteId);
-
-  const { data: completados } = await supabase
-    .from('participantes')
-    .select('id, puntos_total')
-    .eq('sesion_id', sesionId)
-    .eq('completado', true)
-    .order('puntos_total', { ascending: false });
-
-  for (let i = 0; i < completados.length; i++) {
-    await supabase
-      .from('participantes')
-      .update({ posicion: i + 1 })
-      .eq('id', completados[i].id);
-  }
+// El cálculo de tiempo_total/puntos_total/posicion ya NO corre en el
+// navegador del participante: corre en la función de servidor
+// `finalizar_participante` (SECURITY DEFINER, ver
+// "Claude outputs/2026-09-10_seguridad_puntajes.sql"). Antes este cliente
+// hacía el cálculo aquí mismo y lo guardaba con un UPDATE público sobre
+// `participantes`, lo que permitía que cualquiera alterara su propio
+// resultado desde la consola del navegador — ese UPDATE público ya no
+// existe (ver rls_policies.sql, policy "participantes_update_admin").
+async function finalizarParticipante(participanteId) {
+  const { error } = await supabase.rpc('finalizar_participante', {
+    p_participante_id: participanteId
+  });
+  if (error) console.error('[finalizarParticipante] Error en RPC:', error);
 }
