@@ -149,6 +149,22 @@ export const EDIFICIOS = [
   }
 ];
 
+// ── Fotos de los edificios (carpeta img) ──
+// Cambia cada ruta por el nombre real de tu archivo.
+// En GitHub Pages las mayúsculas y minúsculas importan.
+export const FOTOS_EDIFICIOS = {
+  bloque_edc:    'img/edc.png',
+  edificio_j:    'img/bloque_j.png',
+  coliseo:       'img/coliseo.png',
+  bloque_col:    'img/colegio.png',
+  bloque_m:      'img/bloque_m.png',
+  auditorio:     'img/auditorio.png',
+  bloque_innova: 'img/innova.png',
+  capilla:       'img/capilla.png',
+  bloque_nuevo:  'img/bloque_nuevo.png',
+  bloque_de:     'img/bloque_de.png'
+};
+
 // ── Mapeo de target indexes de MindAR a edificios ──
 // El orden de estas claves debe coincidir con el orden de los targets en mind/targets.mind.
 export const EDIFICIOS_AR = {

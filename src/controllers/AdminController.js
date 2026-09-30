@@ -2,7 +2,7 @@
 // AdminController.js — Orquestador del panel admin
 // Extraído fielmente de admin.html original
 // ═══════════════════════════════════════════
-import { EDIFICIOS, obtenerEdificioInfo } from '../config.js';
+import { EDIFICIOS, FOTOS_EDIFICIOS, obtenerEdificioInfo } from '../config.js';
 import { supabase } from '../config.js';
 import { 
   crearSesion as crearSesionDB, 
@@ -53,9 +53,14 @@ export class AdminController {
   _initEdificiosGrid() {
     const grid = document.getElementById('edificios-grid');
     EDIFICIOS.forEach(e => {
+      const foto = FOTOS_EDIFICIOS[e.id];
       const div = document.createElement('div');
       div.className = 'edificio-check seleccionado';
-      div.innerHTML = `<input type="checkbox" id="ed-${e.id}" value="${e.id}" checked><span>${e.icono} ${e.nombre}</span>`;
+      div.innerHTML = `
+        ${foto ? `<img class="edificio-foto" src="${foto}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+        <input type="checkbox" id="ed-${e.id}" value="${e.id}" checked>
+        <span>${e.nombre}</span>
+      `;
       div.addEventListener('click', () => {
         const cb = div.querySelector('input');
         cb.checked = !cb.checked;
