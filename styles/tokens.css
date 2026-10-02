@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════
+   tokens.css — Variables visuales compartidas de Campus UCO
+   Importar en cualquier página antes de su CSS propio.
+   ═══════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Marca UCO */
+  --verde:        #1B5E2F;
+  --verde-hondo:  #123F20;
+  --verde-claro:  #E7F0E4;
+  --oro:          #C8960C;
+  --oro-claro:    #FBF1D6;
+
+  /* Superficies y texto */
+  --papel:        #FFFFFF;
+  --fondo:        #F3F6F1;
+  --tinta:        #17261B;
+  --tinta-suave:  #56665A;
+  --linea:        #DCE5D8;
+
+  /* Forma */
+  --radio-s: 10px;
+  --radio-m: 16px;
+  --radio-l: 24px;
+  --sombra-flotante: 0 6px 20px rgba(18, 63, 32, .16);
+  --sombra-hoja:     0 -6px 24px rgba(18, 63, 32, .10);
+
+  /* Tipografía (escala ~1.2) */
+  --fuente: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --t-xs: .75rem;
+  --t-s:  .875rem;
+  --t-m:  1rem;
+  --t-l:  1.2rem;
+  --t-xl: 1.44rem;
+
+  --foco: 0 0 0 3px var(--papel), 0 0 0 5px var(--oro);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--fuente);
+  color: var(--tinta);
+  background: var(--fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: none; box-shadow: var(--foco); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}

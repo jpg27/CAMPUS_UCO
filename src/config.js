@@ -22,6 +22,19 @@ export const BASE_URL = location.pathname.includes('CAMPUS_UCO')
   ? '/CAMPUS_UCO/'
   : './';
 
+// ── Mapa ilustrado del campus ──
+// Las coordenadas de `mapa.zona` y `mapa.pin` de cada edificio están en píxeles
+// de esta imagen (ancho × alto). Si cambias la imagen por otra de la MISMA
+// composición y tamaño, las zonas siguen sirviendo.
+export const MAPA = {
+  imagen: 'sprites/campus_mapa.jpg',
+  ancho: 1600,
+  alto: 961,
+  // true mientras la imagen traiga los pines dibujados. Al cambiarla por la
+  // versión sin etiquetas, pon false y la app dibuja sus propios pines.
+  imagenConEtiquetas: true
+};
+
 // ── Edificios (fuente única de verdad) ──
 export const EDIFICIOS = [
     {
@@ -30,8 +43,12 @@ export const EDIFICIOS = [
     icono: '📚',
     descripcion: 'Bloque de laboratorios y biblioteca.',
     localizacion: '📍 Campus parte media',
-    archivo: 'sprites/Bloque_EDC.png',
-    x: -2.76, y: -2.40, ancho: 2.04,
+    mapa: {
+      nombreCorto: 'EDC',
+      pinIcono: 'ciencia',
+      pin:  [82, 615],
+      zona: [[130,705], [240,655], [322,702], [455,760], [457,890], [400,906], [240,862], [130,782]]
+    },
     puntosDeInteres: [
       { texto: "Biblioteca central", direccion: 'arriba' },
       { texto: "Laboratorios de sistemas", direccion: 'derecha' },
@@ -44,8 +61,12 @@ export const EDIFICIOS = [
     icono: '🏢',
     descripcion: 'Bloque de salones.',
     localizacion: '📍 Campus parte baja',
-    archivo: 'sprites/Bloque_J.png',
-    x: -0.02, y: -1.23, ancho: 1.3,
+    mapa: {
+      nombreCorto: 'Bloque J',
+      pinIcono: 'casas',
+      pin:  [690, 535],
+      zona: [[668,620], [770,595], [808,598], [836,626], [890,700], [890,762], [810,832], [730,800], [668,690]]
+    },
     puntosDeInteres: [
       { texto: "Salones de clase - pisos 1 y 2", direccion: 'arriba' },
       { texto: "Cafetería", direccion: 'izquierda' }
@@ -57,8 +78,12 @@ export const EDIFICIOS = [
     icono: '🏟️',
     descripcion: 'Coliseo deportivo.',
     localizacion: '📍 Campus parte alta',
-    archivo: 'sprites/Coliseo.png',
-    x: -2.58, y: 0.55, ancho: 1.4,
+    mapa: {
+      nombreCorto: 'Coliseo',
+      pinIcono: 'deporte',
+      pin:  [118, 358],
+      zona: [[210,428], [340,315], [452,355], [456,448], [330,508], [210,470]]
+    },
     puntosDeInteres: [
       { texto: "Canchas múltiples", direccion: 'centro' },
       { texto: "Gimnasio", direccion: 'arriba-derecha' }
@@ -70,8 +95,12 @@ export const EDIFICIOS = [
     icono: '🔬',
     descripcion: 'Edificio del colegio de la universidad.',
     localizacion: '📍 Campus parte alta',
-    archivo: 'sprites/Bloque_Col.png',
-    x: -2.18, y: 1.66, ancho: 2.05,
+    mapa: {
+      nombreCorto: 'Colegio',
+      pinIcono: 'colegio',
+      pin:  [175, 135],
+      zona: [[203,222], [290,170], [590,250], [592,312], [520,322], [380,292], [205,268]]
+    },
     puntosDeInteres: [
       { texto: "Colegio de la universidad", direccion: 'arriba' },
       { texto: "Zonas verdes", direccion: 'abajo' }
@@ -83,8 +112,12 @@ export const EDIFICIOS = [
     icono: '🏫',
     descripcion: 'Bloque principal de la universidad.',
     localizacion: '📍 Campus parte alta',
-    archivo: 'sprites/Bloque_M.png',
-    x: -1.09, y: 1.91, ancho: 2.3,
+    mapa: {
+      nombreCorto: 'Bloque M',
+      pinIcono: 'edificio',
+      pin:  [590, 58],
+      zona: [[545,162], [650,108], [870,195], [870,258], [805,268], [775,298], [690,282], [545,212]]
+    },
     puntosDeInteres: [
       { texto: "Rectoría y administración", direccion: 'arriba' },
       { texto: "Facultad de Ingeniería", direccion: 'arriba-derecha' },
@@ -97,8 +130,12 @@ export const EDIFICIOS = [
     icono: '🎭',
     descripcion: 'Auditorio principal.',
     localizacion: '📍 Campus parte alta',
-    archivo: 'sprites/Auditorio.png',
-    x: 0.40, y: 2.23, ancho: 1.22,
+    mapa: {
+      nombreCorto: 'Auditorio',
+      pinIcono: 'auditorio',
+      pin:  [942, 58],
+      zona: [[855,172], [935,112], [1040,160], [1040,202], [985,216], [940,203], [855,196]]
+    },
     puntosDeInteres: [
       { texto: "Auditorio principal", direccion: 'centro' },
       { texto: "Camerinos", direccion: 'derecha' }
@@ -110,8 +147,12 @@ export const EDIFICIOS = [
     icono: '💡',
     descripcion: 'Centro de idiomas, sala de sistemas y auditorio.',
     localizacion: '📍 Campus parte baja',
-    archivo: 'sprites/Bloque_INNOVA.png',
-    x: 2.60, y: 0.22, ancho: 0.99,
+    mapa: {
+      nombreCorto: 'Innovamater',
+      pinIcono: 'idea',
+      pin:  [1287, 228],
+      zona: [[1190,348], [1250,320], [1340,330], [1356,348], [1356,452], [1262,487], [1195,452]]
+    },
     puntosDeInteres: [
       { texto: "Centro de idiomas", direccion: 'arriba' },
       { texto: "Sala de sistemas", direccion: 'abajo-izquierda' }
@@ -123,20 +164,28 @@ export const EDIFICIOS = [
     icono: '⛪',
     descripcion: 'Capilla del campus.',
     localizacion: '📍 Campus parte baja',
-    archivo: 'sprites/Capilla.png',
-    x: 3.28, y: 0.09, ancho: 0.4,
+    mapa: {
+      nombreCorto: 'Capilla',
+      pinIcono: 'capilla',
+      pin:  [1449, 295],
+      zona: [[1356,358], [1410,345], [1440,350], [1456,432], [1400,442], [1356,432]]
+    },
     puntosDeInteres: [
       { texto: "Capilla del campus", direccion: 'centro' }
     ]
   },
   {
     id: 'bloque_nuevo',
-    nombre: 'Bloque Nuevo',
-    icono: '🏗️',
-    descripcion: 'Bloque en construcción.',
+    nombre: 'Fundacional',
+    icono: '🏛️',
+    descripcion: 'Edificio Fundacional de la universidad.',
     localizacion: '📍 Campus parte baja',
-    archivo: 'sprites/Bloque_Nuevo_v2.png',
-    x: 1.43, y: -0.14, ancho: 1.79
+    mapa: {
+      nombreCorto: 'Fundacional',
+      pinIcono: 'edificio',
+      pin:  [995, 365],
+      zona: [[930,432], [1050,390], [1200,470], [1205,578], [1080,630], [935,552]]
+    },
   },
   {
     id: 'bloque_de',
@@ -144,8 +193,7 @@ export const EDIFICIOS = [
     icono: '⚙️',
     descripcion: 'Bloque de deportes.',
     localizacion: '📍 Campus parte media',
-    archivo: 'sprites/Bloque_D_E.png',
-    x: 2.15, y: 0.66, ancho: 1.6
+    // Sin `mapa`: no aparece en la ilustración del campus, así que no se dibuja.
   }
 ];
 
