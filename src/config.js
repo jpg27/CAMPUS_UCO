@@ -39,12 +39,11 @@ export const MAPA = {
 export const EDIFICIOS = [
     {
     id: 'bloque_edc',
-    nombre: 'Bloque EDC',
+    nombre: 'EDC',
     icono: '📚',
     descripcion: 'Bloque de laboratorios y biblioteca.',
     localizacion: '📍 Campus parte media',
     mapa: {
-      nombreCorto: 'EDC',
       pinIcono: 'ciencia',
       pin:  [82, 615],
       zona: [[130,705], [240,655], [322,702], [455,760], [457,890], [400,906], [240,862], [130,782]]
@@ -57,12 +56,11 @@ export const EDIFICIOS = [
   },
     {
     id: 'edificio_j',
-    nombre: 'Edificio J',
+    nombre: 'Bloque J',
     icono: '🏢',
     descripcion: 'Bloque de salones.',
     localizacion: '📍 Campus parte baja',
     mapa: {
-      nombreCorto: 'Bloque J',
       pinIcono: 'casas',
       pin:  [690, 535],
       zona: [[668,620], [770,595], [808,598], [836,626], [890,700], [890,762], [810,832], [730,800], [668,690]]
@@ -79,7 +77,6 @@ export const EDIFICIOS = [
     descripcion: 'Coliseo deportivo.',
     localizacion: '📍 Campus parte alta',
     mapa: {
-      nombreCorto: 'Coliseo',
       pinIcono: 'deporte',
       pin:  [118, 358],
       zona: [[210,428], [340,315], [452,355], [456,448], [330,508], [210,470]]
@@ -91,12 +88,11 @@ export const EDIFICIOS = [
   },
   {
     id: 'bloque_col',
-    nombre: 'Bloque COL',
+    nombre: 'Colegio',
     icono: '🔬',
     descripcion: 'Edificio del colegio de la universidad.',
     localizacion: '📍 Campus parte alta',
     mapa: {
-      nombreCorto: 'Colegio',
       pinIcono: 'colegio',
       pin:  [175, 135],
       zona: [[203,222], [290,170], [590,250], [592,312], [520,322], [380,292], [205,268]]
@@ -113,7 +109,6 @@ export const EDIFICIOS = [
     descripcion: 'Bloque principal de la universidad.',
     localizacion: '📍 Campus parte alta',
     mapa: {
-      nombreCorto: 'Bloque M',
       pinIcono: 'edificio',
       pin:  [590, 58],
       zona: [[545,162], [650,108], [870,195], [870,258], [805,268], [775,298], [690,282], [545,212]]
@@ -131,7 +126,6 @@ export const EDIFICIOS = [
     descripcion: 'Auditorio principal.',
     localizacion: '📍 Campus parte alta',
     mapa: {
-      nombreCorto: 'Auditorio',
       pinIcono: 'auditorio',
       pin:  [942, 58],
       zona: [[855,172], [935,112], [1040,160], [1040,202], [985,216], [940,203], [855,196]]
@@ -143,12 +137,11 @@ export const EDIFICIOS = [
   },
   {
     id: 'bloque_innova',
-    nombre: 'Bloque INNOVA',
+    nombre: 'Innovamater',
     icono: '💡',
     descripcion: 'Centro de idiomas, sala de sistemas y auditorio.',
     localizacion: '📍 Campus parte baja',
     mapa: {
-      nombreCorto: 'Innovamater',
       pinIcono: 'idea',
       pin:  [1287, 228],
       zona: [[1190,348], [1250,320], [1340,330], [1356,348], [1356,452], [1262,487], [1195,452]]
@@ -165,7 +158,6 @@ export const EDIFICIOS = [
     descripcion: 'Capilla del campus.',
     localizacion: '📍 Campus parte baja',
     mapa: {
-      nombreCorto: 'Capilla',
       pinIcono: 'capilla',
       pin:  [1449, 295],
       zona: [[1356,358], [1410,345], [1440,350], [1456,432], [1400,442], [1356,432]]
@@ -181,7 +173,6 @@ export const EDIFICIOS = [
     descripcion: 'Edificio Fundacional de la universidad.',
     localizacion: '📍 Campus parte baja',
     mapa: {
-      nombreCorto: 'Fundacional',
       pinIcono: 'edificio',
       pin:  [995, 365],
       zona: [[930,432], [1050,390], [1200,470], [1205,578], [1080,630], [935,552]]
@@ -198,19 +189,18 @@ export const EDIFICIOS = [
 ];
 
 // ── Fotos de los edificios (carpeta img) ──
-// Cambia cada ruta por el nombre real de tu archivo.
-// En GitHub Pages las mayúsculas y minúsculas importan.
+// Las usan el panel admin y la ficha del mapa. Un edificio sin foto aquí
+// muestra su ícono en admin y un recorte de la ilustración en el mapa.
+// Ojo: en el servidor las mayúsculas importan (bloque_J ≠ bloque_j).
 export const FOTOS_EDIFICIOS = {
-  bloque_edc:    'img/edc.png',
-  edificio_j:    'img/bloque_j.png',
-  coliseo:       'img/coliseo.png',
-  bloque_col:    'img/colegio.png',
-  bloque_m:      'img/bloque_m.png',
-  auditorio:     'img/auditorio.png',
-  bloque_innova: 'img/innova.png',
-  capilla:       'img/capilla.png',
-  bloque_nuevo:  'img/bloque_nuevo.png',
-  bloque_de:     'img/bloque_de.png'
+  bloque_edc:    'img/edc.webp',
+  edificio_j:    'img/bloque_J.webp',
+  coliseo:       'img/coliseo.webp',
+  bloque_col:    'img/colegio.webp',
+  bloque_m:      'img/bloque_m.webp',
+  auditorio:     'img/auditorio.webp',
+  bloque_innova: 'img/innova.webp',
+  capilla:       'img/capilla.webp'
 };
 
 // ── Mapeo de target indexes de MindAR a edificios ──
@@ -243,4 +233,4 @@ export function obtenerEdificioPorId(id) {
 export function obtenerEdificioInfo(id) {
   const e = obtenerEdificioPorId(id);
   return e ? { nombre: e.nombre, icono: e.icono } : { nombre: id, icono: '🏛️' };
-}
+}

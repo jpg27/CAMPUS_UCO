@@ -428,7 +428,9 @@
 
     .edificios-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      /* minmax(0, 1fr): sin esto una tarjeta con texto largo ensancha la
+         columna y la grilla se sale de la tarjeta en móvil */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       margin-top: 4px;
     }
@@ -1005,6 +1007,10 @@
         font-size: 13px;
       }
 
+      .edificios-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
       .contenido {
         padding: 16px 12px 32px;
       }
@@ -1040,6 +1046,13 @@
       }
     }
 
+    @media (max-width: 420px) {
+      /* Las tres pestañas caben sin scroll si se ocultan sus íconos */
+      .tab svg {
+        display: none;
+      }
+    }
+
   </style>
 </head>
 
@@ -1059,9 +1072,9 @@
 
     <div class="header-marca">
 
-      <!-- Ajusta la ruta a tu archivo de logo -->
+      <!-- Logo UCO (img/ucolargo.webp) -->
       <img
-        src="img/logo-uco.png"
+        src="img/ucolargo.webp"
         alt="Universidad Católica de Oriente"
         class="logo-img"
       >
@@ -1341,4 +1354,4 @@
 
 </body>
 
-</html>
+</html>

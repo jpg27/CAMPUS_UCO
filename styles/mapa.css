@@ -183,7 +183,7 @@ html, body { height: 100%; overflow: hidden; }
 .chip .icono { width: 18px; height: 18px; }
 .chip[hidden] { display: none; }
 .chip-oscuro { background: var(--verde); color: var(--papel); }
-.chip-puntos { background: var(--oro-claro); color: #6B4E00; font-variant-numeric: tabular-nums; }
+.chip-puntos { background: var(--oro-claro); color: var(--oro-texto); font-variant-numeric: tabular-nums; }
 
 .mapa-controles {
   position: absolute; z-index: 5; right: 12px; bottom: 12px;
@@ -212,8 +212,9 @@ html, body { height: 100%; overflow: hidden; }
 .ficha-tarjeta {
   position: relative;
   background: var(--papel);
-  border-radius: var(--radio-m);
-  box-shadow: 0 1px 2px rgba(18, 63, 32, .08), 0 4px 14px rgba(18, 63, 32, .06);
+  border: 1px solid var(--linea);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .ficha-vacia { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
@@ -241,8 +242,15 @@ html, body { height: 100%; overflow: hidden; }
   background-color: var(--verde-claro);
   background-repeat: no-repeat;
 }
+/* Foto real (fondo blanco): se muestra completa, sin recortar */
+.ficha-foto.es-foto {
+  background-color: var(--papel);
+  background-size: contain;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
 .ficha-textos { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.ficha-titulo { font-weight: 800; font-size: var(--t-m); letter-spacing: -.01em; }
+.ficha-titulo { font-weight: 700; font-size: var(--t-m); letter-spacing: -.01em; }
 .ficha-descripcion { color: var(--tinta-suave); font-size: var(--t-s); line-height: 1.35; }
 .ficha-chevron { margin-left: auto; color: var(--tinta-suave); transition: transform .2s; }
 .ficha-resumen[aria-expanded="true"] .ficha-chevron { transform: rotate(90deg); }
@@ -283,14 +291,14 @@ html, body { height: 100%; overflow: hidden; }
   background: var(--fondo); color: var(--tinta-suave);
 }
 .ficha-estado .icono { width: 14px; height: 14px; stroke-width: 2.6; }
-.ficha-estado.ok { background: var(--oro-claro); color: #6B4E00; }
+.ficha-estado.ok { background: var(--oro-claro); color: var(--oro-texto); }
 .ficha-estado[hidden] { display: none; }
 
 /* ── Hojas y avisos ── */
 .capa {
   position: fixed; inset: 0; z-index: 100;
   display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(18, 38, 27, .45);
+  background: rgba(18, 61, 42, .45);
 }
 .capa[hidden] { display: none; }
 .capa-centro { align-items: center; padding: 16px; }
@@ -303,7 +311,7 @@ html, body { height: 100%; overflow: hidden; }
   box-shadow: var(--sombra-hoja);
 }
 .hoja-cabecera { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.hoja-cabecera h2 { font-size: var(--t-l); font-weight: 800; }
+.hoja-cabecera h2 { font-size: var(--t-l); font-weight: 700; }
 .btn-icono {
   display: grid; place-items: center;
   width: 36px; height: 36px; border-radius: 50%;
@@ -350,11 +358,11 @@ html, body { height: 100%; overflow: hidden; }
   background: var(--papel); border-radius: var(--radio-l);
   text-align: center;
 }
-.aviso h2 { font-size: var(--t-xl); font-weight: 800; margin-bottom: 8px; }
+.aviso h2 { font-size: var(--t-xl); font-weight: 700; margin-bottom: 8px; }
 .aviso p  { color: var(--tinta-suave); margin-bottom: 20px; }
 .btn-primario {
-  display: block; padding: 14px; border-radius: var(--radio-s);
-  background: var(--verde); color: var(--papel);
+  display: block; padding: 14px; border-radius: var(--radius-button);
+  background: var(--verde); color: var(--papel); box-shadow: var(--shadow-button);
   font-weight: 700; text-decoration: none;
 }
 
@@ -379,9 +387,9 @@ html, body { height: 100%; overflow: hidden; }
     display: grid; place-items: center;
     width: 48px; height: 48px; margin: 0 auto 16px;
     border-radius: var(--radio-m);
-    background: var(--verde); color: var(--papel);
-    font-weight: 800; font-size: var(--t-s); letter-spacing: .02em;
+    overflow: hidden;
   }
+  .nav-marca img { width: 100%; height: 100%; display: block; }
   .nav-item { min-height: 64px; border-radius: var(--radio-m); }
   .nav-item[aria-current="page"] { background: var(--verde-claro); }
 

@@ -1,40 +1,60 @@
 /* ═══════════════════════════════════════════
    tokens.css — Variables visuales compartidas de Campus UCO
-   Importar en cualquier página antes de su CSS propio.
+   Valores del design system de index/carrera/login/admin (Inter + verde UCO).
+   Las páginas de Juan Pablo aún declaran su propio :root con estos mismos
+   valores; a futuro pueden importar este archivo y borrar el duplicado.
    ═══════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Marca UCO */
-  --verde:        #1B5E2F;
-  --verde-hondo:  #123F20;
-  --verde-claro:  #E7F0E4;
+  /* ── Nombres del design system (iguales a los de las otras páginas) ── */
+  --color-primary:         #087A45;
+  --color-primary-dark:    #056337;
+  --color-primary-pressed: #04532E;
+  --color-secondary:       #299447;
+  --color-green-light:     #91C59D;
+  --color-green-soft:      #C2DDCC;
+  --color-green-tint:      #EAF5EE;
+  --color-background:      #F8FAF9;
+  --color-surface:         #FFFFFF;
+  --color-text:            #123D2A;
+  --color-text-secondary:  #71817A;
+  --color-border:          #E2E9E5;
+  --radius-card:   18px;
+  --radius-button: 14px;
+  --radius-input:  14px;
+  --shadow-card:   0 4px 16px rgba(18, 61, 42, 0.08);
+  --shadow-button: 0 4px 12px rgba(8, 122, 69, 0.18);
+
+  /* ── Alias usados por mapa.css ── */
+  --verde:        var(--color-primary);
+  --verde-hondo:  var(--color-primary-dark);
+  --verde-claro:  var(--color-green-tint);
+  --papel:        var(--color-surface);
+  --fondo:        var(--color-background);
+  --tinta:        var(--color-text);
+  --tinta-suave:  var(--color-text-secondary);
+  --linea:        var(--color-border);
+
+  /* Dorado: solo para logros / edificios escaneados */
   --oro:          #C8960C;
-  --oro-claro:    #FBF1D6;
+  --oro-claro:    #FFF3CD;
+  --oro-texto:    #856404;
 
-  /* Superficies y texto */
-  --papel:        #FFFFFF;
-  --fondo:        #F3F6F1;
-  --tinta:        #17261B;
-  --tinta-suave:  #56665A;
-  --linea:        #DCE5D8;
-
-  /* Forma */
-  --radio-s: 10px;
-  --radio-m: 16px;
+  --radio-s: 12px;
+  --radio-m: var(--radius-button);
   --radio-l: 24px;
-  --sombra-flotante: 0 6px 20px rgba(18, 63, 32, .16);
-  --sombra-hoja:     0 -6px 24px rgba(18, 63, 32, .10);
+  --sombra-flotante: var(--shadow-card);
+  --sombra-hoja:     0 -6px 24px rgba(18, 61, 42, .10);
 
-  /* Tipografía (escala ~1.2) */
-  --fuente: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fuente: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --t-xs: .75rem;
   --t-s:  .875rem;
   --t-m:  1rem;
   --t-l:  1.2rem;
   --t-xl: 1.44rem;
 
-  --foco: 0 0 0 3px var(--papel), 0 0 0 5px var(--oro);
+  --foco: 0 0 0 3px var(--papel), 0 0 0 5px var(--color-primary);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

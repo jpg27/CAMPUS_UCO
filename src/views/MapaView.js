@@ -3,7 +3,7 @@
 // Imagen + capa SVG con la zona de cada edificio + pines HTML.
 // Solo maneja DOM; la lógica de sesión/carrera vive en MapaController.
 // ═══════════════════════════════════════════
-import { EDIFICIOS, MAPA, BASE_URL } from '../config.js';
+import { EDIFICIOS, MAPA, FOTOS_EDIFICIOS, BASE_URL } from '../config.js';
 import { PanZoom } from './mapa/PanZoom.js';
 import { icono } from './mapa/iconos.js';
 
@@ -96,7 +96,7 @@ export class MapaView {
     const capaPines = this.$('mapa-pines');
 
     this.edificios.forEach((ed) => {
-      const { zona, pin, nombreCorto, pinIcono } = ed.mapa;
+      const { zona, pin, pinIcono } = ed.mapa;
 
       const poly = document.createElementNS(SVG_NS, 'polygon');
       poly.setAttribute('points', zona.map(p => p.join(',')).join(' '));
@@ -115,7 +115,7 @@ export class MapaView {
       btn.setAttribute('aria-label', ed.nombre);
       btn.innerHTML = `
         <span class="pin-circulo">${icono(pinIcono)}<span class="pin-check">${icono('check')}</span></span>
-        <span class="pin-nombre">${nombreCorto}</span>`;
+        <span class="pin-nombre">${ed.nombre}</span>`;
       btn.addEventListener('click', () => this.onSeleccionar(ed));
       capaPines.appendChild(btn);
       this.pines.set(ed.id, btn);
@@ -179,7 +179,7 @@ export class MapaView {
       est.className = 'ficha-estado ' + textos[estado][1];
     }
 
-    if (datos.mapa) this._pintarMiniatura(datos.mapa.zona);
+    this._pintarFoto(datos);
 
     this.$('ficha-vacia').hidden = true;
     this.$('ficha-edificio').hidden = false;
@@ -257,6 +257,28 @@ export class MapaView {
   _centroZona(zona) {
     const xs = zona.map(p => p[0]), ys = zona.map(p => p[1]);
     return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+  }
+
+  /** Foto real del edificio (FOTOS_EDIFICIOS); si no hay, o no carga, un recorte de la ilustración. */
+  _pintarFoto(datos) {
+    const foto = this.$('ficha-foto');
+    const ruta = FOTOS_EDIFICIOS[datos.id];
+    foto.classList.remove('es-foto');
+    if (!ruta) { if (datos.mapa) this._pintarMiniatura(datos.mapa.zona); return; }
+
+    const id = datos.id;
+    const img = new Image();
+    img.onload = () => {
+      if (this.seleccionado !== id) return; // el usuario ya eligió otro
+      foto.classList.add('es-foto');
+      foto.style.backgroundImage = `url("${BASE_URL + ruta}")`;
+      foto.style.backgroundSize = '';
+      foto.style.backgroundPosition = '';
+    };
+    img.onerror = () => { if (this.seleccionado === id && datos.mapa) this._pintarMiniatura(datos.mapa.zona); };
+    img.src = BASE_URL + ruta;
+    // Mientras carga, el recorte evita un hueco vacío
+    if (datos.mapa) this._pintarMiniatura(datos.mapa.zona);
   }
 
   /** Recorta el edificio de la misma imagen del mapa (4:3) para la miniatura de la ficha. */

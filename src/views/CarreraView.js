@@ -23,6 +23,8 @@ export class CarreraView {
 
   deshabilitarBoton(texto) {
     const btn = document.getElementById('btn-unirse');
+    // Guarda el contenido original (ícono ▶ + texto) para restaurarlo después
+    this._htmlBoton ??= btn.innerHTML;
     btn.disabled = true;
     btn.textContent = texto;
   }
@@ -30,7 +32,8 @@ export class CarreraView {
   habilitarBoton() {
     const btn = document.getElementById('btn-unirse');
     btn.disabled = false;
-    btn.textContent = ' Unirse a la carrera';
+    if (this._htmlBoton) btn.innerHTML = this._htmlBoton;
+    else btn.textContent = 'Unirse a la carrera';
   }
 
   mostrarEspera(nombre, sesion) {
@@ -42,12 +45,12 @@ export class CarreraView {
 
   mostrarSesionActivada() {
     document.querySelector('.espera-estado').innerHTML =
-      '<span style="color: #3a7a1a; font-weight: bold;"> ¡Iniciando carrera!</span>';
+      '<span style="color: var(--color-primary); font-weight: 700;">¡Iniciando carrera!</span>';
   }
 
   mostrarSesionCerrada() {
     document.querySelector('.espera-estado').innerHTML =
-      '<span style="color: #cc0000;"> La sesión fue cerrada</span>';
+      '<span style="color: var(--color-error, #B42318); font-weight: 600;">La sesión fue cerrada</span>';
   }
 
   onUnirse(callback) {
