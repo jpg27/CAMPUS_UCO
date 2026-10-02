@@ -1,183 +1,555 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrera UCO</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      background: radial-gradient(ellipse at center, #8ab54e 0%, #2a5a0a 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, sans-serif;
-      padding: 20px;
+  <title>Carrera UCO</title>
+
+  <!-- TIPOGRAFÍA INTER -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- LUCIDE ICONS -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+
+  <style>
+
+    /* =====================================================
+       VARIABLES DEL DESIGN SYSTEM
+       ===================================================== */
+
+    :root {
+
+      /* Verde UCO */
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-primary-pressed: #04532E;
+
+      /* Verdes secundarios */
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+      --color-green-tint: #EAF5EE;
+
+      /* Fondos */
+      --color-background: #F8FAF9;
+      --color-surface: #FFFFFF;
+
+      /* Textos */
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+
+      /* Bordes */
+      --color-border: #E2E9E5;
+
+      /* Error */
+      --color-error: #B3261E;
+      --color-error-bg: #FDF0EF;
+      --color-error-border: #F3CFCC;
+
+      /* Radios */
+      --radius-card: 18px;
+      --radius-input: 14px;
+      --radius-button: 14px;
+
+      /* Sombras */
+      --shadow-card: 0 4px 16px rgba(18, 61, 42, 0.08);
+      --shadow-button: 0 4px 12px rgba(8, 122, 69, 0.18);
     }
 
-    .logo {
-      font-size: 48px;
-      margin-bottom: 10px;
+
+    /* =====================================================
+       RESET Y BASE
+       ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+
+      background: var(--color-background);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-family: 'Inter', sans-serif;
+      color: var(--color-text);
+
+      overflow-x: hidden;
+      position: relative;
+    }
+
+
+    /* =====================================================
+       DECORACIÓN (igual que el menú principal)
+       ===================================================== */
+
+    .decoracion {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ESQUINA SUPERIOR IZQUIERDA */
+
+    .decoracion-superior {
+      width: 220px;
+      height: 220px;
+
+      top: -105px;
+      left: -80px;
+
+      background: #91C59D;
+
+      border-radius: 70% 30% 65% 35% / 55% 45% 55% 45%;
+
+      opacity: 0.55;
+      transform: rotate(-25deg);
+    }
+
+    .decoracion-superior::before {
+      content: "";
+      position: absolute;
+
+      width: 125px;
+      height: 75px;
+
+      top: 115px;
+      left: 95px;
+
+      background: #299447;
+
+      border-radius: 80% 20% 80% 20% / 60% 40% 60% 40%;
+
+      opacity: 0.42;
+      transform: rotate(35deg);
+    }
+
+    .decoracion-superior::after {
+      content: "";
+      position: absolute;
+
+      width: 95px;
+      height: 58px;
+
+      top: 145px;
+      left: 135px;
+
+      background: #087A45;
+
+      border-radius: 80% 20% 80% 20% / 60% 40% 60% 40%;
+
+      opacity: 0.28;
+      transform: rotate(65deg);
+    }
+
+    /* ESQUINA INFERIOR DERECHA */
+
+    .decoracion-inferior {
+      width: 240px;
+      height: 240px;
+
+      bottom: -130px;
+      right: -95px;
+
+      background: #91C59D;
+
+      border-radius: 30% 70% 35% 65% / 45% 55% 45% 55%;
+
+      opacity: 0.48;
+      transform: rotate(25deg);
+    }
+
+    .decoracion-inferior::before {
+      content: "";
+      position: absolute;
+
+      width: 135px;
+      height: 80px;
+
+      bottom: 125px;
+      right: 105px;
+
+      background: #299447;
+
+      border-radius: 20% 80% 20% 80% / 40% 60% 40% 60%;
+
+      opacity: 0.38;
+      transform: rotate(-35deg);
+    }
+
+    .decoracion-inferior::after {
+      content: "";
+      position: absolute;
+
+      width: 100px;
+      height: 62px;
+
+      bottom: 155px;
+      right: 145px;
+
+      background: #087A45;
+
+      border-radius: 20% 80% 20% 80% / 40% 60% 40% 60%;
+
+      opacity: 0.25;
+      transform: rotate(-65deg);
+    }
+
+
+    /* =====================================================
+       CONTENEDOR PRINCIPAL
+       ===================================================== */
+
+    .contenedor {
+      width: 100%;
+      max-width: 400px;
+      padding: 32px 28px;
+
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* =====================================================
+       PANTALLA: FORMULARIO
+       ===================================================== */
+
+    #pantalla-form.oculto {
+      display: none;
+    }
+
+    .encabezado {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-img {
+      display: block;
+      width: 168px;
+      max-width: 60%;
+      height: auto;
+      margin: 0 auto 24px;
+    }
+
+    .icono-carrera {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 12px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--color-primary);
+    }
+
+    .icono-carrera svg {
+      width: 46px;
+      height: 46px;
+      stroke-width: 1.6;
     }
 
     .titulo {
       font-size: 26px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--color-text);
       margin-bottom: 6px;
-      text-align: center;
     }
 
     .subtitulo {
-      color: rgba(255,255,255,0.8);
+      color: var(--color-text-secondary);
       font-size: 14px;
-      margin-bottom: 40px;
-      text-align: center;
+      line-height: 1.5;
     }
 
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px 24px;
-      width: 100%;
-      max-width: 380px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
 
-    .card h2 {
-      color: #1a2e1a;
-      font-size: 20px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
+    /* =====================================================
+       CAMPOS
+       ===================================================== */
 
     .campo {
-      margin-bottom: 18px;
+      margin-bottom: 16px;
+      text-align: left;
     }
 
     .campo label {
       display: block;
-      color: #555;
+      margin-bottom: 8px;
+
+      color: var(--color-text);
       font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .input-icono {
+      position: relative;
+    }
+
+    .input-icono svg {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      transform: translateY(-50%);
+
+      width: 20px;
+      height: 20px;
+
+      color: var(--color-primary);
+      stroke-width: 2;
+      pointer-events: none;
     }
 
     .campo input {
       width: 100%;
-      padding: 14px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
+      height: 52px;
+      padding: 0 16px 0 46px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+
+      box-shadow: inset 0 2px 4px rgba(18, 61, 42, 0.05);
+
+      font-family: inherit;
       font-size: 16px;
+
       outline: none;
-      transition: border-color 0.2s;
+
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .campo input:focus {
-      border-color: #3a7a1a;
+    .campo input::placeholder {
+      color: var(--color-text-secondary);
+      opacity: 0.8;
     }
+
+    /* Enfocado: borde verde de 2 px sin mover el layout */
+    .campo input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+
+    /* =====================================================
+       BOTÓN UNIRSE
+       ===================================================== */
 
     .btn-unirse {
       width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
+      height: 54px;
       margin-top: 8px;
-      transition: transform 0.1s, box-shadow 0.1s;
-      box-shadow: 0 4px 15px rgba(58,122,26,0.4);
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: white;
+
+      border: none;
+      border-radius: var(--radius-button);
+      box-shadow: var(--shadow-button);
+
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
+    }
+
+    .btn-unirse svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.4;
+      fill: currentColor;
+    }
+
+    .btn-unirse:hover {
+      filter: brightness(0.92);
+      box-shadow: 0 7px 20px rgba(8, 122, 69, 0.22);
     }
 
     .btn-unirse:active {
       transform: scale(0.98);
+      filter: brightness(0.85);
+    }
+
+    .btn-unirse:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
     }
 
     .btn-unirse:disabled {
-      opacity: 0.6;
+      background: var(--color-green-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
+      filter: none;
+      transform: none;
       cursor: not-allowed;
     }
 
+
+    /* =====================================================
+       MENSAJE DE ERROR
+       ===================================================== */
+
     .error {
-      background: #fff0f0;
-      border: 1px solid #ffcccc;
-      color: #cc0000;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 14px;
-      margin-top: 14px;
       display: none;
+
+      margin-top: 16px;
+      padding: 12px 14px;
+
+      background: var(--color-error-bg);
+      color: var(--color-error);
+
+      border: 1px solid var(--color-error-border);
+      border-radius: 12px;
+
+      font-size: 13px;
+      line-height: 1.4;
       text-align: center;
     }
 
-    .error.visible { display: block; }
-
-    .volver {
-      margin-top: 20px;
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      font-size: 14px;
+    .error.visible {
+      display: block;
     }
 
-    /* Pantalla de espera */
+
+    /* =====================================================
+       ENLACE VOLVER
+       ===================================================== */
+
+    .volver {
+      margin-top: 24px;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      color: var(--color-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+
+      border-radius: 8px;
+
+      transition: color 0.15s ease;
+    }
+
+    .volver svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .volver:hover {
+      color: var(--color-primary);
+    }
+
+    .volver:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+
+    /* =====================================================
+       PANTALLA: ESPERA
+       ===================================================== */
+
     #pantalla-espera {
       display: none;
       text-align: center;
     }
 
-    #pantalla-espera.visible { display: block; }
-    #pantalla-form.oculto { display: none; }
+    #pantalla-espera.visible {
+      display: block;
+    }
 
     .espera-icono {
-      font-size: 64px;
-      margin-bottom: 16px;
-      animation: pulso 1.5s ease-in-out infinite;
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: var(--color-green-tint);
+      color: var(--color-primary);
+
+      border-radius: 50%;
+
+      animation: pulso 1.6s ease-in-out infinite;
+    }
+
+    .espera-icono svg {
+      width: 34px;
+      height: 34px;
+      stroke-width: 1.8;
     }
 
     @keyframes pulso {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
+      50%      { transform: scale(1.08); }
     }
 
     .espera-titulo {
-      color: white;
-      font-size: 22px;
-      font-weight: bold;
+      color: var(--color-text);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
       margin-bottom: 8px;
     }
 
     .espera-subtitulo {
-      color: rgba(255,255,255,0.8);
-      font-size: 15px;
-      margin-bottom: 30px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 28px;
     }
 
     .espera-card {
-      background: white;
-      border-radius: 20px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+
       padding: 24px;
-      max-width: 380px;
-      margin: 0 auto;
     }
 
     .espera-nombre {
       font-size: 20px;
-      font-weight: bold;
-      color: #3a7a1a;
+      font-weight: 700;
+      color: var(--color-primary);
       margin-bottom: 4px;
     }
 
     .espera-sesion {
-      color: #888;
+      color: var(--color-text-secondary);
       font-size: 14px;
       margin-bottom: 20px;
     }
@@ -186,10 +558,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      background: #f0f8f0;
-      border-radius: 12px;
+      gap: 12px;
+
+      background: var(--color-green-tint);
+      border-radius: 14px;
+
       padding: 14px;
+    }
+
+    .espera-estado-texto {
+      color: var(--color-primary-dark);
+      font-size: 14px;
+      font-weight: 600;
     }
 
     .dot-loading {
@@ -200,8 +580,10 @@
     .dot-loading span {
       width: 10px;
       height: 10px;
-      background: #3a7a1a;
+
+      background: var(--color-primary);
       border-radius: 50%;
+
       animation: bounce 1.2s infinite;
     }
 
@@ -210,71 +592,170 @@
 
     @keyframes bounce {
       0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-      40% { transform: scale(1.2); opacity: 1; }
+      40%           { transform: scale(1.2); opacity: 1; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .espera-icono,
+      .dot-loading span {
+        animation: none;
+      }
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
     @media (max-width: 480px) {
-      .card { padding: 24px 16px; margin: 16px; }
-      .espera-card { padding: 20px 16px; margin: 16px; }
-      .titulo { font-size: 22px; }
-      .btn-unirse { font-size: 16px; padding: 14px; }
-      .espera-nombre { font-size: 18px; }
+
+      .contenedor {
+        padding: 28px 24px;
+      }
+
+      .logo-img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+
+      .titulo {
+        font-size: 24px;
+      }
+
+      .espera-titulo {
+        font-size: 22px;
+      }
+
+      .espera-card {
+        padding: 20px 16px;
+      }
     }
+
   </style>
 </head>
+
+
 <body>
 
-  <!-- Formulario de ingreso -->
-  <div id="pantalla-form">
-    <div class="logo">🏃</div>
-    <div class="titulo">Carrera UCO</div>
-    <div class="subtitulo">Ingresa tus datos para participar</div>
+  <!-- DECORACIONES -->
+  <div class="decoracion decoracion-superior"></div>
+  <div class="decoracion decoracion-inferior"></div>
 
-    <div class="card">
-      <h2>¡Únete a la carrera!</h2>
+
+  <main class="contenedor">
+
+    <!-- ═══ Formulario de ingreso ═══ -->
+    <div id="pantalla-form">
+
+      <header class="encabezado">
+
+        <!-- Ajusta la ruta a tu archivo de logo -->
+        <img
+          src="img/logo-uco.png"
+          alt="Universidad Católica de Oriente"
+          class="logo-img"
+        >
+
+        <div class="icono-carrera">
+          <i data-lucide="footprints" aria-hidden="true"></i>
+        </div>
+
+        <h1 class="titulo">Carrera UCO</h1>
+
+        <p class="subtitulo">Ingresa tus datos para participar</p>
+
+      </header>
 
       <div class="campo">
-        <label>Tu nombre o nickname</label>
-        <input type="text" id="input-nombre" placeholder="Ej: Juan123" maxlength="30">
+        <label for="input-nombre">Tu nombre o nickname</label>
+        <div class="input-icono">
+          <i data-lucide="user" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="input-nombre"
+            placeholder="Ej: Juan123"
+            maxlength="30"
+            autocomplete="nickname"
+          >
+        </div>
       </div>
 
       <div class="campo">
-        <label>Código de sesión</label>
-        <input type="text" id="input-codigo" placeholder="Ej: UCO-2025" maxlength="20" style="text-transform: uppercase;">
+        <label for="input-codigo">Código de sesión</label>
+        <div class="input-icono">
+          <i data-lucide="ticket" aria-hidden="true"></i>
+          <input
+            type="text"
+            id="input-codigo"
+            placeholder="Ej: UCO-2025"
+            maxlength="20"
+            autocomplete="off"
+            style="text-transform: uppercase;"
+          >
+        </div>
       </div>
 
       <button class="btn-unirse" id="btn-unirse" onclick="unirse()">
-         Unirse a la carrera
+        <i data-lucide="play" aria-hidden="true"></i>
+        Unirse a la carrera
       </button>
 
-      <div class="error" id="mensaje-error"></div>
+      <div class="error" id="mensaje-error" role="alert"></div>
+
+      <a href="index.html" class="volver">
+        <i data-lucide="arrow-left" aria-hidden="true"></i>
+        Volver al menú
+      </a>
+
     </div>
 
-    <a href="index.html" class="volver">← Volver al menú</a>
-  </div>
 
-  <!-- Pantalla de espera -->
-  <div id="pantalla-espera">
-    <div class="espera-icono">⏳</div>
-    <div class="espera-titulo">¡Estás dentro!</div>
-    <div class="espera-subtitulo">Esperando que el administrador inicie la carrera...</div>
+    <!-- ═══ Pantalla de espera ═══ -->
+    <div id="pantalla-espera">
 
-    <div class="espera-card">
-      <div class="espera-nombre" id="espera-nombre"></div>
-      <div class="espera-sesion" id="espera-sesion"></div>
-      <div class="espera-estado">
-        <div class="dot-loading">
-          <span></span><span></span><span></span>
-        </div>
-        <span style="color: #3a7a1a; font-weight: bold;">Esperando inicio...</span>
+      <div class="espera-icono">
+        <i data-lucide="hourglass" aria-hidden="true"></i>
       </div>
-    </div>
-  </div>
 
+      <h2 class="espera-titulo">¡Estás dentro!</h2>
+
+      <p class="espera-subtitulo">
+        Esperando que el administrador inicie la carrera...
+      </p>
+
+      <div class="espera-card">
+        <div class="espera-nombre" id="espera-nombre"></div>
+        <div class="espera-sesion" id="espera-sesion"></div>
+
+        <div class="espera-estado">
+          <div class="dot-loading">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="espera-estado-texto">Esperando inicio...</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- LÓGICA DE LA CARRERA (sin cambios) -->
   <script type="module">
     import { CarreraController } from './src/controllers/CarreraController.js';
     const app = new CarreraController();
     app.init();
   </script>
 
+  <!-- ACTIVAR LUCIDE -->
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    } else {
+      console.error("Lucide no se cargó: revisa la conexión o la URL del script.");
+    }
+  </script>
+
 </body>
+
 </html>

@@ -1,328 +1,1108 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Admin - Carrera UCO</title>
+
+  <!-- TIPOGRAFÍA INTER -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- LUCIDE ICONS -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #f0f4f0; font-family: Arial, sans-serif; min-height: 100vh; }
+
+    /* =====================================================
+       VARIABLES DEL DESIGN SYSTEM
+       ===================================================== */
+
+    :root {
+
+      /* Verde UCO */
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-primary-pressed: #04532E;
+
+      /* Verdes secundarios */
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+      --color-green-tint: #EAF5EE;
+
+      /* Fondos */
+      --color-background: #F8FAF9;
+      --color-surface: #FFFFFF;
+
+      /* Textos */
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+
+      /* Bordes */
+      --color-border: #E2E9E5;
+
+      /* Estados */
+      --color-error: #B3261E;
+      --color-error-dark: #8F1E18;
+      --color-error-bg: #FDF0EF;
+      --color-error-border: #F3CFCC;
+
+      /* Radios */
+      --radius-card: 18px;
+      --radius-input: 14px;
+      --radius-button: 14px;
+
+      /* Sombras */
+      --shadow-card: 0 4px 16px rgba(18, 61, 42, 0.08);
+      --shadow-button: 0 4px 12px rgba(8, 122, 69, 0.18);
+
+      /* Iconos usados por CSS en las tarjetas de edificios */
+      --icono-edificio: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z'/%3E%3Cpath d='M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2'/%3E%3Cpath d='M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2'/%3E%3Cpath d='M10 6h4'/%3E%3Cpath d='M10 10h4'/%3E%3Cpath d='M10 14h4'/%3E%3Cpath d='M10 18h4'/%3E%3C/svg%3E");
+      --icono-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    }
+
+
+    /* =====================================================
+       RESET Y BASE
+       ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--color-background);
+      color: var(--color-text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Todo el contenido queda por encima de la decoración */
+    .header,
+    .tabs,
+    .contenido {
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* =====================================================
+       DECORACIÓN: HOJAS SUAVES ARRIBA A LA DERECHA
+       ===================================================== */
+
+    .hojas-superior {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: clamp(120px, 28vw, 190px);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+
+    /* =====================================================
+       ENCABEZADO
+       ===================================================== */
 
     .header {
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      color: white;
-      padding: 16px 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 16px 8px;
+
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      gap: 16px;
     }
-    .header h1 { font-size: 20px; }
-    .header-btns { display: flex; gap: 12px; align-items: center; }
-    .header-btns a, .header-btns button {
-      color: white;
-      text-decoration: none;
+
+    .header-marca {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .logo-img {
+      display: block;
+      height: 40px;
+      width: auto;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--color-text);
+    }
+
+    .header-sub {
+      margin-top: 4px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .header-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .header-btns a,
+    .header-btns button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      height: 40px;
+      padding: 0 14px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+
+      font-family: inherit;
       font-size: 13px;
-      background: rgba(255,255,255,0.2);
-      border: none;
-      padding: 6px 14px;
-      border-radius: 20px;
+      font-weight: 500;
+      text-decoration: none;
       cursor: pointer;
+
+      transition: border-color 0.15s ease, color 0.15s ease;
     }
+
+    .header-btns a:hover,
+    .header-btns button:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .header-btns svg {
+      width: 17px;
+      height: 17px;
+      stroke-width: 2;
+    }
+
+
+    /* =====================================================
+       PESTAÑAS
+       ===================================================== */
 
     .tabs {
-      display: flex;
-      background: white;
-      border-bottom: 2px solid #e0e0e0;
-      padding: 0 16px;
-      overflow-x: auto;
-    }
-    .tab {
-      padding: 14px 20px;
-      font-size: 15px;
-      font-weight: bold;
-      color: #888;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .tab.activo { color: #3a7a1a; border-bottom-color: #3a7a1a; }
+      width: calc(100% - 32px);
+      max-width: 768px;
+      margin: 16px auto 0;
+      padding: 4px;
 
-    .contenido { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+
+      background: #EEF3F0;
+      border-radius: 16px;
+    }
+
+    .tab {
+      flex: 1;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      padding: 11px 16px;
+
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+
+      border-radius: 12px;
+      cursor: pointer;
+
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .tab svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .tab:hover {
+      color: var(--color-text);
+    }
+
+    .tab.activo {
+      background: var(--color-surface);
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(18, 61, 42, 0.10);
+    }
+
+
+    /* =====================================================
+       CONTENIDO Y PANTALLAS
+       ===================================================== */
+
+    .contenido {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
 
     .pantalla { display: none; }
     .pantalla.visible { display: block; }
 
+    .seccion-oculta { display: none; }
+
+
+    /* =====================================================
+       TARJETAS
+       ===================================================== */
+
     .card {
-      background: white;
-      border-radius: 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+
       padding: 24px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     }
+
     .card h2 {
-      color: #1a2e1a;
-      font-size: 18px;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid #f0f4f0;
-    }
-
-    .campo { margin-bottom: 16px; }
-    .campo label {
-      display: block;
-      color: #555;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-    .campo input, .campo select, .campo textarea {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s;
-      font-family: Arial;
-    }
-    .campo input:focus,
-    .campo select:focus,
-    .campo textarea:focus { border-color: #3a7a1a; }
-    .campo textarea { resize: vertical; min-height: 80px; }
-
-    .edificios-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .edificio-check {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 14px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
+
+      margin-bottom: 20px;
+
+      color: var(--color-text);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
     }
-    .edificio-check:hover { border-color: #3a7a1a; background: #f0f8f0; }
-    .edificio-check.seleccionado { border-color: #3a7a1a; background: #f0f8f0; }
-    .edificio-check input { width: auto; }
-    .edificio-check span { font-size: 14px; }
+
+    .card h2 > svg {
+      width: 22px;
+      height: 22px;
+      color: var(--color-primary);
+      stroke-width: 2;
+    }
+
+    .subtitulo-seccion {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      margin-bottom: 16px;
+
+      color: var(--color-text);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .subtitulo-seccion svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-primary);
+    }
+
+    .bloque-nueva {
+      border-top: 1px solid var(--color-border);
+      padding-top: 20px;
+    }
+
+    #lista-preguntas-edificio {
+      margin-bottom: 20px;
+    }
+
+
+    /* =====================================================
+       CAMPOS
+       ===================================================== */
+
+    .campo {
+      margin-bottom: 16px;
+    }
+
+    .campo label {
+      display: block;
+      margin-bottom: 8px;
+
+      color: var(--color-text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .campo input:not([type="checkbox"]):not([type="radio"]),
+    .campo select,
+    .campo textarea {
+      width: 100%;
+      padding: 0 16px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+
+      box-shadow: inset 0 2px 4px rgba(18, 61, 42, 0.05);
+
+      font-family: inherit;
+      font-size: 15px;
+
+      outline: none;
+
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .campo input:not([type="checkbox"]):not([type="radio"]),
+    .campo select {
+      height: 50px;
+    }
+
+    .campo textarea {
+      padding: 14px 16px;
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .campo input::placeholder,
+    .campo textarea::placeholder {
+      color: var(--color-text-secondary);
+      opacity: 0.8;
+    }
+
+    /* Enfocado: borde verde de 2 px sin mover el layout */
+    .campo input:not([type="checkbox"]):not([type="radio"]):focus,
+    .campo select:focus,
+    .campo textarea:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+    /* Campo con icono a la izquierda */
+    .input-icono {
+      position: relative;
+    }
+
+    .input-icono > svg {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      transform: translateY(-50%);
+
+      width: 20px;
+      height: 20px;
+
+      color: var(--color-primary);
+      stroke-width: 2;
+      pointer-events: none;
+    }
+
+    .input-icono input {
+      padding-left: 46px !important;
+    }
+
+
+    /* =====================================================
+       TARJETAS DE EDIFICIOS (seleccionables)
+       ===================================================== */
+
+    .edificios-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .edificio-check {
+      position: relative;
+
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      padding: 12px 14px;
+
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+
+      cursor: pointer;
+
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    /* Icono de edificio (a la izquierda) */
+    .edificio-check::before {
+      content: "";
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+
+      background-color: var(--color-primary);
+      -webkit-mask: var(--icono-edificio) center / contain no-repeat;
+      mask: var(--icono-edificio) center / contain no-repeat;
+    }
+
+    /* Círculo de selección (a la derecha) */
+    .edificio-check::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+
+      border: 1.5px solid var(--color-green-soft);
+      border-radius: 50%;
+
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px;
+
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    /* Foto circular del edificio (reemplaza al icono) */
+    .edificio-foto {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid var(--color-surface);
+      box-shadow: 0 1px 4px rgba(18, 61, 42, 0.18);
+    }
+
+    .edificio-check:has(.edificio-foto)::before {
+      display: none;
+    }
+
+    /* El checkbox real queda oculto pero funcional */
+    .edificio-check input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .edificio-check span {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .edificio-check:hover {
+      border-color: var(--color-green-light);
+      background: #F6FAF7;
+    }
+
+    .edificio-check.seleccionado {
+      border-color: var(--color-green-soft);
+      background: var(--color-green-tint);
+    }
+
+    .edificio-check.seleccionado::after {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      background-image: var(--icono-check);
+    }
+
+    .edificio-check:has(input:checked) {
+      border-color: var(--color-green-soft);
+      background: var(--color-green-tint);
+    }
+
+    .edificio-check:has(input:checked)::after {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      background-image: var(--icono-check);
+    }
+
+    .edificio-check:has(input:focus-visible) {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+
+    /* =====================================================
+       BOTONES
+       ===================================================== */
 
     .btn {
-      padding: 14px 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      height: 52px;
+      padding: 0 24px;
+
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-button);
+
+      font-family: inherit;
       font-size: 15px;
-      font-weight: bold;
+      font-weight: 600;
+
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
     }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-crear    { background: linear-gradient(135deg, #3a7a1a, #5a9a2a); color: white; width: 100%; margin-top: 8px; }
-    .btn-activar  { background: linear-gradient(135deg, #1a5a9a, #2a7acc); color: white; flex: 1; }
-    .btn-cerrar   { background: linear-gradient(135deg, #9a1a1a, #cc2a2a); color: white; flex: 1; }
-    .btn-fila     { display: flex; gap: 12px; margin-top: 8px; }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.2;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:focus-visible,
+    .btn-secundario:focus-visible,
+    .btn-peligro:focus-visible,
+    .btn-volver:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    .btn:disabled {
+      background: var(--color-green-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
+      filter: none;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    /* Botón principal verde */
+    .btn-crear {
+      width: 100%;
+      margin-top: 8px;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: white;
+      box-shadow: var(--shadow-button);
+    }
+
+    .btn-crear:hover:not(:disabled) {
+      filter: brightness(0.92);
+      box-shadow: 0 7px 20px rgba(8, 122, 69, 0.22);
+    }
+
+    /* Activar sesión: verde del sistema */
+    .btn-activar {
+      flex: 1;
+      background: var(--color-primary);
+      color: white;
+      box-shadow: var(--shadow-button);
+    }
+
+    .btn-activar:hover:not(:disabled) {
+      background: var(--color-primary-dark);
+    }
+
+    /* Cerrar sesión: rojo de error */
+    .btn-cerrar {
+      flex: 1;
+      background: var(--color-error);
+      color: white;
+    }
+
+    .btn-cerrar:hover:not(:disabled) {
+      background: var(--color-error-dark);
+    }
+
+    .btn-fila {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
     .btn-secundario {
-      background: #f0f4f0;
-      color: #3a7a1a;
-      border: 2px solid #3a7a1a;
-      padding: 10px 20px;
-      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      height: 46px;
+      padding: 0 20px;
+
+      background: var(--color-surface);
+      color: var(--color-primary);
+
+      border: 1px solid var(--color-primary);
+      border-radius: var(--radius-button);
+
+      font-family: inherit;
       font-size: 14px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
+
+      transition: background 0.15s ease;
     }
+
+    .btn-secundario:hover {
+      background: var(--color-green-tint);
+    }
+
     .btn-peligro {
-      background: #fff0f0;
-      color: #cc2a2a;
-      border: 2px solid #cc2a2a;
-      padding: 8px 14px;
-      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 9px 14px;
+
+      background: var(--color-error-bg);
+      color: var(--color-error);
+
+      border: 1px solid var(--color-error-border);
+      border-radius: 12px;
+
+      font-family: inherit;
       font-size: 13px;
-      font-weight: bold;
+      font-weight: 600;
+      cursor: pointer;
+
+      transition: background 0.15s ease;
+    }
+
+    .btn-peligro:hover {
+      background: #FAE1DF;
+    }
+
+    .btn-peligro svg,
+    .btn-secundario svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .btn-volver {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 0;
+
+      background: none;
+      border: none;
+
+      color: var(--color-primary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
     }
+
+    .btn-volver svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+
+    /* =====================================================
+       BADGES DE ESTADO
+       ===================================================== */
 
     .estado-badge {
       display: inline-block;
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-left: 10px;
+      margin-left: auto;
+      padding: 4px 12px;
+
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: 600;
     }
-    .estado-borrador { background: #fff3cd; color: #856404; }
-    .estado-activa   { background: #d4edda; color: #155724; }
-    .estado-cerrada  { background: #f8d7da; color: #721c24; }
+
+    .estado-borrador { background: #FFF3CD; color: #856404; }
+    .estado-activa   { background: var(--color-green-tint); color: var(--color-primary-dark); }
+    .estado-cerrada  { background: var(--color-error-bg); color: var(--color-error); }
+
+
+    /* =====================================================
+       CÓDIGO DE LA SESIÓN
+       ===================================================== */
 
     .codigo-display {
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary));
       color: white;
-      border-radius: 14px;
-      padding: 20px;
+
+      border-radius: 16px;
+      box-shadow: var(--shadow-button);
+
+      padding: 22px 20px;
+      margin-bottom: 16px;
+
       text-align: center;
+    }
+
+    .codigo-display .label      { font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+    .codigo-display .codigo     { font-size: 36px; font-weight: 700; letter-spacing: 4px; }
+    .codigo-display .nom-sesion { font-size: 14px; opacity: 0.85; margin-top: 6px; }
+
+
+    /* =====================================================
+       CONTADORES Y RANKING
+       ===================================================== */
+
+    .contador {
+      display: flex;
+      gap: 12px;
       margin-bottom: 16px;
     }
-    .codigo-display .label      { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
-    .codigo-display .codigo     { font-size: 36px; font-weight: bold; letter-spacing: 4px; }
-    .codigo-display .nom-sesion { font-size: 14px; opacity: 0.8; margin-top: 6px; }
 
-    .contador { display: flex; gap: 16px; margin-bottom: 16px; }
     .contador-item {
       flex: 1;
-      background: #f0f8f0;
-      border-radius: 12px;
       padding: 14px;
+
+      background: var(--color-green-tint);
+      border-radius: 14px;
+
       text-align: center;
     }
-    .contador-num   { font-size: 28px; font-weight: bold; color: #3a7a1a; }
-    .contador-label { font-size: 12px; color: #888; margin-top: 4px; }
+
+    .contador-num   { font-size: 28px; font-weight: 700; color: var(--color-primary); }
+    .contador-label { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
 
     .participante-item {
       display: flex;
       align-items: center;
       gap: 14px;
+
       padding: 12px 16px;
-      border-radius: 12px;
       margin-bottom: 8px;
-      background: #f8f9f8;
+
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
     }
-    .participante-item.completado { background: #f0f8f0; }
-    .participante-item.primero    { background: linear-gradient(135deg, #fff9e6, #fff3cd); }
+
+    .participante-item.completado { background: var(--color-green-tint); border-color: var(--color-green-soft); }
+    .participante-item.primero    { background: linear-gradient(135deg, #FFF9E6, #FFF3CD); border-color: #F5E3A3; }
+
     .pos-badge {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: bold; font-size: 16px; flex-shrink: 0;
+
+      font-weight: 700;
+      font-size: 16px;
     }
+
     .pos-1 { background: #FFD700; color: #333; }
     .pos-2 { background: #C0C0C0; color: #333; }
     .pos-3 { background: #CD7F32; color: white; }
-    .pos-n { background: #e0e0e0; color: #555; font-size: 14px; }
-    .participante-info   { flex: 1; }
-    .participante-nombre { font-weight: bold; color: #1a2e1a; font-size: 15px; }
-    .participante-estado { font-size: 12px; color: #888; margin-top: 2px; }
-    .participante-tiempo { font-weight: bold; color: #3a7a1a; font-size: 15px; }
+    .pos-n { background: var(--color-border); color: var(--color-text-secondary); font-size: 14px; }
 
-    .ranking-vacio { text-align: center; color: #999; padding: 30px; font-size: 15px; }
-    .seccion-oculta { display: none; }
+    .participante-info   { flex: 1; }
+    .participante-nombre { font-weight: 600; color: var(--color-text); font-size: 15px; }
+    .participante-estado { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+    .participante-tiempo { font-weight: 700; color: var(--color-primary); font-size: 15px; }
+
+    .ranking-vacio {
+      text-align: center;
+      color: var(--color-text-secondary);
+      padding: 30px;
+      font-size: 15px;
+    }
+
+
+    /* =====================================================
+       HISTORIAL
+       ===================================================== */
+
+    .filtro-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .filtro-container .campo {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .filtro-container .btn {
+      width: auto;
+      height: 50px;
+      margin-top: 0;
+      padding: 0 18px;
+    }
 
     .sesion-card {
-      background: white;
-      border-radius: 14px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-left: 4px solid var(--color-primary);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+
       padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 14px;
+
       cursor: pointer;
-      transition: box-shadow 0.2s;
-      border-left: 4px solid #3a7a1a;
+
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
     }
-    .sesion-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-    .sesion-card.cerrada { border-left-color: #cc2a2a; }
+
+    .sesion-card:hover {
+      box-shadow: 0 7px 20px rgba(18, 61, 42, 0.11);
+      transform: translateY(-1px);
+    }
+
+    .sesion-card.cerrada { border-left-color: var(--color-error); }
+
     .sesion-card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-    .sesion-nombre { font-weight: bold; font-size: 17px; color: #1a2e1a; }
-    .sesion-codigo { font-size: 13px; color: #888; margin-top: 2px; }
-    .sesion-stats  { display: flex; gap: 16px; margin-top: 10px; font-size: 13px; color: #555; }
+
+    .sesion-nombre { font-weight: 600; font-size: 17px; color: var(--color-text); }
+    .sesion-codigo { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+    .sesion-stats  { display: flex; gap: 16px; margin-top: 10px; font-size: 13px; color: var(--color-text-secondary); }
 
     #detalle-sesion { display: none; }
     #detalle-sesion.visible { display: block; }
 
-    .btn-volver {
-      background: none;
-      border: none;
-      color: #3a7a1a;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 16px;
-      padding: 0;
+    .detalle-barra {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
+      margin-bottom: 16px;
     }
 
     .ganador-card {
       background: linear-gradient(135deg, #FFD700, #FFA500);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 20px;
-      text-align: center;
       margin-bottom: 20px;
+      text-align: center;
     }
+
     .ganador-card .trofeo { font-size: 48px; margin-bottom: 8px; }
-    .ganador-card .nombre { font-size: 22px; font-weight: bold; color: #1a1a1a; }
+    .ganador-card .nombre { font-size: 22px; font-weight: 700; color: #1A1A1A; }
     .ganador-card .stats  { font-size: 14px; color: #333; margin-top: 6px; }
 
-    /* Preguntas */
+
+    /* =====================================================
+       PREGUNTAS
+       ===================================================== */
+
     .pregunta-item {
-      background: #f8f9f8;
-      border-radius: 12px;
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      border-left: 4px solid var(--color-primary);
+      border-radius: 14px;
+
       padding: 16px;
       margin-bottom: 12px;
-      border-left: 4px solid #3a7a1a;
     }
-    .pregunta-item .preg-texto { font-weight: bold; color: #1a2e1a; font-size: 15px; margin-bottom: 8px; }
-    .pregunta-item .preg-opciones { font-size: 13px; color: #555; line-height: 1.8; }
-    .pregunta-item .preg-opciones span.correcta { color: #2e7d32; font-weight: bold; }
-    .pregunta-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+
+    .pregunta-item .preg-texto     { font-weight: 600; color: var(--color-text); font-size: 15px; margin-bottom: 8px; }
+    .pregunta-item .preg-opciones  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; }
+    .pregunta-item .preg-opciones span.correcta { color: var(--color-primary); font-weight: 700; }
+
+    .pregunta-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
     .preg-edificio-selector {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 4px;
     }
+
     .preg-edificio-btn {
-      padding: 10px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      background: white;
-      cursor: pointer;
+      padding: 12px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+
+      font-family: inherit;
       font-size: 13px;
+      font-weight: 500;
       text-align: center;
-      transition: all 0.2s;
+      cursor: pointer;
+
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
-    .preg-edificio-btn:hover    { border-color: #3a7a1a; background: #f0f8f0; }
-    .preg-edificio-btn.activo   { border-color: #3a7a1a; background: #f0f8f0; font-weight: bold; color: #1a2e1a; }
-    /* ── Media Queries para Móviles ── */
+
+    .preg-edificio-btn:hover {
+      border-color: var(--color-green-light);
+      background: #F6FAF7;
+    }
+
+    .preg-edificio-btn.activo {
+      border-color: var(--color-primary);
+      background: var(--color-green-tint);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
     @media (max-width: 600px) {
-      .header { padding: 12px 16px; flex-direction: column; gap: 12px; text-align: center; }
-      .contenido { padding: 16px 12px; }
-      .card { padding: 16px; }
-      .contador { flex-direction: column; gap: 8px; }
-      .btn-fila { flex-direction: column; gap: 8px; }
-      .filtro-container { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
-      .filtro-container .campo { width: 100%; margin-bottom: 0 !important; }
-      .filtro-container button { width: 100% !important; margin-top: 0 !important; }
+
+      .header {
+        flex-direction: column;
+        gap: 14px;
+        padding: 20px 12px 4px;
+      }
+
+      .header-btns {
+        justify-content: flex-start;
+      }
+
+      .tabs {
+        width: calc(100% - 24px);
+      }
+
+      .tab {
+        padding: 11px 12px;
+        font-size: 13px;
+      }
+
+      .contenido {
+        padding: 16px 12px 32px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .contador {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .btn-fila {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .filtro-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .filtro-container .btn {
+        width: 100%;
+      }
+
+      .detalle-barra {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
     }
+
   </style>
 </head>
+
+
 <body>
 
-  <div class="header">
-    <div><h1>🏆 Panel Administrador</h1></div>
+  <!-- DECORACIÓN: hojas suaves arriba a la derecha -->
+  <svg class="hojas-superior" viewBox="0 0 200 200" aria-hidden="true">
+    <path d="M200 0 L200 170 C150 150 110 90 120 0 Z" fill="#C2DDCC" opacity="0.55"/>
+    <path d="M150 0 C165 40 140 90 95 100 C90 55 110 15 150 0 Z" fill="#91C59D" opacity="0.35"/>
+    <path d="M200 60 C185 100 150 130 110 135 C115 95 150 65 200 60 Z" fill="#C2DDCC" opacity="0.6"/>
+  </svg>
+
+
+  <!-- ENCABEZADO -->
+  <header class="header">
+
+    <div class="header-marca">
+
+      <!-- Ajusta la ruta a tu archivo de logo -->
+      <img
+        src="img/logo-uco.png"
+        alt="Universidad Católica de Oriente"
+        class="logo-img"
+      >
+
+      <div>
+        <h1>Panel Administrador</h1>
+        <p class="header-sub">Gestión de carreras y preguntas</p>
+      </div>
+
+    </div>
+
     <div class="header-btns">
-      <button onclick="cerrarAdmin()">🚪 Cerrar sesión</button>
-      <a href="index.html">← Salir</a>
+      <button onclick="cerrarAdmin()">
+        <i data-lucide="log-out" aria-hidden="true"></i>
+        Cerrar sesión
+      </button>
+      <a href="index.html">
+        <i data-lucide="arrow-left" aria-hidden="true"></i>
+        Salir
+      </a>
+    </div>
+
+  </header>
+
+
+  <!-- PESTAÑAS -->
+  <div class="tabs">
+    <div class="tab activo" id="tab-nueva" onclick="cambiarTab('nueva')">
+      <i data-lucide="circle-plus" aria-hidden="true"></i>
+      Nueva carrera
+    </div>
+    <div class="tab" id="tab-preguntas" onclick="cambiarTab('preguntas')">
+      <i data-lucide="circle-help" aria-hidden="true"></i>
+      Preguntas
+    </div>
+    <div class="tab" id="tab-historial" onclick="cambiarTab('historial')">
+      <i data-lucide="clipboard-list" aria-hidden="true"></i>
+      Historial
     </div>
   </div>
 
-  <div class="tabs">
-    <div class="tab activo" id="tab-nueva"     onclick="cambiarTab('nueva')">➕ Nueva carrera</div>
-    <div class="tab"        id="tab-preguntas" onclick="cambiarTab('preguntas')">❓ Preguntas</div>
-    <div class="tab"        id="tab-historial" onclick="cambiarTab('historial')">📋 Historial</div>
-  </div>
 
   <div class="contenido">
 
@@ -330,40 +1110,69 @@
     <div class="pantalla visible" id="pantalla-nueva">
 
       <div class="card" id="card-crear">
-        <h2>➕ Crear nueva sesión</h2>
+        <h2>
+          <i data-lucide="circle-plus" aria-hidden="true"></i>
+          Crear nueva sesión
+        </h2>
+
         <div class="campo">
-          <label>Nombre de la sesión</label>
-          <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
+          <label for="nombre-sesion">Nombre de la sesión</label>
+          <div class="input-icono">
+            <i data-lucide="graduation-cap" aria-hidden="true"></i>
+            <input type="text" id="nombre-sesion" placeholder="Ej: Inducción 2025">
+          </div>
         </div>
+
         <div class="campo">
-          <label>Código de acceso</label>
-          <input type="text" id="codigo-sesion" placeholder="Ej: UCO-2025" style="text-transform:uppercase;">
+          <label for="codigo-sesion">Código de acceso</label>
+          <div class="input-icono">
+            <i data-lucide="key-round" aria-hidden="true"></i>
+            <input type="text" id="codigo-sesion" placeholder="Ej: UCO-2025" style="text-transform:uppercase;">
+          </div>
         </div>
+
         <div class="campo">
           <label>Edificios incluidos</label>
           <div class="edificios-grid" id="edificios-grid"></div>
         </div>
-        <button class="btn btn-crear" onclick="crearSesion()">✅ Crear sesión</button>
+
+        <button class="btn btn-crear" onclick="crearSesion()">
+          <i data-lucide="plus" aria-hidden="true"></i>
+          Crear sesión
+        </button>
       </div>
 
       <div class="card seccion-oculta" id="card-control">
         <h2>
-          🎮 Sesión actual
+          <i data-lucide="gamepad-2" aria-hidden="true"></i>
+          Sesión actual
           <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
         </h2>
+
         <div class="codigo-display">
           <div class="label">Código para estudiantes</div>
           <div class="codigo"     id="display-codigo">---</div>
           <div class="nom-sesion" id="display-nombre"></div>
         </div>
+
         <div class="btn-fila">
-          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">▶️ Activar sesión</button>
-          <button class="btn btn-cerrar"  id="btn-cerrar"  onclick="cerrarSesion()" disabled>⏹️ Cerrar sesión</button>
+          <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">
+            <i data-lucide="play" aria-hidden="true"></i>
+            Activar sesión
+          </button>
+          <button class="btn btn-cerrar" id="btn-cerrar" onclick="cerrarSesion()" disabled>
+            <i data-lucide="square" aria-hidden="true"></i>
+            Cerrar sesión
+          </button>
         </div>
       </div>
 
       <div class="card seccion-oculta" id="card-ranking">
-        <h2>🏅 Ranking en tiempo real</h2>
+        <h2>
+          <i data-lucide="trophy" aria-hidden="true"></i>
+          Ranking en tiempo real
+        </h2>
+
         <div class="contador">
           <div class="contador-item">
             <div class="contador-num"   id="cnt-unidos">0</div>
@@ -378,6 +1187,7 @@
             <div class="contador-label">Edificios</div>
           </div>
         </div>
+
         <div id="lista-ranking">
           <div class="ranking-vacio">Esperando participantes...</div>
         </div>
@@ -385,11 +1195,15 @@
 
     </div>
 
+
     <!-- ═══ TAB: PREGUNTAS ═══ -->
     <div class="pantalla" id="pantalla-preguntas">
 
       <div class="card">
-        <h2>❓ Gestionar preguntas por edificio</h2>
+        <h2>
+          <i data-lucide="circle-help" aria-hidden="true"></i>
+          Gestionar preguntas por edificio
+        </h2>
 
         <div class="campo">
           <label>Selecciona el edificio</label>
@@ -397,33 +1211,36 @@
         </div>
 
         <div id="seccion-preguntas-edificio" style="display:none;">
-          <div id="lista-preguntas-edificio" style="margin-bottom:20px;"></div>
+          <div id="lista-preguntas-edificio"></div>
 
-          <div style="border-top: 2px solid #f0f4f0; padding-top: 20px;">
-            <h3 style="color:#1a2e1a; font-size:16px; margin-bottom:16px;">➕ Nueva pregunta</h3>
+          <div class="bloque-nueva">
+            <h3 class="subtitulo-seccion">
+              <i data-lucide="circle-plus" aria-hidden="true"></i>
+              Nueva pregunta
+            </h3>
 
             <div class="campo">
-              <label>Pregunta</label>
+              <label for="nueva-pregunta">Pregunta</label>
               <textarea id="nueva-pregunta" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
             </div>
             <div class="campo">
-              <label>Opción A</label>
+              <label for="nueva-opcion-a">Opción A</label>
               <input type="text" id="nueva-opcion-a" placeholder="Ingeniería">
             </div>
             <div class="campo">
-              <label>Opción B</label>
+              <label for="nueva-opcion-b">Opción B</label>
               <input type="text" id="nueva-opcion-b" placeholder="Agronomía">
             </div>
             <div class="campo">
-              <label>Opción C</label>
+              <label for="nueva-opcion-c">Opción C</label>
               <input type="text" id="nueva-opcion-c" placeholder="Enfermería">
             </div>
             <div class="campo">
-              <label>Opción D</label>
+              <label for="nueva-opcion-d">Opción D</label>
               <input type="text" id="nueva-opcion-d" placeholder="Deportes">
             </div>
             <div class="campo">
-              <label>Respuesta correcta</label>
+              <label for="nueva-respuesta-correcta">Respuesta correcta</label>
               <select id="nueva-respuesta-correcta">
                 <option value="a">A</option>
                 <option value="b">B</option>
@@ -432,50 +1249,96 @@
               </select>
             </div>
 
-            <button class="btn btn-crear" onclick="guardarPregunta()">💾 Guardar pregunta</button>
+            <button class="btn btn-crear" onclick="guardarPregunta()">
+              <i data-lucide="save" aria-hidden="true"></i>
+              Guardar pregunta
+            </button>
           </div>
         </div>
 
       </div>
     </div>
 
+
     <!-- ═══ TAB: HISTORIAL ═══ -->
     <div class="pantalla" id="pantalla-historial">
+
       <div id="lista-sesiones">
-        
-        <div class="card filtro-container" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
-          <div class="campo" style="margin-bottom: 0; flex: 1;">
-            <label>Desde</label>
+
+        <div class="card filtro-container" style="margin-bottom: 20px;">
+          <div class="campo">
+            <label for="filtro-fecha-inicio">Desde</label>
             <input type="date" id="filtro-fecha-inicio">
           </div>
-          <div class="campo" style="margin-bottom: 0; flex: 1;">
-            <label>Hasta</label>
+          <div class="campo">
+            <label for="filtro-fecha-fin">Hasta</label>
             <input type="date" id="filtro-fecha-fin">
           </div>
-          <button class="btn btn-crear" style="width: auto; padding: 14px 20px;" onclick="filtrarHistorial()">🔍 Buscar</button>
-          <button class="btn btn-cerrar" style="width: auto; padding: 14px 20px;" onclick="limpiarFiltroHistorial()">✖️ Limpiar</button>
+          <button class="btn btn-crear" onclick="filtrarHistorial()">
+            <i data-lucide="search" aria-hidden="true"></i>
+            Buscar
+          </button>
+          <button class="btn-secundario" style="height:50px;" onclick="limpiarFiltroHistorial()">
+            <i data-lucide="x" aria-hidden="true"></i>
+            Limpiar
+          </button>
         </div>
 
         <div id="contenedor-lista-sesiones">
           <div class="ranking-vacio">Cargando historial...</div>
         </div>
+
       </div>
+
       <div id="detalle-sesion">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <button class="btn-volver" style="margin-bottom: 0;" onclick="volverHistorial()">← Volver al historial</button>
-          <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none; padding: 10px 16px; font-size: 14px;">🗑️ Eliminar sesión</button>
+        <div class="detalle-barra">
+          <button class="btn-volver" onclick="volverHistorial()">
+            <i data-lucide="arrow-left" aria-hidden="true"></i>
+            Volver al historial
+          </button>
+          <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none;">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+            Eliminar sesión
+          </button>
         </div>
         <div id="detalle-contenido"></div>
       </div>
+
     </div>
 
   </div>
 
+
+  <!-- LÓGICA DEL PANEL (sin cambios) -->
   <script type="module">
     import { AdminController } from './src/controllers/AdminController.js';
     const app = new AdminController();
     app.init();
   </script>
 
+  <!-- ACTIVAR LUCIDE (también en el contenido que genera el JS) -->
+  <script>
+    (function () {
+      if (!window.lucide) {
+        console.error("Lucide no se cargó: revisa la conexión o la URL del script.");
+        return;
+      }
+
+      lucide.createIcons();
+
+      // Convierte los iconos nuevos cuando el JS agrega contenido a la página
+      var pendiente = false;
+      new MutationObserver(function () {
+        if (pendiente) return;
+        pendiente = true;
+        requestAnimationFrame(function () {
+          pendiente = false;
+          lucide.createIcons();
+        });
+      }).observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+
 </body>
+
 </html>
