@@ -204,11 +204,144 @@ function crearPildoraCanvas({ anchoPx, altoPx, texto, colorTop, colorBottom, ali
   return canvas;
 }
 
+// ═══════════════════════════════════════════
+// Panel de punto de interés (Modo Libre)
+// ═══════════════════════════════════════════
+// Píldora blanca con borde suave, círculo verde muy claro con una flecha
+// que apunta hacia donde queda el lugar, y el texto en Inter (la fuente
+// que ar.html ya carga). El ancho se ajusta al texto; si es largo, pasa a
+// varias líneas (máx. 3, luego corta con "…"). Mismo lenguaje visual que los pines y fichas del mapa.
+const PANEL_INTERES = {
+  margen: 14,          // espacio para la sombra alrededor de la píldora
+  padIzq: 10,
+  padDer: 22,
+  circulo: 44,
+  gap: 12,
+  fuente: 22,
+  altoLinea: 27,
+  anchoTextoMax: 250,
+  maxLineas: 3,
+  altoMin: 64,
+  metrosPorPx: 0.0011, // 250 px de texto ≈ 0.28 m en el marcador
+  colores: {
+    fondo:  '#FFFFFF',
+    borde:  '#E2E9E5',
+    texto:  '#123D2A',
+    circulo:'#EAF5EE',
+    icono:  '#087A45',
+    sombra: 'rgba(18, 61, 42, 0.16)'
+  }
+};
+
+// Grados de giro de la flecha (0 = hacia arriba) según la dirección del punto
+const ANGULO_DIRECCION = {
+  'arriba': 0, 'arriba-derecha': 45, 'derecha': 90, 'abajo-derecha': 135,
+  'abajo': 180, 'abajo-izquierda': 225, 'izquierda': 270, 'arriba-izquierda': 315
+};
+
+function fuentePanel(peso, px) {
+  return `${peso} ${px}px Inter, 'Segoe UI', Arial, sans-serif`;
+}
+
+function dibujarIconoDireccion(ctx, cx, cy, direccion, color) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const angulo = ANGULO_DIRECCION[direccion];
+  if (angulo === undefined) {
+    // 'centro' u otra: pin de ubicación
+    ctx.beginPath();
+    ctx.arc(0, -3, 7.5, Math.PI * 0.85, Math.PI * 2.15);
+    ctx.lineTo(0, 11);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, -3, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.rotate(angulo * Math.PI / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, 10);  ctx.lineTo(0, -9);   // cuerpo
+    ctx.moveTo(-7, -2); ctx.lineTo(0, -9); ctx.lineTo(7, -2); // punta
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function crearPanelInteresCanvas(punto) {
+  const t = PANEL_INTERES;
+  const medir = document.createElement('canvas').getContext('2d');
+  medir.font = fuentePanel(600, t.fuente);
+  let lineas = partirEnLineas(medir, punto.texto, t.anchoTextoMax);
+  if (lineas.length > t.maxLineas) {
+    // Texto demasiado largo: corta en la última línea visible con "…"
+    lineas = lineas.slice(0, t.maxLineas);
+    let ultima = lineas[t.maxLineas - 1];
+    while (ultima && medir.measureText(ultima + '…').width > t.anchoTextoMax) ultima = ultima.slice(0, -1);
+    lineas[t.maxLineas - 1] = ultima.trimEnd() + '…';
+  }
+  const anchoTexto = Math.min(t.anchoTextoMax, Math.max(...lineas.map(l => medir.measureText(l).width)));
+
+  const altoPildora  = Math.max(t.altoMin, lineas.length * t.altoLinea + 26);
+  const anchoPildora = t.padIzq + t.circulo + t.gap + anchoTexto + t.padDer;
+  const anchoPx = anchoPildora + t.margen * 2;
+  const altoPx  = altoPildora  + t.margen * 2;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = anchoPx * PIXEL_SCALE;
+  canvas.height = altoPx  * PIXEL_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(PIXEL_SCALE, PIXEL_SCALE);
+
+  const x = t.margen, y = t.margen;
+  const radio = lineas.length > 1 ? 22 : altoPildora / 2;
+
+  // Píldora con sombra suave
+  ctx.save();
+  ctx.shadowColor = t.colores.sombra;
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 3;
+  trazarRectRedondeado(ctx, x, y, anchoPildora, altoPildora, radio);
+  ctx.fillStyle = t.colores.fondo;
+  ctx.fill();
+  ctx.restore();
+  trazarRectRedondeado(ctx, x + 0.75, y + 0.75, anchoPildora - 1.5, altoPildora - 1.5, radio);
+  ctx.strokeStyle = t.colores.borde;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Círculo con la flecha
+  const cx = x + t.padIzq + t.circulo / 2;
+  const cy = y + altoPildora / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, t.circulo / 2, 0, Math.PI * 2);
+  ctx.fillStyle = t.colores.circulo;
+  ctx.fill();
+  dibujarIconoDireccion(ctx, cx, cy, punto.direccion, t.colores.icono);
+
+  // Texto
+  ctx.font = fuentePanel(600, t.fuente);
+  ctx.fillStyle = t.colores.texto;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const xTexto = x + t.padIzq + t.circulo + t.gap;
+  const yInicio = cy - ((lineas.length - 1) * t.altoLinea) / 2;
+  lineas.forEach((linea, i) => ctx.fillText(linea, xTexto, yInicio + i * t.altoLinea + 1, anchoTexto));
+
+  return { canvas, anchoM: anchoPx * t.metrosPorPx, altoM: altoPx * t.metrosPorPx };
+}
+
 export class ARView {
   constructor() {
     this._responderCallback = null;
     this._continuarCallback = null;
     this._panelesInteres = [];
+    document.fonts?.load(fuentePanel(600, PANEL_INTERES.fuente)).catch(() => {});
     this._panelPregunta = null;
     this._opcionesAR = null;
     this._opcionesTextoAR = null;
@@ -304,24 +437,14 @@ export class ARView {
     const puntos = edificio.puntosDeInteres || [];
     this._panelesInteres = puntos.map(punto => {
       const offset = DIRECCIONES_PUNTOS_INTERES[punto.direccion] || DIRECCIONES_PUNTOS_INTERES.centro;
+      const { canvas, anchoM, altoM } = crearPanelInteresCanvas(punto);
 
-      const panel = document.createElement('a-entity');
+      const panel = document.createElement('a-plane');
+      panel.setAttribute('class', 'panel-interes');
       panel.setAttribute('position', `${offset.x} ${offset.y} ${offset.z}`);
-
-      const fondo = document.createElement('a-plane');
-      fondo.setAttribute('width', '0.34');
-      fondo.setAttribute('height', '0.16');
-      fondo.setAttribute('color', '#1a2e1a');
-      fondo.setAttribute('opacity', '0.85');
-      panel.appendChild(fondo);
-
-      const texto = document.createElement('a-text');
-      texto.setAttribute('value', punto.texto);
-      texto.setAttribute('align', 'center');
-      texto.setAttribute('color', '#FFFFFF');
-      texto.setAttribute('width', '0.62');
-      texto.setAttribute('position', '0 0 0.01');
-      panel.appendChild(texto);
+      panel.setAttribute('width',  anchoM.toFixed(4));
+      panel.setAttribute('height', altoM.toFixed(4));
+      panel.setAttribute('material', { shader: 'flat', src: canvas, transparent: true, alphaTest: 0.02 });
 
       targetEntity.appendChild(panel);
       return panel;
@@ -534,4 +657,4 @@ export class ARView {
       video.srcObject = null;
     }
   }
-}
+}
