@@ -1,7 +1,12 @@
 /**
  * NotificacionComponent.js
  * Componente para manejar las notificaciones toast.
+ *
+ * Tipos: 'exito' (verde, por defecto), 'aviso' (ámbar), 'error' (rojo).
+ * El icono vive en el HTML (ar.html) y cambia según el tipo mediante CSS.
  */
+
+const TIPOS = ['exito', 'aviso', 'error'];
 
 export class NotificacionComponent {
     constructor(containerId = 'notificacion') {
@@ -9,17 +14,15 @@ export class NotificacionComponent {
         this.tituloEl = document.getElementById('not-titulo');
         this.descEl = document.getElementById('not-desc');
         this.puntosEl = document.getElementById('not-puntos');
-        this.iconoEl = document.getElementById('not-icono');
         this.timeoutId = null;
     }
 
-    mostrar(titulo, descripcion, puntos) {
+    mostrar(titulo, descripcion, puntos, tipo = 'exito') {
         if (!this.container) return;
-        
-        if (this.iconoEl) {
-            this.iconoEl.remove();
-            this.iconoEl = null;
-        }
+
+        if (!TIPOS.includes(tipo)) tipo = 'exito';
+        TIPOS.forEach(t => this.container.classList.remove('tipo-' + t));
+        this.container.classList.add('tipo-' + tipo);
 
         if (this.tituloEl) this.tituloEl.textContent = titulo;
         if (this.descEl) this.descEl.textContent = descripcion;
