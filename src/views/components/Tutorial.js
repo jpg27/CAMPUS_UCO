@@ -75,7 +75,7 @@ const PASOS = [
   {
     id: 'camara',
     titulo: 'Apunta la cámara al marcador',
-    texto: 'En cada edificio busca el marcador y enfócalo completo, a 1 o 2 metros, hasta que aparezca la pregunta o la información.',
+    texto: 'En cada edificio busca el marcador y enfócalo completo, a 30 o 50 cm, hasta que aparezca la pregunta o la información.',
     svg: `
       <svg viewBox="0 0 300 300" aria-hidden="true">
         <rect x="88" y="28" width="124" height="244" rx="24" fill="${C.tinta}"/>
