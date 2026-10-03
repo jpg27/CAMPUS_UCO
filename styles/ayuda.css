@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════
+   ayuda.css — Página "¿Cómo funciona?" (ayuda.html)
+   ═══════════════════════════════════════════ */
+
+body { min-height: 100vh; min-height: 100dvh; }
+
+.ayuda {
+  width: 100%; max-width: 560px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+}
+
+.ayuda-barra {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.ayuda-volver {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 0 12px 0 6px;
+  border-radius: 999px;
+  color: var(--color-text); text-decoration: none;
+  font-weight: 600; font-size: var(--t-s);
+}
+.ayuda-volver svg { width: 20px; height: 20px; }
+.ayuda-logo { height: 34px; width: auto; }
+
+.ayuda h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.15; }
+.ayuda-intro { color: var(--color-text-secondary); margin: 6px 0 18px; line-height: 1.45; }
+
+/* Pestañas Mapa / Carrera / Libre */
+.ayuda-tabs {
+  display: flex; gap: 4px; padding: 4px;
+  background: #EEF3F0; border-radius: 16px;
+  margin-bottom: 16px;
+}
+.ayuda-tab {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 10px;
+  border: 0; border-radius: 12px;
+  background: transparent; color: var(--color-text-secondary);
+  font: 600 var(--t-s) var(--fuente); cursor: pointer;
+}
+.ayuda-tab svg { width: 18px; height: 18px; }
+.ayuda-tab[aria-selected="true"] {
+  background: var(--color-surface); color: var(--color-primary);
+  box-shadow: 0 1px 4px rgba(18, 61, 42, .10);
+}
+
+/* Pasos numerados */
+.pasos { list-style: none; display: grid; gap: 10px; counter-reset: paso; }
+.paso {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.paso-icono {
+  position: relative; flex: none;
+  display: grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--color-green-tint); color: var(--color-primary);
+}
+.paso-icono svg { width: 24px; height: 24px; }
+.paso-icono::before {
+  counter-increment: paso; content: counter(paso);
+  position: absolute; top: -8px; left: -8px;
+  display: grid; place-items: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--oro); color: #fff;
+  font-size: 12px; font-weight: 700;
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+.paso h3 { font-size: var(--t-m); font-weight: 700; line-height: 1.3; }
+.paso p { color: var(--color-text-secondary); font-size: var(--t-s); line-height: 1.45; margin-top: 2px; }
+.ayuda-panel[hidden] { display: none; }
+
+/* Botones */
+.ayuda-acciones { display: grid; gap: 8px; margin: 18px 0 28px; }
+.btn-ayuda {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 54px; padding: 0 20px;
+  border: 0; border-radius: var(--radius-button);
+  background: var(--color-primary); color: #fff;
+  font: 700 var(--t-m) var(--fuente);
+  box-shadow: var(--shadow-button); cursor: pointer;
+}
+.btn-ayuda svg { width: 20px; height: 20px; }
+.btn-ayuda-texto {
+  min-height: 44px; border: 0; background: none;
+  color: var(--color-primary); font: 600 var(--t-s) var(--fuente); cursor: pointer;
+}
+
+/* Si algo no funciona */
+.ayuda h2 { font-size: var(--t-l); font-weight: 700; margin-bottom: 10px; }
+.problemas { display: grid; gap: 8px; }
+.problema {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+.problema summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 56px; padding: 0 16px;
+  font-weight: 600; cursor: pointer; list-style: none;
+}
+.problema summary::-webkit-details-marker { display: none; }
+.problema summary svg { width: 20px; height: 20px; color: var(--color-text-secondary); transition: transform .2s; flex: none; }
+.problema[open] summary svg { transform: rotate(180deg); }
+.problema p { padding: 0 16px 16px; color: var(--color-text-secondary); font-size: var(--t-s); line-height: 1.5; }
+.problema summary:focus-visible { border-radius: 16px; }

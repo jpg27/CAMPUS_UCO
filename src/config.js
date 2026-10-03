@@ -275,7 +275,10 @@ export const FOTOS_EDIFICIOS = {
 // se puedan escanear desde otra pantalla. Un edificio que no esté aquí muestra
 // un recorte de la ilustración del mapa. (Admin sigue usando FOTOS_EDIFICIOS.)
 export const FOTOS_MAPA = {
-  bloque_innova: 'img/mapa/bloque_innova.webp'
+  bloque_innova: 'img/mapa/bloque_innova.webp',
+  edificio_j:    'img/mapa/edificio_j.webp',
+  auditorio:     'img/mapa/auditorio.webp',
+  capilla:       'img/mapa/capilla.webp'
 };
 
 // ── Mapeo de target indexes de MindAR a edificios ──

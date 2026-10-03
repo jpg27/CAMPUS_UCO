@@ -437,7 +437,37 @@
       }
     }
 
+    /* =====================================================
+       ENLACE DE AYUDA
+       ===================================================== */
+
+    .enlace-ayuda {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      min-height: 48px;
+      margin-top: 18px;
+
+      color: var(--color-primary);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .enlace-ayuda svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .enlace-ayuda:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+      border-radius: 12px;
+    }
   </style>
+  <link rel="stylesheet" href="styles/tutorial.css">
 </head>
 
 
@@ -497,7 +527,7 @@
       </a>
 
       <!-- MODO LIBRE -->
-      <a href="ar.html" class="btn" onclick="localStorage.clear()">
+      <a href="ar.html" class="btn" onclick="limpiarCarrera()">
         <span class="btn-icono">
           <i data-lucide="camera"></i>
         </span>
@@ -516,8 +546,30 @@
 
     </nav>
 
+    <!-- AYUDA -->
+    <a href="ayuda.html" class="enlace-ayuda">
+      <i data-lucide="circle-help" aria-hidden="true"></i>
+      ¿Cómo funciona?
+    </a>
+
   </main>
 
+
+  <!-- TUTORIAL: se muestra solo la primera vez que se abre la app -->
+  <script type="module">
+    import { mostrarTutorial, tutorialPendiente } from './src/views/components/Tutorial.js';
+    if (tutorialPendiente()) mostrarTutorial();
+  </script>
+
+  <script>
+    // Modo Libre: borra solo los datos de una carrera anterior (antes se
+    // usaba localStorage.clear(), que también borraba otras cosas, como
+    // la marca de que ya se vio el tutorial).
+    function limpiarCarrera() {
+      ['participante', 'sesion', 'puntos_tramo', 'puntos_actuales', 'puntos_timestamp', 'puntos_sesion']
+        .forEach(k => localStorage.removeItem(k));
+    }
+  </script>
 
   <!-- ACTIVAR LUCIDE -->
   <script>

@@ -745,7 +745,7 @@
 
         </div>
 
-        <a href="index.html" class="btn-inicio" onclick="localStorage.clear()">
+        <a href="index.html" class="btn-inicio" onclick="['participante','sesion','puntos_tramo'].forEach(k => localStorage.removeItem(k))">
           <!-- Casa -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>

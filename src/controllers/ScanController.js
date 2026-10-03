@@ -91,8 +91,16 @@ export class ScanController {
     mutationObs.observe(document.body, { childList: true, subtree: true });
 
     // ── Notificar a la estrategia cuando la escena de A-Frame cargó ──
-    document.querySelector('a-scene')?.addEventListener('loaded', () => {
+    // Ojo: init() espera respuestas de Supabase antes de llegar aquí, y para
+    // entonces A-Frame normalmente ya disparó 'loaded'. Si solo escucháramos
+    // el evento, alCargarEscena() nunca corría: el contador no arrancaba y al
+    // ir al mapa se guardaban 1000 puntos (el bug de "se reinician al cambiar
+    // de vista"). Por eso se revisa hasLoaded primero.
+    const escena = document.querySelector('a-scene');
+    if (escena?.hasLoaded) {
       this.estrategia.alCargarEscena(this.contexto);
-    });
+    } else {
+      escena?.addEventListener('loaded', () => this.estrategia.alCargarEscena(this.contexto), { once: true });
+    }
   }
 }

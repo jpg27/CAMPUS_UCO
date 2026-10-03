@@ -32,7 +32,8 @@ const LUCIDE = {
   cerrar:    'X',
   chevron:   'ChevronRight',
   check:     'Check',
-  candado:   'Lock'
+  candado:   'Lock',
+  ayuda:     'CircleHelp'
 };
 
 const RESPALDO = 'M3 9l9-5 9 5M4 9h16M6 9v9M10 9v9M14 9v9M18 9v9M3 20h18';

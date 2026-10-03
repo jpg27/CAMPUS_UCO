@@ -191,24 +191,7 @@ export class AdminController {
         this._actualizarBadge('cerrada');
         document.getElementById('btn-cerrar').disabled = true;
 
-        setTimeout(() => {
-          this.sesionActual = null;
-          if (this.suscripcion) { this.suscripcion.unsubscribe(); this.suscripcion = null; }
-          document.getElementById('card-control').classList.add('seccion-oculta');
-          document.getElementById('card-ranking').classList.add('seccion-oculta');
-          document.getElementById('card-crear').style.display = 'block';
-          document.getElementById('nombre-sesion').value = '';
-          document.getElementById('codigo-sesion').value = '';
-          document.getElementById('btn-activar').disabled = false;
-          document.getElementById('btn-cerrar').disabled  = true;
-          document.getElementById('lista-ranking').innerHTML =
-            '<div class="ranking-vacio">Esperando participantes...</div>';
-          document.getElementById('cnt-unidos').textContent      = '0';
-          document.getElementById('cnt-completados').textContent = '0';
-          document.getElementById('cnt-edificios').textContent   = '0';
-          document.getElementById('badge-estado').textContent    = 'Borrador';
-          document.getElementById('badge-estado').className      = 'estado-badge estado-borrador';
-        }, 1500);
+        setTimeout(() => this._reiniciarPanelControl(), 1500);
       } catch (e) { alert('Error al cerrar la sesión'); }
     };
 
@@ -326,6 +309,26 @@ export class AdminController {
 
       document.getElementById('detalle-contenido').innerHTML = html;
       
+      // Cerrar desde el historial (sirve si se salió del panel con la sesión abierta)
+      const btnCerrarHist = document.getElementById('btn-cerrar-sesion-historial');
+      const sePuedeCerrar = sesion.estado === 'activa' || sesion.estado === 'borrador';
+      btnCerrarHist.style.display = sePuedeCerrar ? 'inline-flex' : 'none';
+      btnCerrarHist.disabled = false;
+      btnCerrarHist.onclick = async () => {
+        if (!confirm(`¿Cerrar la sesión "${sesion.nombre}"? Los participantes verán que la carrera terminó.`)) return;
+        btnCerrarHist.disabled = true;
+        try {
+          await cerrarSesionDB(sesionId);
+          // Si es la misma sesión que está abierta en "Nueva carrera", reiniciar ese panel
+          if (this.sesionActual?.id === sesionId) this._reiniciarPanelControl();
+          await window.verDetalleSesion(sesionId);
+          this._cargarHistorialEnSegundoPlano();
+        } catch (e) {
+          alert('Error al cerrar la sesión');
+          btnCerrarHist.disabled = false;
+        }
+      };
+
       const btnEliminar = document.getElementById('btn-eliminar-sesion');
       btnEliminar.style.display = 'block';
       btnEliminar.onclick = async () => {
@@ -350,7 +353,39 @@ export class AdminController {
       document.getElementById('lista-sesiones').style.display = 'block';
       document.getElementById('detalle-sesion').classList.remove('visible');
       document.getElementById('btn-eliminar-sesion').style.display = 'none';
+      document.getElementById('btn-cerrar-sesion-historial').style.display = 'none';
+      this._cargarHistorial();
     };
+  }
+
+  /** Vuelve "Nueva carrera" al formulario de crear sesión. */
+  _reiniciarPanelControl() {
+    this.sesionActual = null;
+    if (this.suscripcion) { this.suscripcion.unsubscribe(); this.suscripcion = null; }
+    document.getElementById('card-control').classList.add('seccion-oculta');
+    document.getElementById('card-ranking').classList.add('seccion-oculta');
+    document.getElementById('card-crear').style.display = 'block';
+    document.getElementById('nombre-sesion').value = '';
+    document.getElementById('codigo-sesion').value = '';
+    document.getElementById('btn-activar').disabled = false;
+    document.getElementById('btn-cerrar').disabled  = true;
+    document.getElementById('lista-ranking').innerHTML =
+      '<div class="ranking-vacio">Esperando participantes...</div>';
+    document.getElementById('cnt-unidos').textContent      = '0';
+    document.getElementById('cnt-completados').textContent = '0';
+    document.getElementById('cnt-edificios').textContent   = '0';
+    document.getElementById('badge-estado').textContent    = 'Borrador';
+    document.getElementById('badge-estado').className      = 'estado-badge estado-borrador';
+  }
+
+  /** Recarga la lista del historial sin salir del detalle que se está viendo. */
+  async _cargarHistorialEnSegundoPlano() {
+    const detalleVisible = document.getElementById('detalle-sesion').classList.contains('visible');
+    await this._cargarHistorial();
+    if (detalleVisible) {
+      document.getElementById('detalle-sesion').classList.add('visible');
+      document.getElementById('lista-sesiones').style.display = 'none';
+    }
   }
 
   _mostrarControlSesion() {

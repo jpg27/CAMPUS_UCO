@@ -3,6 +3,10 @@
  */
 import { supabase } from '../config.js';
 
+// El cierre automático real lo hace un job de pg_cron en Supabase
+// (ver "Claude outputs/2026-10-03_cierre_automatico_sesiones.sql").
+// Lo de este archivo queda como respaldo: el admin cierra las caducadas
+// al abrir su panel, y un participante no puede unirse a una caducada.
 const HORAS_CADUCIDAD = 3;
 
 export async function cerrarSesionesCaducadas() {
@@ -28,7 +32,7 @@ export async function cerrarSesionesCaducadas() {
       const ids = caducadas.map(s => s.id);
       await supabase
         .from('sesiones')
-        .update({ estado: 'cerrada' })
+        .update({ estado: 'cerrada', cerrada_en: new Date().toISOString() })
         .in('id', ids);
       console.log(`[AutoCierre] ${caducadas.length} sesión(es) cerrada(s) automáticamente.`);
     }
@@ -47,12 +51,12 @@ export async function obtenerSesionPorCodigo(codigo) {
     
   if (error || !data) return null;
   
-  // Verificación reactiva: si está activa pero ya pasaron 3 horas, cerrarla.
+  // Si está activa pero ya pasaron 3 horas, no dejar entrar. (No se intenta
+  // cerrarla desde aquí: el participante es anónimo y RLS no le permite
+  // hacer UPDATE sobre sesiones; de eso se encarga el job de pg_cron.)
   if (data.estado === 'activa' && data.activada_en) {
     const activada = new Date(data.activada_en).getTime();
-    const ahora = Date.now();
-    if ((ahora - activada) > HORAS_CADUCIDAD * 60 * 60 * 1000) {
-      await cerrarSesion(data.id);
+    if ((Date.now() - activada) > HORAS_CADUCIDAD * 60 * 60 * 1000) {
       return null; // Ya no está disponible
     }
   }

@@ -31,6 +31,11 @@ export class ModoCarrera extends GameStrategy {
     this.targetActual = null;
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
+
+    // Evita procesar dos detecciones a la vez (MindAR puede disparar
+    // targetFound varias veces seguidas si el marcador "parpadea").
+    this._procesandoDeteccion = false;
+    this._timerEstrella = null;
   }
 
   async init(contexto) {
@@ -55,6 +60,23 @@ export class ModoCarrera extends GameStrategy {
   }
 
   async manejarDeteccion(edificio, targetEntity, contexto) {
+    const { view, notificacion } = contexto;
+
+    // Si ya hay una pregunta en pantalla (sin registrar), una nueva detección
+    // no debe abrir otra: antes, perder y volver a ver el marcador mostraba
+    // una pregunta nueva (otra oportunidad de responder) mientras la
+    // estrella de la anterior seguía visible.
+    if (this.preguntaActual) return;
+    if (this._procesandoDeteccion) return;
+    this._procesandoDeteccion = true;
+    try {
+      await this._procesarDeteccion(edificio, targetEntity, contexto);
+    } finally {
+      this._procesandoDeteccion = false;
+    }
+  }
+
+  async _procesarDeteccion(edificio, targetEntity, contexto) {
     const { view, notificacion } = contexto;
 
     if (!this.edificiosHabilitados.includes(edificio.id)) {
@@ -95,12 +117,9 @@ export class ModoCarrera extends GameStrategy {
     this.respuestaRegistrada = true;
     this.respondioCorrectamente = this.preguntaActual.respuesta_correcta === letra;
 
+    // La estrella ya no aparece aquí (encima del panel de la pregunta):
+    // se muestra en _continuar(), cuando el panel ya se cerró.
     view.marcarRespuestaAR(letra, this.preguntaActual.respuesta_correcta);
-
-    if (this.respondioCorrectamente && this.targetActual) {
-      const model = this.targetActual.querySelector('a-gltf-model');
-      if (model) model.setAttribute('visible', 'true');
-    }
 
     if (this.respondioCorrectamente) {
       this.puntosController?.aplicarBonus();
@@ -113,10 +132,8 @@ export class ModoCarrera extends GameStrategy {
     const { view, notificacion } = contexto;
     view.ocultarPreguntaAR();
 
-    if (this.targetActual) {
-      const model = this.targetActual.querySelector('a-gltf-model');
-      if (model) model.setAttribute('visible', 'false');
-    }
+    // Premio: la estrella aparece cuando el panel ya se fue, solo si acertó.
+    if (this.respondioCorrectamente) this._mostrarEstrella(this.targetActual);
 
     try {
       const puntos = this.puntosController ? this.puntosController.obtenerPuntos() : 0;
@@ -149,7 +166,21 @@ export class ModoCarrera extends GameStrategy {
       console.error('Error:', e);
       notificacion.mostrar('Error', 'No se pudo registrar el escaneo', null, 'error');
       this.puntosController?.resetear(this.sesion.id);
+    } finally {
+      // La pregunta terminó: ya se pueden procesar nuevas detecciones.
+      this.preguntaActual = null;
+      this.edificioActual = null;
+      this.targetActual = null;
     }
+  }
+
+  /** Muestra la estrella sobre el marcador unos segundos. */
+  _mostrarEstrella(targetEntity, ms = 4000) {
+    const model = targetEntity?.querySelector('a-gltf-model');
+    if (!model) return;
+    clearTimeout(this._timerEstrella);
+    model.setAttribute('visible', 'true');
+    this._timerEstrella = setTimeout(() => model.setAttribute('visible', 'false'), ms);
   }
 
   async _registrarSinPregunta(edificio, targetEntity, contexto) {
@@ -171,13 +202,7 @@ export class ModoCarrera extends GameStrategy {
 
       this.puntosController?.detener();
 
-      if (targetEntity) {
-        const model = targetEntity.querySelector('a-gltf-model');
-        if (model) {
-          model.setAttribute('visible', 'true');
-          setTimeout(() => model.setAttribute('visible', 'false'), 4000);
-        }
-      }
+      this._mostrarEstrella(targetEntity);
 
       if (resultado.esUltimo) {
         await this._mostrarPantallaFinalizacion(view);

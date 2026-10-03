@@ -907,6 +907,24 @@
       margin-bottom: 16px;
     }
 
+    .detalle-acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-cerrar-historial {
+      height: auto;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+
+    .btn-cerrar-historial:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
     .ganador-card {
       background: linear-gradient(135deg, #FFD700, #FFA500);
       border-radius: 16px;
@@ -1309,10 +1327,17 @@
             <i data-lucide="arrow-left" aria-hidden="true"></i>
             Volver al historial
           </button>
-          <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none;">
-            <i data-lucide="trash-2" aria-hidden="true"></i>
-            Eliminar sesión
-          </button>
+          <div class="detalle-acciones">
+            <!-- Solo visible si la sesión está en borrador o activa -->
+            <button class="btn-secundario btn-cerrar-historial" id="btn-cerrar-sesion-historial" style="display: none;">
+              <i data-lucide="square" aria-hidden="true"></i>
+              Cerrar sesión
+            </button>
+            <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none;">
+              <i data-lucide="trash-2" aria-hidden="true"></i>
+              Eliminar sesión
+            </button>
+          </div>
         </div>
         <div id="detalle-contenido"></div>
       </div>

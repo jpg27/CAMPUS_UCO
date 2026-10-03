@@ -4,7 +4,7 @@
 import { CarreraView } from '../views/CarreraView.js';
 import { obtenerSesionPorCodigo } from '../models/SesionModel.js';
 import { unirseASesion } from '../models/ParticipanteModel.js';
-import { guardarParticipante, guardarSesion, guardarPuntos, obtenerPuntos } from '../utils/storage.js';
+import { guardarParticipante, guardarSesion, asegurarTramo } from '../utils/storage.js';
 import { SesionObserver } from '../observers/SesionObserver.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
 
@@ -64,8 +64,8 @@ export class CarreraController {
 
       // Si ya está activa, ir directo
       if (sesion.estado === 'activa') {
-        const guardados = obtenerPuntos(sesion.id);
-        if (!guardados.valido) guardarPuntos(1000, sesion.id);
+        // El contador de puntos arranca cuando la carrera está activa
+        asegurarTramo(sesion.id);
         setTimeout(() => {
           window.location.href = 'ar.html';
         }, 1500);
@@ -76,8 +76,8 @@ export class CarreraController {
       this.sesionObserver = new SesionObserver(sesion.id);
 
       this.unsubSesionActivada = eventBus.on(EVENTOS.SESION_ACTIVADA, () => {
-        const guardados = obtenerPuntos(sesion.id);
-        if (!guardados.valido) guardarPuntos(1000, sesion.id);
+        // El contador de puntos arranca cuando la carrera está activa
+        asegurarTramo(sesion.id);
         
         this.view.mostrarSesionActivada();
         setTimeout(() => {

@@ -63,8 +63,10 @@
       </div>
 
       <article id="ficha-edificio" class="ficha-tarjeta ficha-edificio" hidden aria-live="polite">
+        <div class="ficha-cabecera">
+        <!-- La foto es un botón aparte: con foto real abre el visor; con el recorte del mapa queda desactivada -->
+        <button id="ficha-foto" class="ficha-foto" type="button" disabled aria-label="Ver foto en grande"></button>
         <button id="ficha-resumen" class="ficha-resumen" type="button" aria-expanded="false" aria-controls="ficha-detalle">
-          <span id="ficha-foto" class="ficha-foto" aria-hidden="true"></span>
           <span class="ficha-textos">
             <span id="panel-titulo" class="ficha-titulo">Nombre del bloque</span>
             <span id="panel-nombre-completo" class="ficha-nombre-completo" hidden></span>
@@ -72,6 +74,7 @@
           </span>
           <span class="ficha-chevron" data-icono="chevron"></span>
         </button>
+        </div>
 
         <div id="ficha-detalle" class="ficha-detalle">
           <p id="ficha-estado" class="ficha-estado" hidden></p>
@@ -94,6 +97,15 @@
     </aside>
   </div>
 
+  <!-- ── Visor de foto ── -->
+  <div id="visor-foto" class="capa capa-centro visor" hidden>
+    <figure class="visor-figura" role="dialog" aria-modal="true" aria-labelledby="visor-titulo">
+      <img id="visor-img" alt="">
+      <figcaption id="visor-titulo"></figcaption>
+    </figure>
+    <button type="button" class="visor-cerrar" data-cerrar aria-label="Cerrar foto" data-icono="cerrar"></button>
+  </div>
+
   <!-- ── Hoja "Más" ── -->
   <div id="hoja-mas" class="capa" hidden>
     <div class="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-mas-titulo">
@@ -102,6 +114,7 @@
         <button type="button" class="btn-icono" data-cerrar aria-label="Cerrar" data-icono="cerrar"></button>
       </div>
       <a class="hoja-opcion" href="index.html" data-icono="inicio">Inicio</a>
+      <a class="hoja-opcion" href="ayuda.html#mapa" data-icono="ayuda">Cómo funciona</a>
       <button type="button" class="hoja-opcion" id="mas-logros" hidden data-icono="trofeo">Mis logros</button>
       <a class="hoja-opcion" href="login-admin.html" data-icono="admin">Administración</a>
     </div>

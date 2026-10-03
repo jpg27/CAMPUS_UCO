@@ -313,21 +313,36 @@ export class MapaView {
     const foto = this.$('ficha-foto');
     const ruta = FOTOS_MAPA[datos.id];
     foto.classList.remove('es-foto');
+    foto.disabled = true;
+    foto.onclick = null;
     if (!ruta) { if (datos.mapa) this._pintarMiniatura(datos.mapa.zona); return; }
 
     const id = datos.id;
+    const url = BASE_URL + ruta;
     const img = new Image();
     img.onload = () => {
       if (this.seleccionado !== id) return; // el usuario ya eligió otro
       foto.classList.add('es-foto');
-      foto.style.backgroundImage = `url("${BASE_URL + ruta}")`;
+      foto.style.backgroundImage = `url("${url}")`;
       foto.style.backgroundSize = '';
       foto.style.backgroundPosition = '';
+      foto.disabled = false;
+      foto.setAttribute('aria-label', `Ver foto de ${datos.nombre} en grande`);
+      foto.onclick = () => this.abrirFoto(url, datos.nombre);
     };
     img.onerror = () => { if (this.seleccionado === id && datos.mapa) this._pintarMiniatura(datos.mapa.zona); };
-    img.src = BASE_URL + ruta;
+    img.src = url;
     // Mientras carga, el recorte evita un hueco vacío
     if (datos.mapa) this._pintarMiniatura(datos.mapa.zona);
+  }
+
+  /** Visor a pantalla completa para la foto del edificio. */
+  abrirFoto(url, nombre) {
+    const img = this.$('visor-img');
+    img.src = url;
+    img.alt = `Foto de ${nombre}`;
+    this.$('visor-titulo').textContent = nombre;
+    this.abrirCapa('visor-foto');
   }
 
   /** Recorta el edificio de la misma imagen del mapa (4:3) para la miniatura de la ficha. */
