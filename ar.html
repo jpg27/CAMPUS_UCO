@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>AR - Campus UCO</title>
+
+  <!-- Tipografía Inter (solo la usa la pantalla de finalización por ahora) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="./mindar.js"></script>
   <style>
@@ -43,27 +52,129 @@
       z-index: 999;
     }
 
+    /* ═════════════════════════════════════════════════
+       NOTIFICACIÓN DE ESCANEO (nuevo diseño)
+       ═════════════════════════════════════════════════ */
     #notificacion {
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-secondary: #299447;
+      --color-green-soft: #C2DDCC;
+      --color-green-tint: #EAF5EE;
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+      --color-border: #E2E9E5;
+
       position: fixed;
-      top: -140px;
+      top: -220px;
       left: 50%;
       transform: translateX(-50%);
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      color: white;
-      border-radius: 16px;
-      padding: 16px 24px;
-      text-align: center;
-      width: 85%;
-      max-width: 380px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+
+      width: 90%;
+      max-width: 400px;
+
+      display: flex;
+      align-items: center;
+      gap: 14px;
+
+      padding: 14px 16px;
+
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(18, 61, 42, 0.22);
+
+      font-family: 'Inter', Arial, sans-serif;
+      text-align: left;
+
       transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 1000;
     }
     #notificacion.visible { top: 70px; }
-    #notificacion .not-icono  { font-size: 32px; margin-bottom: 6px; }
-    #notificacion .not-titulo { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-    #notificacion .not-desc   { font-size: 13px; opacity: 0.85; }
-    #notificacion .not-puntos { margin-top: 8px; font-size: 20px; font-weight: bold; color: #FFD700; }
+
+    #notificacion .not-icono {
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 14px;
+      border: 1px solid transparent;
+    }
+
+    #notificacion .not-icono svg {
+      display: none;
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Tipo: éxito (verde) */
+    #notificacion.tipo-exito .not-icono {
+      background: var(--color-green-tint);
+      border-color: var(--color-green-soft);
+      color: var(--color-primary);
+    }
+    #notificacion.tipo-exito .ico-exito { display: block; }
+
+    /* Tipo: aviso (ámbar) */
+    #notificacion.tipo-aviso .not-icono {
+      background: #FFF3CD;
+      border-color: #F1DE9A;
+      color: #856404;
+    }
+    #notificacion.tipo-aviso .ico-aviso { display: block; }
+
+    /* Tipo: error (rojo) */
+    #notificacion.tipo-error .not-icono {
+      background: #FDF0EF;
+      border-color: #F3CFCC;
+      color: #B3261E;
+    }
+    #notificacion.tipo-error .ico-error { display: block; }
+
+    #notificacion .not-cuerpo {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #notificacion .not-titulo {
+      color: var(--color-text);
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    #notificacion .not-desc {
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    #notificacion .not-puntos {
+      flex-shrink: 0;
+
+      padding: 6px 12px;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #FFFFFF;
+
+      border-radius: 999px;
+      box-shadow: 0 3px 8px rgba(8, 122, 69, 0.18);
+
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    #notificacion .not-puntos:empty { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      #notificacion { transition: none; }
+    }
+
 
     #panel-logros {
       position: fixed;
@@ -123,94 +234,374 @@
     .edificio-logro .sub    { font-size: 12px; color: #888; margin-top: 2px; }
     .edificio-logro .trofeo { font-size: 24px; }
 
+    /* ═════════════════════════════════════════════════
+       "SIN SESIÓN" / "CARRERA FINALIZADA" (nuevo diseño)
+       ═════════════════════════════════════════════════ */
     #sin-sesion {
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+      --color-border: #E2E9E5;
+
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(18, 61, 42, 0.55);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 2000;
-    }
-    .sin-sesion-modal {
-      background: white; border-radius: 20px;
-      padding: 30px 24px; text-align: center;
-      max-width: 320px; margin: 20px;
-    }
-    .sin-sesion-modal h2 { color: #1a2e1a; margin-bottom: 10px; }
-    .sin-sesion-modal p  { color: #666; font-size: 14px; margin-bottom: 20px; }
-    .sin-sesion-modal a {
-      display: block; padding: 14px;
-      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white; border-radius: 12px;
-      text-decoration: none; font-weight: bold;
+      padding: 20px;
+      font-family: 'Inter', Arial, sans-serif;
     }
 
-    /* ── Pantalla de finalización ── */
+    .sin-sesion-modal {
+      position: relative;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 360px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(18, 61, 42, 0.28);
+      padding: 36px 24px 28px;
+      text-align: center;
+      animation: scaleIn 0.45s ease;
+    }
+
+    /* Hojas decorativas suaves */
+    .sin-sesion-modal::before {
+      content: "";
+      position: absolute;
+      top: -70px;
+      right: -70px;
+      width: 190px;
+      height: 190px;
+      background: var(--color-green-soft);
+      opacity: 0.55;
+      border-radius: 70% 30% 65% 35% / 55% 45% 55% 45%;
+      transform: rotate(-20deg);
+      pointer-events: none;
+    }
+    .sin-sesion-modal::after {
+      content: "";
+      position: absolute;
+      bottom: -80px;
+      left: -80px;
+      width: 190px;
+      height: 190px;
+      background: var(--color-green-light);
+      opacity: 0.3;
+      border-radius: 30% 70% 35% 65% / 45% 55% 45% 55%;
+      transform: rotate(25deg);
+      pointer-events: none;
+    }
+
+    .sin-sesion-modal > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Círculo del icono: ámbar para "Sin sesión", verde para "Finalizada" */
+    .sin-sesion-icono {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #FFF3CD;
+      color: #856404;
+
+      border-radius: 50%;
+    }
+    .sin-sesion-icono svg {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+
+    .sin-sesion-modal.finalizada .sin-sesion-icono {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #FFFFFF;
+      box-shadow: 0 6px 18px rgba(8, 122, 69, 0.28);
+    }
+
+    .sin-sesion-modal h2 {
+      color: var(--color-text);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 8px;
+    }
+
+    .sin-sesion-modal p {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .sin-sesion-modal a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      width: 100%;
+      height: 52px;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #FFFFFF;
+
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(8, 122, 69, 0.18);
+
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+    .sin-sesion-modal a svg {
+      width: 20px;
+      height: 20px;
+    }
+    .sin-sesion-modal a:hover  { filter: brightness(0.92); }
+    .sin-sesion-modal a:active { transform: scale(0.98); filter: brightness(0.85); }
+    .sin-sesion-modal a:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    /* Iconos según el estado del modal */
+    .sin-sesion-modal .ico-finalizada,
+    .sin-sesion-modal .ico-inicio {
+      display: none;
+    }
+    .sin-sesion-modal.finalizada .ico-finalizada,
+    .sin-sesion-modal.finalizada .ico-inicio {
+      display: block;
+    }
+    .sin-sesion-modal.finalizada .ico-alerta,
+    .sin-sesion-modal.finalizada .ico-unirse {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sin-sesion-modal { animation: none; }
+    }
+
+    /* ═════════════════════════════════════════════════
+       PANTALLA DE FINALIZACIÓN (nuevo diseño)
+       ═════════════════════════════════════════════════ */
     #panel-finalizacion {
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+      --color-green-tint: #EAF5EE;
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+      --color-border: #E2E9E5;
+
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(18, 61, 42, 0.55);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
       z-index: 2500;
       display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
+      font-family: 'Inter', Arial, sans-serif;
     }
     #panel-finalizacion.visible { display: flex; }
+
     .finalizacion-card {
-      background: white;
+      position: relative;
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
       border-radius: 24px;
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       overflow: hidden;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 12px 40px rgba(18, 61, 42, 0.28);
       text-align: center;
-      animation: scaleIn 0.5s ease;
+      animation: scaleIn 0.45s ease;
     }
+
+    /* Hojas decorativas suaves dentro de la tarjeta */
+    .finalizacion-card::before {
+      content: "";
+      position: absolute;
+      top: -70px;
+      right: -70px;
+      width: 190px;
+      height: 190px;
+      background: var(--color-green-soft);
+      opacity: 0.55;
+      border-radius: 70% 30% 65% 35% / 55% 45% 55% 45%;
+      transform: rotate(-20deg);
+      pointer-events: none;
+    }
+    .finalizacion-card::after {
+      content: "";
+      position: absolute;
+      bottom: -80px;
+      left: -80px;
+      width: 190px;
+      height: 190px;
+      background: var(--color-green-light);
+      opacity: 0.3;
+      border-radius: 30% 70% 35% 65% / 45% 55% 45% 55%;
+      transform: rotate(25deg);
+      pointer-events: none;
+    }
+
     @keyframes scaleIn {
-      from { transform: scale(0.7); opacity: 0; }
-      to   { transform: scale(1);   opacity: 1; }
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
     }
+
+    .finalizacion-header,
+    .finalizacion-body {
+      position: relative;
+      z-index: 1;
+    }
+
     .finalizacion-header {
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      padding: 30px 20px 20px;
+      padding: 36px 24px 4px;
     }
-    .finalizacion-header .trofeo { font-size: 64px; margin-bottom: 10px; }
-    .finalizacion-header h2 { color: white; font-size: 22px; margin-bottom: 6px; }
+
+    .finalizacion-icono {
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #FFFFFF;
+
+      border-radius: 50%;
+      box-shadow: 0 6px 18px rgba(8, 122, 69, 0.28);
+    }
+    .finalizacion-icono svg {
+      width: 42px;
+      height: 42px;
+    }
+
+    .finalizacion-header h2 {
+      color: var(--color-text);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 6px;
+    }
+
     .finalizacion-header .nombre-jugador {
-      color: #90EE90; font-size: 18px; font-weight: bold;
+      color: var(--color-primary);
+      font-size: 17px;
+      font-weight: 600;
     }
-    .finalizacion-body { padding: 24px 20px; }
+
+    .finalizacion-body {
+      padding: 24px 24px 28px;
+    }
+
     .finalizacion-stats {
-      display: flex; gap: 12px; margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
     }
+
     .finalizacion-stat {
-      flex: 1;
-      background: #f8f9f8;
-      border-radius: 14px;
-      padding: 14px 8px;
-      border: 2px solid #e0e0e0;
+      background: var(--color-green-tint);
+      border: 1px solid var(--color-green-soft);
+      border-radius: 16px;
+      padding: 16px 8px;
     }
+
+    .finalizacion-stat .stat-icono {
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 8px;
+      display: block;
+      color: var(--color-primary);
+    }
+
     .finalizacion-stat .valor {
-      font-size: 28px; font-weight: bold; color: #1a2e1a;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--color-text);
     }
+
     .finalizacion-stat .label {
-      font-size: 12px; color: #888; margin-top: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
     }
+
     .finalizacion-body .btn-inicio {
-      display: block; width: 100%; padding: 14px;
-      background: linear-gradient(135deg, #3a7a1a, #5a9a2a);
-      color: white; border: none; border-radius: 12px;
-      font-size: 16px; font-weight: bold; font-family: Arial;
-      cursor: pointer; text-decoration: none; text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      width: 100%;
+      height: 52px;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #FFFFFF;
+
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(8, 122, 69, 0.18);
+
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+
+      transition: transform 0.15s ease, filter 0.15s ease;
     }
+    .finalizacion-body .btn-inicio svg {
+      width: 20px;
+      height: 20px;
+    }
+    .finalizacion-body .btn-inicio:hover  { filter: brightness(0.92); }
+    .finalizacion-body .btn-inicio:active { transform: scale(0.98); filter: brightness(0.85); }
+    .finalizacion-body .btn-inicio:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .finalizacion-card { animation: none; }
+    }
+
     @media (max-width: 600px) {
       .finalizacion-card { margin: 16px; width: auto; }
-      .finalizacion-stats { flex-direction: column; }
-      #notificacion { width: 90%; padding: 12px 16px; }
+      .finalizacion-header { padding-top: 30px; }
+      .finalizacion-body { padding: 20px 20px 24px; }
+      .finalizacion-stat .valor { font-size: 24px; }
       .logros-contenido { padding: 16px; }
-      .sin-sesion-modal { margin: 16px; }
     }
   </style>
 </head>
@@ -220,18 +611,66 @@
   <div id="display-puntos">⭐ 1000</div>
   <button class="btn-top" id="btn-logros">🏆 Logros</button>
 
-  <div id="sin-sesion">
-    <div class="sin-sesion-modal">
-      <h2>⚠️ Sin sesión</h2>
-      <p>No estás unido a ninguna carrera.</p>
-      <a href="carrera.html">🚀 Unirse a la carrera</a>
+  <div id="sin-sesion" role="dialog" aria-modal="true" aria-labelledby="sin-sesion-titulo">
+    <div class="sin-sesion-modal" id="sin-sesion-modal">
+
+      <div class="sin-sesion-icono">
+        <!-- Alerta (Sin sesión) -->
+        <svg class="ico-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+          <path d="M12 9v4"/>
+          <path d="M12 17h.01"/>
+        </svg>
+        <!-- Bandera (Carrera finalizada) -->
+        <svg class="ico-finalizada" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+          <line x1="4" x2="4" y1="22" y2="15"/>
+        </svg>
+      </div>
+
+      <h2 id="sin-sesion-titulo">Sin sesión</h2>
+      <p id="sin-sesion-texto">No estás unido a ninguna carrera.</p>
+
+      <a id="sin-sesion-enlace" href="carrera.html">
+        <!-- Play (Unirse a la carrera) -->
+        <svg class="ico-unirse" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="6 3 20 12 6 21 6 3"/>
+        </svg>
+        <!-- Casa (Ir al inicio) -->
+        <svg class="ico-inicio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>
+          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+        <span id="sin-sesion-enlace-texto">Unirse a la carrera</span>
+      </a>
+
     </div>
   </div>
 
-  <div id="notificacion">
-    <div class="not-icono"  id="not-icono">✅</div>
-    <div class="not-titulo" id="not-titulo">Edificio escaneado</div>
-    <div class="not-desc"   id="not-desc">Registro guardado</div>
+  <div id="notificacion" class="tipo-exito" role="status" aria-live="polite">
+    <div class="not-icono" id="not-icono" aria-hidden="true">
+      <!-- Éxito -->
+      <svg class="ico-exito" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+      <!-- Aviso -->
+      <svg class="ico-aviso" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>
+        <path d="M12 9v4"/>
+        <path d="M12 17h.01"/>
+      </svg>
+      <!-- Error -->
+      <svg class="ico-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="m15 9-6 6"/>
+        <path d="m9 9 6 6"/>
+      </svg>
+    </div>
+    <div class="not-cuerpo">
+      <div class="not-titulo" id="not-titulo">Edificio escaneado</div>
+      <div class="not-desc"   id="not-desc">Registro guardado</div>
+    </div>
     <div class="not-puntos" id="not-puntos"></div>
   </div>
 
@@ -263,26 +702,59 @@
   </div>
 
   <!-- PANTALLA DE FINALIZACIÓN DE CARRERA -->
-  <div id="panel-finalizacion">
+  <div id="panel-finalizacion" role="dialog" aria-modal="true" aria-labelledby="fin-titulo">
     <div class="finalizacion-card">
+
       <div class="finalizacion-header">
-        <div class="trofeo">🏆</div>
-        <h2>¡Carrera completada!</h2>
+        <div class="finalizacion-icono">
+          <!-- Trofeo -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+            <path d="M4 22h16"/>
+            <path d="M10 14.66V17c0 .55-.47.98-1.97 1.21C7.85 18.75 7 20.24 7 22"/>
+            <path d="M14 14.66V17c0 .55.47.98 1.97 1.21C16.15 18.75 17 20.24 17 22"/>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+          </svg>
+        </div>
+        <h2 id="fin-titulo">¡Carrera completada!</h2>
         <div class="nombre-jugador" id="fin-nombre">Jugador</div>
       </div>
+
       <div class="finalizacion-body">
         <div class="finalizacion-stats">
+
           <div class="finalizacion-stat">
+            <!-- Estrella -->
+            <svg class="stat-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
             <div class="valor" id="fin-puntos">0</div>
-            <div class="label">⭐ Puntos</div>
+            <div class="label">Puntos</div>
           </div>
+
           <div class="finalizacion-stat">
+            <!-- Reloj -->
+            <svg class="stat-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
             <div class="valor" id="fin-tiempo">0m</div>
-            <div class="label">⏱️ Tiempo</div>
+            <div class="label">Tiempo</div>
           </div>
+
         </div>
-        <a href="index.html" class="btn-inicio" onclick="localStorage.clear()">🏠 Volver al inicio</a>
+
+        <a href="index.html" class="btn-inicio" onclick="localStorage.clear()">
+          <!-- Casa -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/>
+            <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          Volver al inicio
+        </a>
       </div>
+
     </div>
   </div>
 

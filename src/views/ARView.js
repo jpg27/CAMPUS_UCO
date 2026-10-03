@@ -287,11 +287,13 @@ export class ARView {
   }
 
   mostrarSesionCerrada() {
-    const modal = document.querySelector('.sin-sesion-modal');
-    modal.querySelector('h2').textContent = '⏹️ Carrera finalizada';
-    modal.querySelector('p').textContent  = 'El administrador cerró la carrera.';
-    modal.querySelector('a').textContent  = '🏠 Ir al inicio';
-    modal.querySelector('a').href         = 'index.html';
+    // Usa la estructura del modal de ar.html: cambia el estado a "finalizada"
+    // (icono de bandera en verde) y actualiza solo los textos, sin tocar los iconos.
+    document.getElementById('sin-sesion-modal').classList.add('finalizada');
+    document.getElementById('sin-sesion-titulo').textContent       = 'Carrera finalizada';
+    document.getElementById('sin-sesion-texto').textContent        = 'El administrador cerró la carrera.';
+    document.getElementById('sin-sesion-enlace-texto').textContent = 'Ir al inicio';
+    document.getElementById('sin-sesion-enlace').href              = 'index.html';
     document.getElementById('sin-sesion').style.display = 'flex';
   }
 

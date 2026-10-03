@@ -58,7 +58,7 @@ export class ModoCarrera extends GameStrategy {
     const { view, notificacion } = contexto;
 
     if (!this.edificiosHabilitados.includes(edificio.id)) {
-      notificacion.mostrar('🚫 ' + edificio.nombre, 'Este edificio no forma parte de tu carrera', null);
+      notificacion.mostrar(edificio.nombre, 'Este edificio no forma parte de tu carrera', null, 'aviso');
       return;
     }
 
@@ -70,7 +70,7 @@ export class ModoCarrera extends GameStrategy {
       .maybeSingle();
 
     if (yaEscaneado) {
-      notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, 'Ya completaste este edificio ✅', null);
+      notificacion.mostrar(edificio.nombre, 'Ya completaste este edificio', null, 'aviso');
       return;
     }
 
@@ -135,9 +135,10 @@ export class ModoCarrera extends GameStrategy {
         await this._mostrarPantallaFinalizacion(view);
       } else {
         notificacion.mostrar(
-          this.edificioActual.icono + ' ' + this.edificioActual.nombre,
+          this.edificioActual.nombre,
           'Edificio registrado — sigue al siguiente',
-          puntos
+          puntos,
+          'exito'
         );
       }
 
@@ -146,7 +147,7 @@ export class ModoCarrera extends GameStrategy {
       }
     } catch (e) {
       console.error('Error:', e);
-      notificacion.mostrar('❌ Error', 'No se pudo registrar el escaneo', null);
+      notificacion.mostrar('Error', 'No se pudo registrar el escaneo', null, 'error');
       this.puntosController?.resetear(this.sesion.id);
     }
   }
@@ -164,7 +165,7 @@ export class ModoCarrera extends GameStrategy {
       );
 
       if (resultado.duplicado) {
-        notificacion.mostrar(edificio.icono + ' Ya escaneado', `${edificio.nombre} ya fue registrado`, null);
+        notificacion.mostrar('Ya escaneado', `${edificio.nombre} ya fue registrado`, null, 'aviso');
         return;
       }
 
@@ -181,14 +182,14 @@ export class ModoCarrera extends GameStrategy {
       if (resultado.esUltimo) {
         await this._mostrarPantallaFinalizacion(view);
       } else {
-        notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, 'Edificio registrado', puntos);
+        notificacion.mostrar(edificio.nombre, 'Edificio registrado', puntos, 'exito');
       }
 
       if (this.puntosController && !resultado.esUltimo) {
         setTimeout(() => this.puntosController.resetear(this.sesion.id), 3000);
       }
     } catch (e) {
-      notificacion.mostrar('❌ Error', 'No se pudo registrar', null);
+      notificacion.mostrar('Error', 'No se pudo registrar', null, 'error');
     }
   }
 
