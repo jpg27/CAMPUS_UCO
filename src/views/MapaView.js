@@ -3,7 +3,7 @@
 // Imagen + capa SVG con la zona de cada edificio + pines HTML.
 // Solo maneja DOM; la lógica de sesión/carrera vive en MapaController.
 // ═══════════════════════════════════════════
-import { EDIFICIOS, MAPA, FOTOS_EDIFICIOS, BASE_URL } from '../config.js';
+import { EDIFICIOS, MAPA, FOTOS_MAPA, BASE_URL } from '../config.js';
 import { PanZoom } from './mapa/PanZoom.js';
 import { icono } from './mapa/iconos.js';
 
@@ -163,7 +163,16 @@ export class MapaView {
     this.$('panel-descripcion').textContent = datos.descripcion;
     this.$('panel-localizacion').textContent = (datos.localizacion || '').replace(/^📍\s*/, '');
 
-    const puntos = datos.puntosDeInteres || [];
+    const completo = this.$('panel-nombre-completo');
+    completo.textContent = datos.nombreCompleto || '';
+    completo.hidden = !datos.nombreCompleto;
+
+    // Qué encuentras: por pisos si el edificio los tiene; si no, la lista de puntos de interés
+    const pisos = datos.pisos || [];
+    this.$('ficha-pisos').hidden = pisos.length === 0;
+    if (pisos.length) this._pintarPisos(pisos);
+
+    const puntos = pisos.length ? [] : (datos.puntosDeInteres || []);
     this.$('ficha-puntos').innerHTML = puntos.map(p => `<li>${p.texto}</li>`).join('');
     this.$('ficha-puntos-bloque').hidden = puntos.length === 0;
 
@@ -183,6 +192,45 @@ export class MapaView {
 
     this.$('ficha-vacia').hidden = true;
     this.$('ficha-edificio').hidden = false;
+  }
+
+  /** Pestañas por piso (si hay más de uno) + etiquetas con los lugares del piso elegido. */
+  _pintarPisos(pisos) {
+    const tabs = this.$('pisos-tabs');
+    const panel = this.$('pisos-panel');
+    const varios = pisos.length > 1;
+    tabs.hidden = !varios;
+    this.$('pisos-titulo').textContent = varios ? 'Qué encuentras' : pisos[0].nombre;
+
+    const lista = (items) => `<ul class="etiquetas">${items.map(t => `<li>${t}</li>`).join('')}</ul>`;
+    const mostrar = (i) => {
+      tabs.querySelectorAll('[role="tab"]').forEach((b, j) => {
+        b.setAttribute('aria-selected', String(i === j));
+        b.tabIndex = i === j ? 0 : -1;
+      });
+      const p = pisos[i];
+      panel.setAttribute('aria-label', p.nombre);
+      panel.innerHTML = lista(p.lugares || []) +
+        (p.laboratorios?.length ? `<h3 class="pisos-grupo">Laboratorios</h3>${lista(p.laboratorios)}` : '');
+    };
+
+    tabs.innerHTML = varios
+      ? pisos.map((p, i) => `<button type="button" role="tab" class="piso-tab" data-i="${i}">${p.nombre}</button>`).join('')
+      : '';
+    tabs.onclick = (e) => {
+      const b = e.target.closest('[role="tab"]');
+      if (b) mostrar(Number(b.dataset.i));
+    };
+    // Flechas izquierda/derecha para moverse entre pisos con teclado
+    tabs.onkeydown = (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const botones = [...tabs.querySelectorAll('[role="tab"]')];
+      const actual = botones.findIndex(b => b.getAttribute('aria-selected') === 'true');
+      const sig = (actual + (e.key === 'ArrowRight' ? 1 : -1) + botones.length) % botones.length;
+      mostrar(sig);
+      botones[sig].focus();
+    };
+    mostrar(0);
   }
 
   ocultarPanel() {
@@ -259,10 +307,11 @@ export class MapaView {
     return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
   }
 
-  /** Foto real del edificio (FOTOS_EDIFICIOS); si no hay, o no carga, un recorte de la ilustración. */
+  /** Foto del edificio para el mapa (FOTOS_MAPA); si no hay, o no carga, un recorte de la ilustración.
+   *  No usa FOTOS_EDIFICIOS a propósito: son las mismas imágenes de los marcadores AR. */
   _pintarFoto(datos) {
     const foto = this.$('ficha-foto');
-    const ruta = FOTOS_EDIFICIOS[datos.id];
+    const ruta = FOTOS_MAPA[datos.id];
     foto.classList.remove('es-foto');
     if (!ruta) { if (datos.mapa) this._pintarMiniatura(datos.mapa.zona); return; }
 

@@ -67,6 +67,7 @@
           <span id="ficha-foto" class="ficha-foto" aria-hidden="true"></span>
           <span class="ficha-textos">
             <span id="panel-titulo" class="ficha-titulo">Nombre del bloque</span>
+            <span id="panel-nombre-completo" class="ficha-nombre-completo" hidden></span>
             <span id="panel-descripcion" class="ficha-descripcion">Descripción del bloque</span>
           </span>
           <span class="ficha-chevron" data-icono="chevron"></span>
@@ -75,6 +76,13 @@
         <div id="ficha-detalle" class="ficha-detalle">
           <p id="ficha-estado" class="ficha-estado" hidden></p>
           <p class="ficha-lugar"><span data-icono="ubicacion"></span><span id="panel-localizacion">Campus</span></p>
+          <!-- Edificios con información por piso -->
+          <div id="ficha-pisos" hidden>
+            <h2 class="ficha-subtitulo" id="pisos-titulo">Qué encuentras</h2>
+            <div id="pisos-tabs" class="pisos-tabs" role="tablist" aria-labelledby="pisos-titulo"></div>
+            <div id="pisos-panel" class="pisos-panel" role="tabpanel"></div>
+          </div>
+          <!-- Edificios sin pisos: lista simple (puntos de interés) -->
           <div id="ficha-puntos-bloque">
             <h2 class="ficha-subtitulo">Qué encuentras</h2>
             <ul id="ficha-puntos" class="ficha-puntos"></ul>
