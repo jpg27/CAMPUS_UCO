@@ -288,7 +288,7 @@ html, body { height: 100%; overflow: hidden; }
   padding: 4px 16px 16px;
 
 }
-.ficha-resumen[aria-expanded="true"] + .ficha-detalle { display: block; }
+.ficha-edificio[data-expandida="true"] .ficha-detalle { display: block; }
 
 .ficha-lugar {
   display: flex; align-items: center; gap: 6px;
@@ -484,7 +484,7 @@ html, body { height: 100%; overflow: hidden; }
   .ficha-descripcion { font-size: var(--t-m); }
   .ficha-chevron { display: none; }
   .ficha-edificio { max-height: none; overflow: visible; }
-  .ficha-detalle, .ficha-resumen[aria-expanded] + .ficha-detalle { display: block; max-height: none; padding: 8px 12px 16px; }
+  .ficha-detalle, .ficha-edificio[data-expandida] .ficha-detalle { display: block; max-height: none; padding: 8px 12px 16px; }
   .ficha-resumen[aria-expanded="false"] .ficha-descripcion { display: block; overflow: visible; -webkit-line-clamp: unset; }
   .ficha-cerrar { top: 20px; right: 20px; background: rgba(255, 255, 255, .9); }
 

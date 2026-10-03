@@ -176,21 +176,21 @@ export const EDIFICIOS = [
     icono: '🎭',
     descripcion: 'Auditorio principal.',
     localizacion: '📍 Campus parte alta',
+    nombreCompleto: 'Auditorio Monseñor Flavio Calle Zapata',
     mapa: {
       pinIcono: 'auditorio',
       pin:  [942, 58],
       zona: [[854,173], [853,188], [870,195], [870,200], [906,216], [938,193], [942,194],[945,192],[999,213],[1040,182],[1040,154],[1043,152],[933,112],[920,118],[916,118],[850,169]]
     },
     puntosDeInteres: [
-      { texto: "Auditorio principal", direccion: 'centro' },
-      { texto: "Camerinos", direccion: 'derecha' }
+      { texto: "Auditorio principal", direccion: 'centro' }
     ]
   },
   {
     id: 'bloque_innova',
-    nombre: 'Innovamater',
+    nombre: 'Innovamáter',
     icono: '💡',
-    descripcion: 'Edificio de cinco pisos con el Centro de Idiomas, las facultades de Ciencias Económicas y Administrativas (FACEA) y de Ciencias de la Salud, oficinas académicas y un auditorio en el último piso.',
+    descripcion: 'Edificio con el Centro de Idiomas, las facultades de Ciencias Económicas y Administrativas (FACEA) y de Ciencias de la Salud, oficinas académicas y un auditorio en el último piso.',
     localizacion: '📍 Campus parte baja',
     // Qué hay en cada piso: lo muestra la ficha del mapa (pestañas por piso)
     pisos: [
@@ -237,7 +237,7 @@ export const EDIFICIOS = [
     id: 'bloque_nuevo',
     nombre: 'Fundacional',
     icono: '🏛️',
-    descripcion: 'Edificio Fundacional de la universidad.',
+    descripcion: 'Edificio Fundacional de la universidad, actualmente en construcción.',
     localizacion: '📍 Campus parte baja',
     mapa: {
       pinIcono: 'edificio',
@@ -278,7 +278,8 @@ export const FOTOS_MAPA = {
   bloque_innova: 'img/mapa/bloque_innova.webp',
   edificio_j:    'img/mapa/edificio_j.webp',
   auditorio:     'img/mapa/auditorio.webp',
-  capilla:       'img/mapa/capilla.webp'
+  capilla:       'img/mapa/capilla.webp',
+  bloque_nuevo:  'img/mapa/bloque_nuevo.webp'
 };
 
 // ── Mapeo de target indexes de MindAR a edificios ──

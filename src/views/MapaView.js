@@ -64,7 +64,7 @@ export class MapaView {
     const resumen = this.$('ficha-resumen');
     resumen.addEventListener('click', () => {
       if (window.matchMedia('(min-width: 900px)').matches) return;
-      resumen.setAttribute('aria-expanded', String(resumen.getAttribute('aria-expanded') !== 'true'));
+      this._expandirFicha(resumen.getAttribute('aria-expanded') !== 'true');
     });
     this.$('cerrar-panel').addEventListener('click', () => this.onDeseleccionar());
 
@@ -236,7 +236,17 @@ export class MapaView {
   ocultarPanel() {
     this.$('ficha-edificio').hidden = true;
     this.$('ficha-vacia').hidden = false;
-    this.$('ficha-resumen').setAttribute('aria-expanded', 'false');
+    this._expandirFicha(false);
+  }
+
+  /**
+   * Despliega o pliega el detalle de la ficha (móvil y ventanas angostas).
+   * El estado se marca en la ficha completa (data-expandida) porque el
+   * detalle ya no es hermano directo del botón: está fuera de .ficha-cabecera.
+   */
+  _expandirFicha(abierta) {
+    this.$('ficha-resumen').setAttribute('aria-expanded', String(abierta));
+    this.$('ficha-edificio').dataset.expandida = String(abierta);
   }
 
   // ── Modo carrera / navegación ──
