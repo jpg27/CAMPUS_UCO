@@ -2,7 +2,7 @@
 // ARView.js — Vista de Realidad Aumentada
 // Extraído fielmente de ar.html original
 // ═══════════════════════════════════════════
-import { obtenerEdificioInfo } from '../config.js';
+import { obtenerEdificioInfo, PUNTOS } from '../config.js';
 import { formatearHora } from '../utils/formatters.js';
 import { icono } from './mapa/iconos.js';
 
@@ -24,41 +24,59 @@ const DIRECCIONES_PUNTOS_INTERES = {
 };
 
 // ═══════════════════════════════════════════
-// Estilo "tarjeta" del panel 3D de pregunta (Modo Carrera)
+// Panel 3D de pregunta (Modo Carrera)
 // ═══════════════════════════════════════════
-// El panel se dibuja como textura de canvas (no como a-plane de color
-// plano + a-text) para poder tener esquinas redondeadas, degradados y
-// texto multilínea de verdad, como una tarjeta de UI normal. Las 4
-// opciones NO se hornean en esa textura: son planos aparte, calculados
-// para calzar exactamente en el espacio que la tarjeta deja para ellas,
-// porque necesitan seguir siendo entidades individuales que el
-// raycaster del <a-camera> pueda detectar por separado (ver ar.html).
+// El panel se dibuja como textura de canvas para tener esquinas
+// redondeadas y texto multilínea, con el mismo lenguaje visual del resto
+// de la app (tarjeta blanca, borde suave, Inter, verde UCO). Las 4
+// opciones y el mensaje de resultado NO se hornean en esa textura: son
+// planos aparte, calculados para calzar exactamente en los huecos que la
+// tarjeta deja para ellos, porque deben ser entidades individuales que el
+// raycaster pueda detectar por separado.
+//
+// Abajo de la tarjeta hay un hueco reservado: antes de responder dice
+// "Toca una opción para responder" y al responder muestra el resultado.
+// Ya no hay botón "Continuar": el panel se cierra solo (ver ModoCarrera).
 const PIXEL_SCALE = 3; // sobremuestreo para que no se vea borroso de cerca
 
 const TARJETA = {
   anchoPx: 420,
-  padX: 22,
-  headerAlto: 52,
-  headerAncho: 232,
-  headerSolape: 22,
-  radioTarjeta: 26,
-  preguntaFuente: 22,
+  margen: 10,          // espacio alrededor para la sombra
+  padX: 20,
+  padArriba: 20,
+  chipAlto: 30,
+  chipGap: 14,
+  preguntaFuente: 21,
   preguntaAltoLinea: 27,
-  preguntaGapArriba: 20,
   infoFuente: 13,
-  infoGapArriba: 10,
+  infoGapArriba: 8,
   infoGapAbajo: 18,
   botonAlto: 58,
-  botonGap: 12,
-  paddingAbajo: 22,
+  botonGap: 10,
+  continuarGap: 14,
+  continuarAlto: 52,
+  padAbajo: 20,
+  radio: 24,
   anchoMetros: 0.60
 };
 
-const COLOR_OPCION     = ['#1f8066', '#145341'];
-const COLOR_CORRECTA   = ['#3fa142', '#256b28'];
-const COLOR_INCORRECTA = ['#d9453f', '#9c2622'];
-const COLOR_INACTIVA   = ['#5c6560', '#3d4440'];
-const COLOR_CONTINUAR  = ['#1c2430', '#0c1015'];
+const COLORES = {
+  fondo:        '#FFFFFF',
+  borde:        '#E2E9E5',
+  texto:        '#123D2A',
+  secundario:   '#71817A',
+  verde:        '#087A45',
+  tinte:        '#EAF5EE',
+  tinteBorde:   '#C2DDCC',
+  rojo:         '#B3261E',
+  rojoTinte:    '#FDF0EF',
+  grisTinte:    '#F1F4F2',
+  sombra:       'rgba(18, 61, 42, 0.18)'
+};
+
+function fuenteApp(peso, px) {
+  return `${peso} ${px}px Inter, 'Segoe UI', Arial, sans-serif`;
+}
 
 function trazarRectRedondeado(ctx, x, y, w, h, r) {
   const radio = Math.min(r, w / 2, h / 2);
@@ -72,7 +90,7 @@ function trazarRectRedondeado(ctx, x, y, w, h, r) {
 }
 
 function partirEnLineas(ctx, texto, anchoMax) {
-  const palabras = texto.split(' ');
+  const palabras = String(texto ?? '').split(' ');
   const lineas = [];
   let actual = '';
   palabras.forEach(palabra => {
@@ -88,120 +106,208 @@ function partirEnLineas(ctx, texto, anchoMax) {
   return lineas;
 }
 
-// Textura de la tarjeta: píldora de título + cuerpo con la pregunta.
-// Calcula su propia altura según cuántas líneas necesita la pregunta, y
-// devuelve dónde debe empezar el bloque de 4 opciones (en px del
-// canvas) para que quien las dibuje aparte pueda alinearlas exactas.
-function crearTarjetaPreguntaCanvas(edificio, pregunta) {
-  const t = TARJETA;
-  const medibujo = document.createElement('canvas').getContext('2d');
-  medibujo.font = `bold ${t.preguntaFuente}px Arial`;
-  const lineasPregunta = partirEnLineas(medibujo, pregunta.pregunta, t.anchoPx - t.padX * 2);
-
-  const cardFillTop        = t.headerAlto - t.headerSolape;
-  const contentTop         = cardFillTop + t.preguntaGapArriba;
-  const preguntaAltoBloque = lineasPregunta.length * t.preguntaAltoLinea;
-  const infoTop            = contentTop + preguntaAltoBloque + t.infoGapArriba;
-  const botonesTop         = infoTop + t.infoFuente + t.infoGapAbajo;
-  const botonesAltoBloque  = 4 * t.botonAlto + 3 * t.botonGap;
-  const altoPx             = botonesTop + botonesAltoBloque + t.paddingAbajo;
-
+function nuevoCanvas(anchoPx, altoPx) {
   const canvas = document.createElement('canvas');
-  canvas.width  = t.anchoPx * PIXEL_SCALE;
-  canvas.height = altoPx    * PIXEL_SCALE;
+  canvas.width  = Math.round(anchoPx * PIXEL_SCALE);
+  canvas.height = Math.round(altoPx  * PIXEL_SCALE);
   const ctx = canvas.getContext('2d');
   ctx.scale(PIXEL_SCALE, PIXEL_SCALE);
-
-  // Cuerpo blanco/crema con esquinas redondeadas
-  ctx.save();
-  ctx.shadowColor   = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur    = 16;
-  ctx.shadowOffsetY = 8;
-  trazarRectRedondeado(ctx, 6, cardFillTop, t.anchoPx - 12, altoPx - cardFillTop - 6, t.radioTarjeta);
-  ctx.fillStyle = '#f4efe4';
-  ctx.fill();
-  ctx.restore();
-
-  // Píldora del título, flotando sobre el borde superior de la tarjeta
-  const headerX = (t.anchoPx - t.headerAncho) / 2;
-  trazarRectRedondeado(ctx, headerX, 0, t.headerAncho, t.headerAlto, t.headerAlto / 2);
-  const gradHeader = ctx.createLinearGradient(0, 0, 0, t.headerAlto);
-  gradHeader.addColorStop(0, '#1c2430');
-  gradHeader.addColorStop(1, '#0c1015');
-  ctx.fillStyle = gradHeader;
-  ctx.fill();
-
-  // Título en dos tonos: primera palabra en blanco, el resto en verde
-  // (p.ej. "Bloque" blanco + "INNOVA" verde). Si el nombre es una sola
-  // palabra, queda toda en blanco.
-  ctx.font = `bold ${Math.round(t.headerAlto * 0.36)}px Arial`;
-  ctx.textBaseline = 'middle';
-  const partes  = edificio.nombre.split(' ');
-  const primera = partes[0];
-  const resto   = partes.slice(1).join(' ');
-  const anchoPrimera = ctx.measureText(primera).width;
-  const anchoResto   = resto ? ctx.measureText(' ' + resto).width : 0;
-  const x0 = t.anchoPx / 2 - (anchoPrimera + anchoResto) / 2;
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(primera, x0, t.headerAlto / 2 + 1);
-  if (resto) {
-    ctx.fillStyle = '#4ade80';
-    ctx.fillText(' ' + resto, x0 + anchoPrimera, t.headerAlto / 2 + 1);
-  }
-
-  // Pregunta
-  ctx.font = `bold ${t.preguntaFuente}px Arial`;
-  ctx.fillStyle = '#182238';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  lineasPregunta.forEach((linea, i) => {
-    ctx.fillText(linea, t.anchoPx / 2, contentTop + (i + 1) * t.preguntaAltoLinea - 6, t.anchoPx - t.padX * 2);
-  });
-
-  // Info de puntos (igual a la que tenía el modal 2D)
-  ctx.font = `${t.infoFuente}px Arial`;
-  ctx.fillStyle = '#8a8a86';
-  ctx.fillText(
-    '✅ +0 pts si aciertas · ❌ -100 pts si fallas',
-    t.anchoPx / 2, infoTop + t.infoFuente, t.anchoPx - t.padX * 2
-  );
-
-  return { canvas, anchoPx: t.anchoPx, altoPx, botonesTop, botonAlto: t.botonAlto, botonGap: t.botonGap, padX: t.padX };
+  return { canvas, ctx };
 }
 
-// Textura de una píldora clicable (una opción, o el botón "Continuar").
-function crearPildoraCanvas({ anchoPx, altoPx, texto, colorTop, colorBottom, align = 'left' }) {
-  const canvas = document.createElement('canvas');
-  canvas.width  = anchoPx * PIXEL_SCALE;
-  canvas.height = altoPx  * PIXEL_SCALE;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(PIXEL_SCALE, PIXEL_SCALE);
+// Textura de la tarjeta: chip con el edificio, la pregunta, una línea de
+// ayuda y los huecos de las opciones y del resultado. Calcula su altura
+// según las líneas de la pregunta y devuelve dónde van las opciones y el
+// botón (en px del canvas) para alinearlos exactos.
+function crearTarjetaPreguntaCanvas(edificio, pregunta, penalizacion) {
+  const t = TARJETA;
+  const anchoInterno = t.anchoPx - (t.margen + t.padX) * 2;
 
+  const medir = document.createElement('canvas').getContext('2d');
+  medir.font = fuenteApp(700, t.preguntaFuente);
+  const lineasPregunta = partirEnLineas(medir, pregunta.pregunta, anchoInterno);
+
+  const cardTop       = t.margen;
+  const chipTop       = cardTop + t.padArriba;
+  const preguntaTop   = chipTop + t.chipAlto + t.chipGap;
+  const infoTop       = preguntaTop + lineasPregunta.length * t.preguntaAltoLinea + t.infoGapArriba;
+  const botonesTop    = infoTop + t.infoFuente + t.infoGapAbajo;
+  const continuarTop  = botonesTop + 4 * t.botonAlto + 3 * t.botonGap + t.continuarGap;
+  const cardBottom    = continuarTop + t.continuarAlto + t.padAbajo;
+  const altoPx        = cardBottom + t.margen;
+
+  const { canvas, ctx } = nuevoCanvas(t.anchoPx, altoPx);
+  const cardX = t.margen, cardW = t.anchoPx - t.margen * 2, cardH = cardBottom - cardTop;
+
+  // Tarjeta blanca con sombra suave y borde
   ctx.save();
-  ctx.shadowColor   = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur    = 5;
-  ctx.shadowOffsetY = 3;
-  trazarRectRedondeado(ctx, 0, 0, anchoPx, altoPx, altoPx / 2);
-  const grad = ctx.createLinearGradient(0, 0, 0, altoPx);
-  grad.addColorStop(0, colorTop);
-  grad.addColorStop(1, colorBottom);
-  ctx.fillStyle = grad;
+  ctx.shadowColor = COLORES.sombra;
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 4;
+  trazarRectRedondeado(ctx, cardX, cardTop, cardW, cardH, t.radio);
+  ctx.fillStyle = COLORES.fondo;
   ctx.fill();
   ctx.restore();
+  trazarRectRedondeado(ctx, cardX + 0.75, cardTop + 0.75, cardW - 1.5, cardH - 1.5, t.radio);
+  ctx.strokeStyle = COLORES.borde;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-  // Brillo superior sutil, efecto de bisel
-  trazarRectRedondeado(ctx, 3, 3, anchoPx - 6, altoPx * 0.4, altoPx / 2 - 3);
-  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  // Chip con el nombre del edificio
+  ctx.font = fuenteApp(600, 14);
+  const nombre = edificio.nombre || '';
+  const chipAncho = Math.min(anchoInterno, ctx.measureText(nombre).width + 32);
+  const chipX = (t.anchoPx - chipAncho) / 2;
+  trazarRectRedondeado(ctx, chipX, chipTop, chipAncho, t.chipAlto, t.chipAlto / 2);
+  ctx.fillStyle = COLORES.tinte;
   ctx.fill();
-
-  ctx.font = `bold ${Math.round(altoPx * 0.32)}px Arial`;
-  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = COLORES.tinteBorde;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = COLORES.verde;
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.textAlign = align;
-  const tx = align === 'center' ? anchoPx / 2 : altoPx * 0.42;
-  ctx.fillText(texto, tx, altoPx / 2 + 1, anchoPx - (align === 'center' ? 32 : altoPx * 0.6));
+  ctx.fillText(nombre, t.anchoPx / 2, chipTop + t.chipAlto / 2 + 1, chipAncho - 20);
 
+  // Pregunta
+  ctx.font = fuenteApp(700, t.preguntaFuente);
+  ctx.fillStyle = COLORES.texto;
+  ctx.textBaseline = 'alphabetic';
+  lineasPregunta.forEach((linea, i) => {
+    ctx.fillText(linea, t.anchoPx / 2, preguntaTop + (i + 1) * t.preguntaAltoLinea - 6, anchoInterno);
+  });
+
+  // Línea de ayuda
+  ctx.font = fuenteApp(500, t.infoFuente);
+  ctx.fillStyle = COLORES.secundario;
+  ctx.fillText(`Una respuesta incorrecta resta ${penalizacion} puntos`, t.anchoPx / 2, infoTop + t.infoFuente, anchoInterno);
+
+  // Hueco del resultado: mientras no se responde, muestra una indicación
+  ctx.font = fuenteApp(500, t.infoFuente);
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Toca una opción para responder', t.anchoPx / 2, continuarTop + t.continuarAlto / 2, anchoInterno);
+
+  return {
+    canvas, altoPx,
+    anchoPx: t.anchoPx,
+    botonX: t.margen + t.padX,
+    botonAncho: anchoInterno,
+    botonesTop, botonAlto: t.botonAlto, botonGap: t.botonGap,
+    continuarTop, continuarAlto: t.continuarAlto
+  };
+}
+
+function dibujarCheck(ctx, cx, cy, color) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - 6, cy + 0.5); ctx.lineTo(cx - 1.5, cy + 5); ctx.lineTo(cx + 6.5, cy - 4.5); ctx.stroke();
+  ctx.restore();
+}
+
+function dibujarX(ctx, cx, cy, color) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - 5, cy - 5); ctx.lineTo(cx + 5, cy + 5); ctx.moveTo(cx + 5, cy - 5); ctx.lineTo(cx - 5, cy + 5); ctx.stroke();
+  ctx.restore();
+}
+
+// Textura de una opción. estado: 'normal' | 'correcta' | 'incorrecta' | 'inactiva'
+function crearOpcionCanvas({ anchoPx, altoPx, letra, texto, estado = 'normal' }) {
+  const { canvas, ctx } = nuevoCanvas(anchoPx, altoPx);
+  const estilos = {
+    normal:     { fondo: COLORES.fondo,     borde: COLORES.borde, grosor: 1.5, circulo: COLORES.tinte,     letra: COLORES.verde,      texto: COLORES.texto },
+    correcta:   { fondo: COLORES.tinte,     borde: COLORES.verde, grosor: 2,   circulo: COLORES.verde,     letra: '#FFFFFF',          texto: COLORES.texto },
+    incorrecta: { fondo: COLORES.rojoTinte, borde: COLORES.rojo,  grosor: 2,   circulo: COLORES.rojo,      letra: '#FFFFFF',          texto: COLORES.texto },
+    inactiva:   { fondo: COLORES.fondo,     borde: COLORES.borde, grosor: 1.5, circulo: COLORES.grisTinte, letra: COLORES.secundario, texto: COLORES.secundario }
+  };
+  const e = estilos[estado] || estilos.normal;
+  const radio = 16;
+
+  trazarRectRedondeado(ctx, e.grosor / 2, e.grosor / 2, anchoPx - e.grosor, altoPx - e.grosor, radio);
+  ctx.fillStyle = e.fondo;
+  ctx.fill();
+  ctx.strokeStyle = e.borde;
+  ctx.lineWidth = e.grosor;
+  ctx.stroke();
+
+  // Círculo con la letra (o ✓ / ✕ cuando ya se respondió)
+  const d = 34, cx = 12 + d / 2, cy = altoPx / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+  ctx.fillStyle = e.circulo;
+  ctx.fill();
+  if (estado === 'correcta') dibujarCheck(ctx, cx, cy, e.letra);
+  else if (estado === 'incorrecta') dibujarX(ctx, cx, cy, e.letra);
+  else {
+    ctx.font = fuenteApp(700, 15);
+    ctx.fillStyle = e.letra;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letra.toUpperCase(), cx, cy + 1);
+  }
+
+  // Texto: una línea a 17px; si no cabe, hasta dos líneas a 15px
+  const xTexto = 12 + d + 12;
+  const anchoTexto = anchoPx - xTexto - 14;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = e.texto;
+  ctx.font = fuenteApp(600, 17);
+  const textoStr = String(texto ?? '');
+  if (ctx.measureText(textoStr).width <= anchoTexto) {
+    ctx.fillText(textoStr, xTexto, altoPx / 2 + 1);
+  } else {
+    ctx.font = fuenteApp(600, 15);
+    let lineas = partirEnLineas(ctx, textoStr, anchoTexto);
+    if (lineas.length > 2) {
+      lineas = [lineas[0], lineas.slice(1).join(' ')];
+      let ultima = lineas[1];
+      while (ultima && ctx.measureText(ultima + '…').width > anchoTexto) ultima = ultima.slice(0, -1);
+      lineas[1] = ultima.trimEnd() + '…';
+    }
+    const altoLinea = 19;
+    const y0 = altoPx / 2 - ((lineas.length - 1) * altoLinea) / 2 + 1;
+    lineas.forEach((l, i) => ctx.fillText(l, xTexto, y0 + i * altoLinea, anchoTexto));
+  }
+  return canvas;
+}
+
+// Textura del mensaje de resultado (va en el hueco de abajo de la tarjeta
+// cuando se responde; no es un botón: el panel se cierra solo).
+function crearResultadoCanvas({ anchoPx, altoPx, acerto, penalizacion }) {
+  const { canvas, ctx } = nuevoCanvas(anchoPx, altoPx);
+  const fondo = acerto ? COLORES.tinte : COLORES.rojoTinte;
+  const borde = acerto ? COLORES.tinteBorde : '#F3CFCC';
+  const color = acerto ? COLORES.verde : COLORES.rojo;
+
+  trazarRectRedondeado(ctx, 0.75, 0.75, anchoPx - 1.5, altoPx - 1.5, 14);
+  ctx.fillStyle = fondo;
+  ctx.fill();
+  ctx.strokeStyle = borde;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  const texto = acerto ? '¡Correcto! Edificio registrado' : `Incorrecto · −${penalizacion} puntos · Edificio registrado`;
+  ctx.font = fuenteApp(700, 15);
+  const anchoTexto = Math.min(ctx.measureText(texto).width, anchoPx - 70);
+  const d = 22, gap = 10;
+  const x0 = (anchoPx - (d + gap + anchoTexto)) / 2;
+  const cy = altoPx / 2;
+
+  ctx.beginPath();
+  ctx.arc(x0 + d / 2, cy, d / 2, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.save();
+  ctx.translate(x0 + d / 2, cy);
+  ctx.scale(0.7, 0.7);
+  if (acerto) dibujarCheck(ctx, 0, 0, '#FFFFFF'); else dibujarX(ctx, 0, 0, '#FFFFFF');
+  ctx.restore();
+
+  ctx.fillStyle = color;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(texto, x0 + d + gap, cy + 1, anchoTexto);
   return canvas;
 }
 
@@ -347,7 +453,7 @@ export class ARView {
     this._opcionesAR = null;
     this._opcionesTextoAR = null;
     this._continuarEntidad = null;
-    this._panelAltoMetros = 0;
+    this._continuarLayout = null;
     this._pxToM = 0;
     this._raycaster = new THREE.Raycaster();
     this._mouse = new THREE.Vector2();
@@ -363,10 +469,18 @@ export class ARView {
     // raycasting manual con Three.js: el mismo patrón que ya usa
     // MapaView/MapaController para los bloques del mapa, que sí funciona
     // en ambos dispositivos.
-    window.addEventListener('click', (e) => this._manejarTap(e.clientX, e.clientY));
+    // En celular, después de cada 'touchend' el navegador dispara un 'click'
+    // sintético en el mismo punto: se ignora para no procesar el toque dos veces.
+    let ultimoToque = 0;
+    window.addEventListener('click', (e) => {
+      if (Date.now() - ultimoToque < 700) return;
+      this._manejarTap(e.clientX, e.clientY);
+    });
     window.addEventListener('touchend', (e) => {
       const t = e.changedTouches[0];
-      if (t) this._manejarTap(t.clientX, t.clientY);
+      if (!t) return;
+      ultimoToque = Date.now();
+      this._manejarTap(t.clientX, t.clientY);
     });
   }
 
@@ -384,8 +498,14 @@ export class ARView {
     const camara = escena && escena.camera;
     if (!camara) return;
 
-    this._mouse.x =  (clientX / window.innerWidth)  * 2 - 1;
-    this._mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    // MindAR agranda el canvas para cubrir la pantalla con el video (puede
+    // quedar más grande que la ventana y desplazado). Las coordenadas se
+    // calculan respecto al canvas real, no a la ventana; si no, los toques
+    // caen corridos y a veces no aciertan la opción o "Continuar".
+    const lienzo = escena.renderer?.domElement || escena.canvas;
+    const r = lienzo ? lienzo.getBoundingClientRect() : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    this._mouse.x =  ((clientX - r.left) / r.width)  * 2 - 1;
+    this._mouse.y = -((clientY - r.top)  / r.height) * 2 + 1;
     this._raycaster.setFromCamera(this._mouse, camara);
 
     const objetos = [];
@@ -478,10 +598,13 @@ export class ARView {
   // entidad tocada.
   mostrarPreguntaAR(edificio, pregunta, targetEntity) {
     this.ocultarPreguntaAR();
+    document.fonts?.load(fuenteApp(700, 21)).catch(() => {});
 
-    const tarjeta = crearTarjetaPreguntaCanvas(edificio, pregunta);
+    const tarjeta = crearTarjetaPreguntaCanvas(edificio, pregunta, PUNTOS.PENALIZACION);
     const pxToM = TARJETA.anchoMetros / tarjeta.anchoPx;
     const altoMetros = tarjeta.altoPx * pxToM;
+    // Convierte una coordenada vertical del canvas (px) a metros del panel
+    const yPanel = (px) => altoMetros / 2 - px * pxToM;
 
     const panel = document.createElement('a-entity');
     panel.setAttribute('position', `0 ${(altoMetros / 2 + 0.06).toFixed(4)} 0.05`);
@@ -490,7 +613,7 @@ export class ARView {
     fondo.setAttribute('width', TARJETA.anchoMetros.toFixed(4));
     fondo.setAttribute('height', altoMetros.toFixed(4));
     fondo.setAttribute('position', '0 0 0');
-    fondo.setAttribute('material', { shader: 'flat', src: tarjeta.canvas, transparent: true, alphaTest: 0.05 });
+    fondo.setAttribute('material', { shader: 'flat', src: tarjeta.canvas, transparent: true, alphaTest: 0.02 });
     panel.appendChild(fondo);
 
     const opcionesTexto = {
@@ -500,54 +623,53 @@ export class ARView {
     this._opcionesAR = {};
     this._opcionesTextoAR = opcionesTexto;
 
-    const btnAnchoPx = tarjeta.anchoPx - tarjeta.padX * 2;
+    // Centro horizontal de los botones respecto al centro del panel
+    const xBoton = ((tarjeta.botonX + tarjeta.botonAncho / 2) - tarjeta.anchoPx / 2) * pxToM;
+
     ['a', 'b', 'c', 'd'].forEach((letra, i) => {
       const centroPx = tarjeta.botonesTop + i * (tarjeta.botonAlto + tarjeta.botonGap) + tarjeta.botonAlto / 2;
-      const y = altoMetros / 2 - centroPx * pxToM;
 
       const opcion = document.createElement('a-plane');
       opcion.setAttribute('class', 'clickable-opcion');
-      opcion.setAttribute('width', (btnAnchoPx * pxToM).toFixed(4));
+      opcion.setAttribute('width', (tarjeta.botonAncho * pxToM).toFixed(4));
       opcion.setAttribute('height', (tarjeta.botonAlto * pxToM).toFixed(4));
-      opcion.setAttribute('position', `0 ${y.toFixed(4)} 0.01`);
+      opcion.setAttribute('position', `${xBoton.toFixed(4)} ${yPanel(centroPx).toFixed(4)} 0.01`);
       opcion.setAttribute('material', {
-        shader: 'flat', transparent: true, alphaTest: 0.05,
-        src: crearPildoraCanvas({
-          anchoPx: btnAnchoPx, altoPx: tarjeta.botonAlto,
-          texto: `${letra.toUpperCase()})  ${opcionesTexto[letra]}`,
-          colorTop: COLOR_OPCION[0], colorBottom: COLOR_OPCION[1]
-        })
+        shader: 'flat', transparent: true, alphaTest: 0.02,
+        src: crearOpcionCanvas({ anchoPx: tarjeta.botonAncho, altoPx: tarjeta.botonAlto, letra, texto: opcionesTexto[letra] })
       });
 
       panel.appendChild(opcion);
-      this._opcionesAR[letra] = { entidad: opcion, anchoPx: btnAnchoPx, altoPx: tarjeta.botonAlto };
+      this._opcionesAR[letra] = { entidad: opcion, anchoPx: tarjeta.botonAncho, altoPx: tarjeta.botonAlto };
     });
 
     targetEntity.appendChild(panel);
     this._panelPregunta = panel;
-    this._panelAltoMetros = altoMetros;
     this._pxToM = pxToM;
+    // Dónde va el mensaje de resultado (hueco reservado dentro de la tarjeta)
+    this._continuarLayout = {
+      x: xBoton,
+      y: yPanel(tarjeta.continuarTop + tarjeta.continuarAlto / 2),
+      anchoPx: tarjeta.botonAncho,
+      altoPx: tarjeta.continuarAlto
+    };
   }
 
   marcarRespuestaAR(letraSeleccionada, letraCorrecta) {
     const esCorrecta = letraSeleccionada === letraCorrecta;
 
     Object.entries(this._opcionesAR || {}).forEach(([letra, info]) => {
-      let colores = COLOR_INACTIVA;
-      if (letra === letraCorrecta) colores = COLOR_CORRECTA;
-      else if (letra === letraSeleccionada) colores = COLOR_INCORRECTA;
+      let estado = 'inactiva';
+      if (letra === letraCorrecta) estado = 'correcta';
+      else if (letra === letraSeleccionada) estado = 'incorrecta';
 
       info.entidad.setAttribute('material', {
-        shader: 'flat', transparent: true, alphaTest: 0.05,
-        src: crearPildoraCanvas({
-          anchoPx: info.anchoPx, altoPx: info.altoPx,
-          texto: `${letra.toUpperCase()})  ${this._opcionesTextoAR[letra]}`,
-          colorTop: colores[0], colorBottom: colores[1]
-        })
+        shader: 'flat', transparent: true, alphaTest: 0.02,
+        src: crearOpcionCanvas({ anchoPx: info.anchoPx, altoPx: info.altoPx, letra, texto: this._opcionesTextoAR[letra], estado })
       });
     });
 
-    if (this._panelPregunta) this._agregarBotonContinuarAR(this._panelPregunta);
+    if (this._panelPregunta) this._mostrarResultadoAR(this._panelPregunta, esCorrecta);
     return esCorrecta;
   }
 
@@ -559,27 +681,25 @@ export class ARView {
     this._opcionesAR = null;
     this._opcionesTextoAR = null;
     this._continuarEntidad = null;
+    this._resultadoEntidad = null;
+    this._continuarLayout = null;
   }
 
-  _agregarBotonContinuarAR(panel) {
-    const anchoPx = 260, altoPx = 54;
-    const y = -this._panelAltoMetros / 2 - 0.05 - (altoPx * this._pxToM) / 2;
+  _mostrarResultadoAR(panel, acerto) {
+    const l = this._continuarLayout;
+    if (!l || this._resultadoEntidad) return;
 
-    const continuar = document.createElement('a-plane');
-    continuar.setAttribute('class', 'clickable-continuar');
-    continuar.setAttribute('width', (anchoPx * this._pxToM).toFixed(4));
-    continuar.setAttribute('height', (altoPx * this._pxToM).toFixed(4));
-    continuar.setAttribute('position', `0 ${y.toFixed(4)} 0.02`);
-    continuar.setAttribute('material', {
-      shader: 'flat', transparent: true, alphaTest: 0.05,
-      src: crearPildoraCanvas({
-        anchoPx, altoPx, texto: 'Continuar →', align: 'center',
-        colorTop: COLOR_CONTINUAR[0], colorBottom: COLOR_CONTINUAR[1]
-      })
+    const resultado = document.createElement('a-plane');
+    resultado.setAttribute('width', (l.anchoPx * this._pxToM).toFixed(4));
+    resultado.setAttribute('height', (l.altoPx * this._pxToM).toFixed(4));
+    resultado.setAttribute('position', `${l.x.toFixed(4)} ${l.y.toFixed(4)} 0.02`);
+    resultado.setAttribute('material', {
+      shader: 'flat', transparent: true, alphaTest: 0.02,
+      src: crearResultadoCanvas({ anchoPx: l.anchoPx, altoPx: l.altoPx, acerto, penalizacion: PUNTOS.PENALIZACION })
     });
 
-    panel.appendChild(continuar);
-    this._continuarEntidad = continuar;
+    panel.appendChild(resultado);
+    this._resultadoEntidad = resultado;
   }
 
   onResponder(callback) {

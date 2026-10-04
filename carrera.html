@@ -249,8 +249,8 @@
     }
 
     .icono-carrera {
-      width: 52px;
-      height: 52px;
+      width: 64px;
+      height: 64px;
       margin: 0 auto 12px;
 
       display: flex;
@@ -261,9 +261,13 @@
     }
 
     .icono-carrera svg {
-      width: 46px;
-      height: 46px;
-      stroke-width: 1.6;
+      width: 60px;
+      height: 60px;
+    }
+
+    /* Rellenos del ícono: mismo color del fondo para "tapar" la ruta punteada */
+    .icono-carrera .relleno {
+      fill: var(--color-background);
     }
 
     .titulo {
@@ -639,12 +643,6 @@
       box-shadow: 0 0 0 3px #FDF0EF;
     }
 
-    .campo-ayuda {
-      margin-top: 6px;
-      color: var(--color-text-secondary);
-      font-size: 13px;
-      line-height: 1.4;
-    }
   </style>
   <link rel="stylesheet" href="styles/avisos.css">
 </head>
@@ -672,7 +670,15 @@
         >
 
         <div class="icono-carrera">
-          <i data-lucide="footprints" aria-hidden="true"></i>
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 42H36a6 6 0 0 0 0-12H16a6 6 0 0 1 0-12H33" stroke-dasharray="2.4 3.6"/>
+            <path d="M38 19V4"/>
+            <path d="M38 5h8l-2.5 3.5L46 12h-8"/>
+            <circle class="relleno" cx="28" cy="30" r="2.6"/>
+            <circle class="relleno" cx="21" cy="18" r="2.6"/>
+            <path class="relleno" d="M9 45.5s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C15.5 39.9 9 45.5 9 45.5z"/>
+            <circle cx="9" cy="35" r="2.2"/>
+          </svg>
         </div>
 
         <h1 class="titulo">Carrera UCO</h1>
@@ -692,10 +698,8 @@
             maxlength="40"
             autocomplete="name"
             autocapitalize="words"
-            aria-describedby="ayuda-nombre"
           >
         </div>
-        <p class="campo-ayuda" id="ayuda-nombre">Con tu apellido el organizador puede reconocerte si hay nombres repetidos.</p>
       </div>
 
       <div class="campo">

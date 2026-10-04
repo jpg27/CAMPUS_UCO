@@ -153,6 +153,11 @@ export class MapaView {
       const fuera = enCarrera && !enCarrera.has(id);
       btn.classList.toggle('escaneado', hecho);
       btn.classList.toggle('fuera', !!fuera);
+      // La zona del edificio también se resalta: dorada si ya se completó,
+      // gris ("desactivada") si no hace parte de esta carrera.
+      const zona = this.zonas.get(id);
+      zona?.classList.toggle('escaneada', hecho);
+      zona?.classList.toggle('fuera', !!fuera && !hecho);
       btn.setAttribute('aria-label', ed.nombre + (hecho ? ', escaneado' : fuera ? ', no está en esta carrera' : ''));
     });
   }

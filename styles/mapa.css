@@ -95,6 +95,28 @@ html, body { height: 100%; overflow: hidden; }
   stroke-width: 4;
 }
 
+/* ── Estados en modo carrera ── */
+/* Completado: dorado (el mismo color del chulito y de "Mis logros") */
+.zona.escaneada {
+  fill: rgba(200, 150, 12, .34);
+  stroke: var(--oro);
+  stroke-width: 3;
+}
+/* No hace parte de la carrera: gris, como desactivado */
+.zona.fuera {
+  fill: rgba(92, 102, 97, .58);
+  stroke: rgba(255, 255, 255, .6);
+  stroke-width: 2;
+  stroke-dasharray: 7 6;
+}
+@media (hover: hover) {
+  .zona.escaneada:hover { fill: rgba(200, 150, 12, .44); stroke: var(--oro); }
+  .zona.fuera:hover     { fill: rgba(92, 102, 97, .5); stroke: rgba(255, 255, 255, .85); }
+}
+/* Seleccionada: borde blanco grueso para distinguirla del dorado de "completado" */
+.zona.escaneada.seleccionada { fill: rgba(200, 150, 12, .42); stroke: #FFFFFF; stroke-width: 4; }
+.zona.fuera.seleccionada     { fill: rgba(92, 102, 97, .45); stroke: #FFFFFF; stroke-width: 3; stroke-dasharray: none; }
+
 /* ── Pines (dibujados por la app; imagen sin etiquetas) ── */
 .mapa-pines { position: absolute; inset: 0; pointer-events: none; }
 
@@ -136,7 +158,7 @@ html, body { height: 100%; overflow: hidden; }
 .pin.seleccionado .pin-circulo { background: var(--papel); color: var(--verde); }
 .pin.escaneado .pin-circulo { background: var(--oro); }
 .pin.escaneado .pin-check { display: grid; }
-.pin.fuera { opacity: .5; }
+.pin.fuera { opacity: .6; filter: grayscale(1); }
 
 /* Con poco zoom solo se ven los círculos; el nombre aparece al seleccionar. */
 .compacto .pin:not(.seleccionado) { padding-right: 4px; }
@@ -158,7 +180,7 @@ html, body { height: 100%; overflow: hidden; }
 .pines-sobre-imagen .pin.escaneado .pin-circulo { background: transparent; }
 .pines-sobre-imagen .pin-check { width: 28px; height: 28px; right: -6px; top: -6px; box-shadow: 0 0 0 3px var(--papel); }
 .pines-sobre-imagen .pin-check .icono { width: 18px; height: 18px; }
-.pines-sobre-imagen .pin.fuera { opacity: 1; background: rgba(255, 255, 255, .55); }
+.pines-sobre-imagen .pin.fuera { opacity: 1; filter: none; background: rgba(226, 230, 228, .62); }
 
 /* ── Barra superior y controles (flotan sobre el mapa) ── */
 .barra-sup {
