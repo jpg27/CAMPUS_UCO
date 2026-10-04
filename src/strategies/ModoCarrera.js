@@ -235,7 +235,7 @@ export class ModoCarrera extends GameStrategy {
     const seg = tiempoTotal % 60;
     const tiempoStr = `${min}m ${seg}s`;
 
-    view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr);
+    view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr, { sesion: this.sesion, fecha: new Date() });
   }
 
   alCargarEscena(contexto) {
@@ -282,4 +282,4 @@ export class ModoCarrera extends GameStrategy {
     this.sesionObserver?.destruir();
     this.puntosController?.detener();
   }
-}
+}

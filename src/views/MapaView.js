@@ -91,6 +91,7 @@ export class MapaView {
   }
 
   cargarBloques() {
+    this._precargarFotos();
     const svg = this.$('mapa-zonas');
     svg.setAttribute('viewBox', `0 0 ${MAPA.ancho} ${MAPA.alto}`);
     const capaPines = this.$('mapa-pines');
@@ -322,16 +323,17 @@ export class MapaView {
   _pintarFoto(datos) {
     const foto = this.$('ficha-foto');
     const ruta = FOTOS_MAPA[datos.id];
-    foto.classList.remove('es-foto');
+    foto.classList.remove('es-foto', 'cargando');
     foto.disabled = true;
     foto.onclick = null;
+    // Sin foto propia: recorte de la ilustración del mapa
     if (!ruta) { if (datos.mapa) this._pintarMiniatura(datos.mapa.zona); return; }
 
     const id = datos.id;
     const url = BASE_URL + ruta;
-    const img = new Image();
-    img.onload = () => {
+    const mostrar = () => {
       if (this.seleccionado !== id) return; // el usuario ya eligió otro
+      foto.classList.remove('cargando');
       foto.classList.add('es-foto');
       foto.style.backgroundImage = `url("${url}")`;
       foto.style.backgroundSize = '';
@@ -340,10 +342,36 @@ export class MapaView {
       foto.setAttribute('aria-label', `Ver foto de ${datos.nombre} en grande`);
       foto.onclick = () => this.abrirFoto(url, datos.nombre);
     };
-    img.onerror = () => { if (this.seleccionado === id && datos.mapa) this._pintarMiniatura(datos.mapa.zona); };
-    img.src = url;
-    // Mientras carga, el recorte evita un hueco vacío
-    if (datos.mapa) this._pintarMiniatura(datos.mapa.zona);
+
+    const img = this._fotosPrecargadas?.get(url) || new Image();
+    if (img.complete && img.naturalWidth) { mostrar(); return; } // ya estaba en caché: sin parpadeo
+
+    // Mientras carga se ve un fondo liso (antes se veía un instante el
+    // recorte del mapa y después la foto, lo que parecía "otra foto detrás").
+    foto.classList.add('cargando');
+    foto.style.backgroundImage = 'none';
+    img.addEventListener('load', mostrar, { once: true });
+    img.addEventListener('error', () => {
+      if (this.seleccionado !== id) return;
+      foto.classList.remove('cargando');
+      if (datos.mapa) this._pintarMiniatura(datos.mapa.zona);
+    }, { once: true });
+    if (!img.src) img.src = url;
+  }
+
+  /** Descarga en segundo plano las fotos de la ficha para que abran al instante. */
+  _precargarFotos() {
+    this._fotosPrecargadas = new Map();
+    const cargar = () => Object.values(FOTOS_MAPA).forEach(ruta => {
+      const url = BASE_URL + ruta;
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+      this._fotosPrecargadas.set(url, img);
+    });
+    // Después de que el mapa cargó, sin competir con la imagen del mapa
+    if ('requestIdleCallback' in window) requestIdleCallback(cargar, { timeout: 3000 });
+    else setTimeout(cargar, 1500);
   }
 
   /** Visor a pantalla completa para la foto del edificio. */

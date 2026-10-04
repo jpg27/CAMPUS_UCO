@@ -77,6 +77,10 @@ export class ScanController {
     document.getElementById('btn-cerrar-logros')?.addEventListener('click', () => {
       this.view.ocultarLogros();
     });
+    // Tocar fuera de la hoja también la cierra (igual que en el mapa)
+    document.getElementById('panel-logros')?.addEventListener('click', (e) => {
+      if (e.target.id === 'panel-logros') this.view.ocultarLogros();
+    });
 
     // ── Notificar a la estrategia al ir al mapa ──
     document.getElementById('btn-mapa')?.addEventListener('click', () => {

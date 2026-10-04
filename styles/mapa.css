@@ -250,6 +250,14 @@ html, body { height: 100%; overflow: hidden; }
 }
 /* Foto real del edificio: llena la miniatura (recorta los bordes si hace falta) */
 .ficha-foto:disabled { cursor: default; }
+/* Mientras descarga la foto: fondo liso con un brillo suave */
+.ficha-foto.cargando {
+  background-image: none;
+  background-color: var(--verde-claro);
+  animation: foto-cargando 1.2s ease-in-out infinite alternate;
+}
+@keyframes foto-cargando { from { opacity: 1; } to { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .ficha-foto.cargando { animation: none; } }
 .ficha-foto.es-foto { cursor: zoom-in; position: relative; }
 /* Ícono de "ampliar" en la esquina de la foto */
 .ficha-foto.es-foto::after {

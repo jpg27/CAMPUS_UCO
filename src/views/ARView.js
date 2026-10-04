@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════
 import { obtenerEdificioInfo } from '../config.js';
 import { formatearHora } from '../utils/formatters.js';
+import { icono } from './mapa/iconos.js';
 
 // Desplazamiento (en metros, espacio local del marcador) de cada panel de
 // punto de interés según hacia dónde queda ese punto en el mundo real
@@ -602,7 +603,7 @@ export class ARView {
 
     const lista = document.getElementById('logros-lista');
     if (!edificiosSesion || edificiosSesion.length === 0) {
-      lista.innerHTML = '<p style="text-align:center;color:#888;">No hay edificios</p>';
+      lista.innerHTML = '<li class="ar-logros-vacio">Esta carrera todavía no tiene edificios.</li>';
       return;
     }
 
@@ -613,20 +614,18 @@ export class ARView {
       const hora      = escaneo ? formatearHora(escaneo.escaneado_en) : null;
       const pts       = escaneo?.puntos || 0;
       const acierto   = escaneo?.respondio_correctamente;
+      const resultado = acierto === true ? ', <span class="ok">respuesta correcta</span>'
+                      : acierto === false ? ', <span class="mal">respuesta incorrecta</span>' : '';
 
       return `
-        <div class="edificio-logro ${escaneado ? 'done' : ''}">
-          <div class="icono">${info.icono}</div>
-          <div class="info">
-            <div class="nombre">${info.nombre}</div>
-            <div class="sub">
-              ${escaneado
-                ? `✅ ${hora} · ⭐ ${pts} pts ${acierto === true ? '· 🎯 Correcto' : acierto === false ? '· ❌ Incorrecto' : ''}`
-                : '⏳ Pendiente'}
-            </div>
+        <li class="ar-logro ${escaneado ? 'hecho' : ''}">
+          <span class="ar-logro-icono">${icono(escaneado ? 'check' : 'candado')}</span>
+          <div class="ar-logro-info">
+            <div class="ar-logro-nombre">${info.nombre}</div>
+            <div class="ar-logro-estado">${escaneado ? `Escaneado a las ${hora}${resultado}` : 'Pendiente'}</div>
           </div>
-          <div class="trofeo">${escaneado ? '🏆' : '🔒'}</div>
-        </div>
+          ${escaneado ? `<span class="ar-logro-pts">${pts} pts</span>` : ''}
+        </li>
       `;
     }).join('');
   }
@@ -639,10 +638,15 @@ export class ARView {
     document.getElementById('panel-logros').classList.remove('visible');
   }
 
-  mostrarPantallaFinalizacion(nombre, puntos, tiempo) {
+  mostrarPantallaFinalizacion(nombre, puntos, tiempo, { sesion = null, fecha = new Date() } = {}) {
     document.getElementById('fin-nombre').textContent = nombre;
     document.getElementById('fin-puntos').textContent = puntos;
     document.getElementById('fin-tiempo').textContent = tiempo;
+    // Sesión y fecha/hora en la captura de pantalla, para que el organizador
+    // pueda comprobar que es de esta carrera.
+    const cuando = fecha.toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    const meta = document.getElementById('fin-meta');
+    if (meta) meta.textContent = sesion ? `${sesion.nombre || 'Carrera'} (${sesion.codigo || ''}), ${cuando}` : cuando;
     document.getElementById('panel-finalizacion').classList.add('visible');
   }
 

@@ -190,7 +190,7 @@ export const EDIFICIOS = [
     id: 'bloque_innova',
     nombre: 'Innovamáter',
     icono: '💡',
-    descripcion: 'Edificio con el Centro de Idiomas, las facultades de Ciencias Económicas y Administrativas (FACEA) y de Ciencias de la Salud, oficinas académicas y un auditorio en el último piso.',
+    descripcion: 'En este edificio encuentras el Centro de Idiomas, las facultades de Ciencias Económicas y Administrativas (FACEA) y de Ciencias de la Salud, oficinas académicas y un auditorio en el último piso.',
     localizacion: '📍 Campus parte baja',
     // Qué hay en cada piso: lo muestra la ficha del mapa (pestañas por piso)
     pisos: [
@@ -279,7 +279,11 @@ export const FOTOS_MAPA = {
   edificio_j:    'img/mapa/edificio_j.webp',
   auditorio:     'img/mapa/auditorio.webp',
   capilla:       'img/mapa/capilla.webp',
-  bloque_nuevo:  'img/mapa/bloque_nuevo.webp'
+  bloque_nuevo:  'img/mapa/bloque_nuevo.webp',
+  bloque_edc:    'img/mapa/bloque_edc.webp',
+  coliseo:       'img/mapa/coliseo.webp',
+  bloque_col:    'img/mapa/bloque_col.webp',
+  bloque_m:      'img/mapa/bloque_m.webp'
 };
 
 // ── Mapeo de target indexes de MindAR a edificios ──
@@ -298,8 +302,9 @@ export const EDIFICIOS_AR = {
 // ── Constantes de puntos ──
 export const PUNTOS = {
   INICIO: 1000,
-  POR_TICK: 1,
-  MS_POR_TICK: 2000,
+  POR_TICK: 1,             // puntos que se pierden en cada tick
+  MS_POR_TICK: 1000,       // un tick por segundo
+  EXTRA_POR_MINUTO: 20,    // además, cada minuto completo resta 20 más
   BONUS_CORRECTO: 0,
   PENALIZACION: 100
 };

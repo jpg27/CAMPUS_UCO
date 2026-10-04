@@ -9,12 +9,15 @@ import {
   activarSesion as activarSesionDB, 
   cerrarSesion as cerrarSesionDB,
   cerrarSesionesCaducadas,
+  conEstadoReal,
+  estaCaducada,
   eliminarSesion
 } from '../models/SesionModel.js';
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
 import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo } from '../utils/formatters.js';
 import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
+import { mostrarAviso, confirmar } from '../views/components/Avisos.js';
 
 export class AdminController {
   constructor() {
@@ -27,6 +30,10 @@ export class AdminController {
     if (this.suscripcion) {
       supabase.removeChannel(this.suscripcion);
       this.suscripcion = null;
+    }
+    if (this.canalSesiones) {
+      supabase.removeChannel(this.canalSesiones);
+      this.canalSesiones = null;
     }
   }
 
@@ -44,9 +51,47 @@ export class AdminController {
     this._initTabPreguntas();
     this._exposeWindowFunctions();
     
+    // Cambios en "sesiones" en tiempo real: si una sesión se cierra sola
+    // (job de pg_cron o el autocierre de abajo) o desde otro dispositivo, el
+    // historial y el panel de control se actualizan sin recargar la página.
+    this._escucharSesiones();
+
     // Autocierre de sesiones activas (inicial y cada 5 minutos)
-    await cerrarSesionesCaducadas();
-    setInterval(cerrarSesionesCaducadas, 5 * 60 * 1000);
+    await this._autocierre();
+    setInterval(() => this._autocierre(), 5 * 60 * 1000);
+  }
+
+  async _autocierre() {
+    const cerradas = await cerrarSesionesCaducadas();
+    // La sesión abierta en el panel también se marca si ya caducó, aunque la
+    // base no se haya podido actualizar desde aquí.
+    if (estaCaducada(this.sesionActual)) cerradas.push(this.sesionActual.id);
+    if (cerradas.length) this._alCambiarSesiones(cerradas.map(id => ({ id, estado: 'cerrada' })));
+  }
+
+  _escucharSesiones() {
+    this.canalSesiones = supabase
+      .channel('admin-sesiones')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sesiones' },
+        (payload) => this._alCambiarSesiones([payload.new || payload.old]))
+      .subscribe();
+  }
+
+  /** Refresca lo que esté en pantalla cuando cambia el estado de una o más sesiones. */
+  _alCambiarSesiones(cambios) {
+    const historialVisible = document.getElementById('pantalla-historial')?.classList.contains('visible');
+    if (historialVisible) this._cargarHistorialEnSegundoPlano();
+
+    // La sesión abierta en el panel de control se cerró sin que el admin la cerrara
+    const actual = this.sesionActual;
+    const cambio = actual && cambios.find(c => c?.id === actual.id);
+    if (cambio && cambio.estado === 'cerrada' && actual.estado !== 'cerrada') {
+      actual.estado = 'cerrada';
+      this._actualizarBadge('cerrada');
+      document.getElementById('btn-activar').disabled = true;
+      document.getElementById('btn-cerrar').disabled  = true;
+      mostrarAviso({ tipo: 'aviso', titulo: 'La sesión se cerró', texto: `"${actual.nombre}" se cerró automáticamente al cumplir el tiempo máximo.`, duracion: 8000 });
+    }
   }
 
   // ── Grid de edificios (nueva carrera) ──
@@ -155,19 +200,19 @@ export class AdminController {
     window.crearSesion = async () => {
       const nombre = document.getElementById('nombre-sesion').value.trim();
       const codigo = document.getElementById('codigo-sesion').value.trim();
-      if (!nombre || !codigo) { alert('Completa nombre y código'); return; }
+      if (!nombre || !codigo) { mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Escribe el nombre y el código de la sesión.' }); return; }
 
       const edificiosSeleccionados = EDIFICIOS.filter(e =>
         document.getElementById('ed-' + e.id)?.checked
       );
-      if (edificiosSeleccionados.length === 0) { alert('Selecciona al menos un edificio'); return; }
+      if (edificiosSeleccionados.length === 0) { mostrarAviso({ tipo: 'aviso', titulo: 'Sin edificios', texto: 'Selecciona al menos un edificio para la carrera.' }); return; }
 
       try {
         this.sesionActual = await crearSesionDB(nombre, codigo, edificiosSeleccionados);
         this._mostrarControlSesion();
         this._iniciarRanking();
       } catch (e) {
-        alert('Error al crear la sesión. El código puede estar en uso.');
+        mostrarAviso({ tipo: 'error', titulo: 'No se pudo crear la sesión', texto: 'Puede que ese código ya esté en uso. Prueba con otro.' });
       }
     };
 
@@ -179,12 +224,13 @@ export class AdminController {
         this._actualizarBadge('activa');
         document.getElementById('btn-activar').disabled = true;
         document.getElementById('btn-cerrar').disabled  = false;
-      } catch (e) { alert('Error al activar la sesión'); }
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo activar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.cerrarSesion = async () => {
       if (!this.sesionActual) return;
-      if (!confirm('¿Cerrar la sesión?')) return;
+      const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${this.sesionActual.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+      if (!ok) return;
       try {
         await cerrarSesionDB(this.sesionActual.id);
         this.sesionActual.estado = 'cerrada';
@@ -192,11 +238,11 @@ export class AdminController {
         document.getElementById('btn-cerrar').disabled = true;
 
         setTimeout(() => this._reiniciarPanelControl(), 1500);
-      } catch (e) { alert('Error al cerrar la sesión'); }
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.guardarPregunta = async () => {
-      if (!this.edificioSeleccionado) { alert('Selecciona un edificio primero'); return; }
+      if (!this.edificioSeleccionado) { mostrarAviso({ tipo: 'aviso', titulo: 'Elige un edificio', texto: 'Selecciona el edificio al que pertenece la pregunta.' }); return; }
 
       const pregunta = document.getElementById('nueva-pregunta').value.trim();
       const opA = document.getElementById('nueva-opcion-a').value.trim();
@@ -206,7 +252,7 @@ export class AdminController {
       const correcta = document.getElementById('nueva-respuesta-correcta').value;
 
       if (!pregunta || !opA || !opB || !opC || !opD) {
-        alert('Completa todos los campos');
+        mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Completa la pregunta, las cuatro opciones y la respuesta correcta.' });
         return;
       }
 
@@ -219,27 +265,39 @@ export class AdminController {
         document.getElementById('nueva-opcion-d').value = '';
         document.getElementById('nueva-respuesta-correcta').value = 'a';
         await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
-        alert('✅ Pregunta guardada correctamente');
+        mostrarAviso({ tipo: 'exito', titulo: 'Pregunta guardada', texto: `Se agregó a ${this.edificioSeleccionado.nombre}.` });
       } catch (e) {
-        alert('Error al guardar la pregunta');
+        mostrarAviso({ tipo: 'error', titulo: 'No se pudo guardar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
       }
     };
 
     window.borrarPregunta = async (preguntaId) => {
-      if (!confirm('¿Eliminar esta pregunta?')) return;
+      const ok = await confirmar({ titulo: '¿Eliminar esta pregunta?', texto: 'Esta acción no se puede deshacer.', aceptar: 'Eliminar', peligro: true });
+      if (!ok) return;
       try {
         await eliminarPregunta(preguntaId);
         await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
       } catch (e) {
-        alert('Error al eliminar la pregunta');
+        mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
       }
     };
 
-    window.verDetalleSesion = async (sesionId) => {
+    window.verDetalleSesion = async (sesionId, { forzarDetalle = false } = {}) => {
+      const { data: sesionBD } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
+      // Si ya pasó el tiempo máximo se muestra como cerrada aunque la base
+      // todavía no se haya actualizado.
+      const sesion = conEstadoReal(sesionBD);
+
+      // Una sesión activa o en borrador se abre en el panel de control
+      // ("Nueva carrera"), con el ranking en tiempo real y los botones
+      // Activar/Cerrar, como cuando se acaba de crear.
+      if (!forzarDetalle && sesion && (sesion.estado === 'activa' || sesion.estado === 'borrador')) {
+        this._abrirEnPanelControl(sesion);
+        return;
+      }
+
       document.getElementById('lista-sesiones').style.display = 'none';
       document.getElementById('detalle-sesion').classList.add('visible');
-
-      const { data: sesion } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
       const { data: participantes } = await supabase.from('participantes').select('*').eq('sesion_id', sesionId)
         .order('posicion', { ascending: true, nullsFirst: false });
       const { data: edificios } = await supabase.from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden');
@@ -315,16 +373,17 @@ export class AdminController {
       btnCerrarHist.style.display = sePuedeCerrar ? 'inline-flex' : 'none';
       btnCerrarHist.disabled = false;
       btnCerrarHist.onclick = async () => {
-        if (!confirm(`¿Cerrar la sesión "${sesion.nombre}"? Los participantes verán que la carrera terminó.`)) return;
+        const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${sesion.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+        if (!ok) return;
         btnCerrarHist.disabled = true;
         try {
           await cerrarSesionDB(sesionId);
           // Si es la misma sesión que está abierta en "Nueva carrera", reiniciar ese panel
           if (this.sesionActual?.id === sesionId) this._reiniciarPanelControl();
-          await window.verDetalleSesion(sesionId);
+          await window.verDetalleSesion(sesionId, { forzarDetalle: true });
           this._cargarHistorialEnSegundoPlano();
         } catch (e) {
-          alert('Error al cerrar la sesión');
+          mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' });
           btnCerrarHist.disabled = false;
         }
       };
@@ -332,16 +391,17 @@ export class AdminController {
       const btnEliminar = document.getElementById('btn-eliminar-sesion');
       btnEliminar.style.display = 'block';
       btnEliminar.onclick = async () => {
-        if (confirm('¿Estás seguro de eliminar esta sesión y todos sus datos? Esta acción no se puede deshacer.')) {
+        const ok = await confirmar({ titulo: '¿Eliminar esta sesión?', texto: `Se borrarán "${sesion.nombre}", sus participantes y sus escaneos. Esta acción no se puede deshacer.`, aceptar: 'Eliminar', peligro: true });
+        if (ok) {
           btnEliminar.disabled = true;
           btnEliminar.textContent = 'Eliminando...';
           try {
             await eliminarSesion(sesionId);
-            alert('Sesión eliminada correctamente');
+            mostrarAviso({ tipo: 'exito', titulo: 'Sesión eliminada', texto: `"${sesion.nombre}" y sus datos se borraron.` });
             window.volverHistorial();
             this._cargarHistorial();
           } catch(e) {
-            alert('Error al eliminar la sesión');
+            mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' });
           }
           btnEliminar.disabled = false;
           btnEliminar.textContent = '🗑️ Eliminar sesión';
@@ -356,6 +416,22 @@ export class AdminController {
       document.getElementById('btn-cerrar-sesion-historial').style.display = 'none';
       this._cargarHistorial();
     };
+  }
+
+  /** Retoma una sesión del historial en el panel de control con ranking en vivo. */
+  _abrirEnPanelControl(sesion) {
+    if (this.suscripcion) {
+      try { supabase.removeChannel(this.suscripcion); } catch (e) { /* ya estaba cerrado */ }
+      this.suscripcion = null;
+    }
+    this.sesionActual = sesion;
+    this._mostrarControlSesion();
+    this._actualizarBadge(sesion.estado);
+    document.getElementById('btn-activar').disabled = sesion.estado !== 'borrador';
+    document.getElementById('btn-cerrar').disabled  = sesion.estado !== 'activa';
+    this._iniciarRanking();
+    window.cambiarTab('nueva');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /** Vuelve "Nueva carrera" al formulario de crear sesión. */
@@ -451,6 +527,10 @@ export class AdminController {
   }
 
   async _cargarHistorial(fechaInicio = null, fechaFin = null) {
+    // Antes de mostrar estados, cerrar las que ya pasaron el tiempo máximo
+    // (por si el job de pg_cron no ha corrido todavía).
+    await cerrarSesionesCaducadas();
+
     let query = supabase
       .from('sesiones')
       .select('*')
@@ -463,7 +543,8 @@ export class AdminController {
       query = query.lte('creada_en', fechaFin + 'T23:59:59Z');
     }
 
-    const { data: sesiones } = await query;
+    const { data: datos } = await query;
+    const sesiones = (datos || []).map(conEstadoReal);
 
     const contenedor = document.getElementById('contenedor-lista-sesiones');
     document.getElementById('detalle-sesion').classList.remove('visible');
@@ -490,4 +571,4 @@ export class AdminController {
       </div>
     `).join('');
   }
-}
+}

@@ -58,7 +58,7 @@ const PASOS = [
   {
     id: 'carrera',
     titulo: 'Compite en la carrera',
-    texto: 'Únete con el código del organizador. En cada edificio empiezas con 1000 puntos y pierdes 1 cada 2 segundos: ¡ve rápido!',
+    texto: 'Únete con el código del organizador. En cada edificio empiezas con 1000 puntos y pierdes 1 por segundo, más 20 por cada minuto: ¡ve rápido!',
     svg: `
       <svg viewBox="0 0 300 300" aria-hidden="true">
         <rect x="40" y="70" width="150" height="86" rx="14" fill="${C.blanco}" stroke="${C.suave}" stroke-width="3"/>

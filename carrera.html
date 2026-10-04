@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Carrera UCO</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 
   <!-- TIPOGRAFÍA INTER -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -631,7 +634,19 @@
       }
     }
 
+    .input-icono input[aria-invalid="true"] {
+      border-color: #E3A39E;
+      box-shadow: 0 0 0 3px #FDF0EF;
+    }
+
+    .campo-ayuda {
+      margin-top: 6px;
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
   </style>
+  <link rel="stylesheet" href="styles/avisos.css">
 </head>
 
 
@@ -667,17 +682,20 @@
       </header>
 
       <div class="campo">
-        <label for="input-nombre">Tu nombre o nickname</label>
+        <label for="input-nombre">Nombre y apellido</label>
         <div class="input-icono">
           <i data-lucide="user" aria-hidden="true"></i>
           <input
             type="text"
             id="input-nombre"
-            placeholder="Ej: Juan123"
-            maxlength="30"
-            autocomplete="nickname"
+            placeholder="Ej: Juan Pérez"
+            maxlength="40"
+            autocomplete="name"
+            autocapitalize="words"
+            aria-describedby="ayuda-nombre"
           >
         </div>
+        <p class="campo-ayuda" id="ayuda-nombre">Con tu apellido el organizador puede reconocerte si hay nombres repetidos.</p>
       </div>
 
       <div class="campo">
@@ -700,7 +718,9 @@
         Unirse a la carrera
       </button>
 
-      <div class="error" id="mensaje-error" role="alert"></div>
+      <!-- Los errores ahora se muestran como notificación (Avisos.js); se deja
+           el contenedor oculto por compatibilidad. -->
+      <div class="error" id="mensaje-error" role="alert" hidden></div>
 
       <a href="index.html" class="volver">
         <i data-lucide="arrow-left" aria-hidden="true"></i>

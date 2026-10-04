@@ -2,23 +2,30 @@
 // CarreraView.js — Vista de unirse a carrera
 // Extraído fielmente de carrera.html original
 // ═══════════════════════════════════════════
+import { mostrarAviso, ocultarAviso } from './components/Avisos.js';
 
 export class CarreraView {
   obtenerDatosFormulario() {
     return {
-      nombre: document.getElementById('input-nombre').value.trim(),
+      // Quita espacios repetidos: "Juan   Pérez" → "Juan Pérez"
+      nombre: document.getElementById('input-nombre').value.trim().replace(/\s+/g, ' '),
       codigo: document.getElementById('input-codigo').value.trim()
     };
   }
 
-  mostrarError(msg) {
-    const error = document.getElementById('mensaje-error');
-    error.textContent = msg;
-    error.classList.add('visible');
+  /** Muestra el error como notificación de la app y marca el campo con problema. */
+  mostrarError(texto, { titulo = 'Revisa tus datos', tipo = 'aviso', campo = null } = {}) {
+    mostrarAviso({ tipo, titulo, texto });
+    if (campo) {
+      const input = document.getElementById(campo);
+      input?.setAttribute('aria-invalid', 'true');
+      input?.focus();
+    }
   }
 
   ocultarError() {
-    document.getElementById('mensaje-error').classList.remove('visible');
+    ocultarAviso();
+    document.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
   }
 
   deshabilitarBoton(texto) {

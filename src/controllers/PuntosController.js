@@ -5,7 +5,8 @@
 // siempre a partir de la hora en que empezó el tramo actual (desde la
 // activación de la carrera o desde el último edificio registrado):
 //
-//   puntos = INICIO - (segundos transcurridos / segundos por tick) - penalización
+//   puntos = INICIO - 1 por segundo - 20 por cada minuto completo - penalización
+//   (valores en PUNTOS de config.js)
 //
 // Ese "tramo" se guarda en localStorage (ver storage.js), así que AR y mapa
 // leen el mismo dato: cambiar de vista, recargar o volver atrás no reinicia
@@ -45,8 +46,13 @@ export class PuntosController {
   /** Puntos según el reloj real (no depende de que la página haya estado abierta). */
   calcular() {
     if (!this.tramo) return PUNTOS.INICIO;
-    const ticks = Math.floor((Date.now() - this.tramo.inicio) / this.msPorTick);
-    const puntos = PUNTOS.INICIO - ticks * PUNTOS.POR_TICK - (this.tramo.penalizacion || 0);
+    const transcurrido = Math.max(0, Date.now() - this.tramo.inicio);
+    const ticks   = Math.floor(transcurrido / this.msPorTick);
+    const minutos = Math.floor(transcurrido / 60000);
+    const puntos = PUNTOS.INICIO
+      - ticks * PUNTOS.POR_TICK
+      - minutos * (PUNTOS.EXTRA_POR_MINUTO || 0)
+      - (this.tramo.penalizacion || 0);
     return Math.max(0, Math.min(PUNTOS.INICIO, puntos));
   }
 
