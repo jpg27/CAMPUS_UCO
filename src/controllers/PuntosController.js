@@ -1,9 +1,22 @@
 // ═══════════════════════════════════════════
-// PuntosController.js — Cronómetro descendente centralizado
-// Extraído de ar.html y mapa.html (lógica duplicada unificada)
+// PuntosController.js — Cronómetro descendente de la carrera
+//
+// Los puntos NO se guardan como un número que se va restando: se calculan
+// siempre a partir de la hora en que empezó el tramo actual (desde la
+// activación de la carrera o desde el último edificio registrado):
+//
+//   puntos = INICIO - 1 por segundo - 20 por cada minuto completo - penalización
+//   (valores en PUNTOS de config.js)
+//
+// Ese "tramo" se guarda en localStorage (ver storage.js), así que AR y mapa
+// leen el mismo dato: cambiar de vista, recargar o volver atrás no reinicia
+// el contador, porque el tiempo sigue corriendo aunque ninguna página esté
+// abierta.
 // ═══════════════════════════════════════════
 import { PUNTOS } from '../config.js';
-import { guardarPuntos, obtenerPuntos, limpiarPuntos } from '../utils/storage.js';
+import { obtenerTramo, crearTramo, guardarTramo } from '../utils/storage.js';
+
+const MS_REFRESCO = 500; // cada cuánto se repinta el display
 
 export class PuntosController {
   constructor(display, msPorTick) {
@@ -12,32 +25,47 @@ export class PuntosController {
     this.puntosActuales = PUNTOS.INICIO;
     this.intervalo = null;
     this.iniciado = false;
+    this.sesionId = null;
+    this.tramo = null;
   }
 
   iniciar(sesionId) {
     if (this.iniciado) return;
     this.iniciado = true;
+    this.sesionId = sesionId;
+    // Si ya hay un tramo en curso para esta sesión se continúa; solo se crea
+    // uno nuevo si no existe (p. ej. primera vez que se abre la carrera).
+    this.tramo = obtenerTramo(sesionId) || crearTramo(sesionId);
 
-    // Restaurar puntos guardados
-    const guardados = obtenerPuntos(sesionId);
-    if (guardados.valido) {
-      const segundosTranscurridos = Math.floor((Date.now() - guardados.timestamp) / 1000);
-      const ticksTranscurridos = Math.floor(segundosTranscurridos / (this.msPorTick / 1000));
-      this.puntosActuales = Math.max(0, guardados.puntos - (ticksTranscurridos * PUNTOS.POR_TICK));
-    } else {
-      this.puntosActuales = PUNTOS.INICIO;
-    }
-
-    this.display.actualizar(this.puntosActuales);
-    this.display.mostrar();
-
-    this.intervalo = setInterval(() => {
-      this.puntosActuales = Math.max(0, this.puntosActuales - PUNTOS.POR_TICK);
-      this.display.actualizar(this.puntosActuales);
-      guardarPuntos(this.puntosActuales, sesionId);
-    }, this.msPorTick);
+    this._refrescar();
+    this.display.mostrar?.();
+    clearInterval(this.intervalo);
+    this.intervalo = setInterval(() => this._refrescar(), MS_REFRESCO);
   }
 
+  /** Puntos según el reloj real (no depende de que la página haya estado abierta). */
+  calcular() {
+    if (!this.tramo) return PUNTOS.INICIO;
+    const transcurrido = Math.max(0, Date.now() - this.tramo.inicio);
+    const ticks   = Math.floor(transcurrido / this.msPorTick);
+    const minutos = Math.floor(transcurrido / 60000);
+    const puntos = PUNTOS.INICIO
+      - ticks * PUNTOS.POR_TICK
+      - minutos * (PUNTOS.EXTRA_POR_MINUTO || 0)
+      - (this.tramo.penalizacion || 0);
+    return Math.max(0, Math.min(PUNTOS.INICIO, puntos));
+  }
+
+  _refrescar() {
+    this.puntosActuales = this.calcular();
+    this.display.actualizar(this.puntosActuales);
+  }
+
+  /**
+   * Congela el display (p. ej. mientras se responde una pregunta). Solo afecta
+   * a esta página: el tramo guardado sigue corriendo, así que salir a otra
+   * vista y volver no deja los puntos congelados para siempre.
+   */
   detener() {
     if (this.intervalo) {
       clearInterval(this.intervalo);
@@ -45,26 +73,32 @@ export class PuntosController {
     }
   }
 
-  guardar(sesionId) {
-    guardarPuntos(this.puntosActuales, sesionId);
+  // Se mantiene por compatibilidad con ModoCarrera.alIrAlMapa(): ya no hace
+  // falta guardar nada, el tramo vive en localStorage desde que se crea.
+  guardar() {
     this.detener();
   }
 
   aplicarBonus() {
-    this.puntosActuales = Math.min(1000, this.puntosActuales + PUNTOS.BONUS_CORRECTO);
+    if (!this.tramo || !PUNTOS.BONUS_CORRECTO) return;
+    this.tramo.penalizacion = (this.tramo.penalizacion || 0) - PUNTOS.BONUS_CORRECTO;
+    guardarTramo(this.tramo);
+    this.puntosActuales = Math.min(PUNTOS.INICIO, this.puntosActuales + PUNTOS.BONUS_CORRECTO);
     this.display.actualizar(this.puntosActuales);
   }
 
   aplicarPenalizacion() {
+    if (!this.tramo) return;
+    this.tramo.penalizacion = (this.tramo.penalizacion || 0) + PUNTOS.PENALIZACION;
+    guardarTramo(this.tramo);
     this.puntosActuales = Math.max(0, this.puntosActuales - PUNTOS.PENALIZACION);
     this.display.actualizar(this.puntosActuales);
   }
 
+  /** Empieza un tramo nuevo desde INICIO (después de registrar un edificio). */
   resetear(sesionId) {
     this.detener();
-    limpiarPuntos();
-    this.puntosActuales = PUNTOS.INICIO;
-    this.display.actualizar(this.puntosActuales);
+    this.tramo = crearTramo(sesionId);
     this.iniciado = false;
     this.iniciar(sesionId);
   }

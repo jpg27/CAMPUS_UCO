@@ -1,146 +1,522 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Admin - Login</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
+  <!-- TIPOGRAFÍA INTER -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- LUCIDE ICONS -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* =====================================================
+       VARIABLES DEL DESIGN SYSTEM
+       ===================================================== */
+
+    :root {
+
+      /* Verde UCO */
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-primary-pressed: #04532E;
+
+      /* Verdes secundarios */
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+
+      /* Fondos */
+      --color-background: #F8FAF9;
+      --color-surface: #FFFFFF;
+
+      /* Textos */
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+
+      /* Bordes */
+      --color-border: #E2E9E5;
+
+      /* Error */
+      --color-error: #B3261E;
+      --color-error-bg: #FDF0EF;
+      --color-error-border: #F3CFCC;
+
+      /* Radios */
+      --radius-input: 14px;
+      --radius-button: 14px;
+
+      /* Sombras */
+      --shadow-button: 0 4px 12px rgba(8, 122, 69, 0.18);
+    }
+
+
+    /* =====================================================
+       RESET
+       ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+
+    /* =====================================================
+       BODY
+       ===================================================== */
 
     body {
-      background: radial-gradient(ellipse at center, #1a2e1a, #0a1a0a);
       min-height: 100vh;
+      min-height: 100dvh;
+
+      background: var(--color-background);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      font-family: 'Inter', sans-serif;
+      color: var(--color-text);
+
+      overflow-x: hidden;
+      position: relative;
+    }
+
+
+    /* =====================================================
+       DECORACIÓN: HOJAS ARRIBA A LA DERECHA
+       ===================================================== */
+
+    .hojas-superior {
+      position: fixed;
+      top: 0;
+      right: 0;
+
+      width: clamp(120px, 30vw, 190px);
+      height: auto;
+      aspect-ratio: 1 / 1;
+
+      pointer-events: none;
+      z-index: 0;
+    }
+
+
+    /* =====================================================
+       DECORACIÓN: OLA VERDE ABAJO A LA DERECHA
+       ===================================================== */
+
+    .ola-inferior {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+
+      /* Ocupa todo el ancho; el dibujo se ancla a la derecha */
+      width: 100%;
+      height: clamp(120px, 22vh, 180px);
+
+      pointer-events: none;
+      z-index: 0;
+    }
+
+
+    /* =====================================================
+       CONTENEDOR PRINCIPAL
+       ===================================================== */
+
+    .contenedor {
+      width: 100%;
+      max-width: 400px;
+
+      /* Espacio abajo para que la ola no tape el enlace */
+      padding: 32px 28px 150px;
+
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* =====================================================
+       ENCABEZADO
+       ===================================================== */
+
+    .encabezado {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-img {
+      display: block;
+      width: 168px;
+      max-width: 60%;
+      height: auto;
+      margin: 0 auto 28px;
+    }
+
+    .icono-admin {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: Arial, sans-serif;
-      padding: 20px;
+
+      color: var(--color-primary);
     }
 
-    .card {
-      background: white;
-      border-radius: 20px;
-      padding: 40px 30px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      text-align: center;
+    .icono-admin svg {
+      width: 44px;
+      height: 44px;
+      stroke-width: 1.6;
     }
-
-    .icono { font-size: 48px; margin-bottom: 12px; }
 
     .titulo {
       font-size: 22px;
-      font-weight: bold;
-      color: #1a2e1a;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--color-text);
       margin-bottom: 6px;
     }
 
     .subtitulo {
-      color: #888;
+      color: var(--color-text-secondary);
       font-size: 14px;
-      margin-bottom: 30px;
+      line-height: 1.5;
+      font-weight: 400;
     }
 
-    .campo { margin-bottom: 16px; text-align: left; }
+
+    /* =====================================================
+       CAMPOS
+       ===================================================== */
+
+    .campo {
+      margin-bottom: 16px;
+      text-align: left;
+    }
 
     .campo label {
       display: block;
-      color: #555;
+      margin-bottom: 8px;
+
+      color: var(--color-text);
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
+      letter-spacing: 0.6px;
     }
 
     .campo input {
       width: 100%;
-      padding: 14px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
+      height: 50px;
+      padding: 0 16px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+
+      box-shadow: inset 0 2px 4px rgba(18, 61, 42, 0.05);
+
+      font-family: inherit;
       font-size: 15px;
+
       outline: none;
-      transition: border-color 0.2s;
+
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
     }
 
-    .campo input:focus { border-color: #3a7a1a; }
+    .campo input::placeholder {
+      color: var(--color-text-secondary);
+      opacity: 0.8;
+    }
+
+    /* Enfocado: borde verde de 2 px sin mover el layout */
+    .campo input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+
+    /* =====================================================
+       BOTÓN INGRESAR
+       ===================================================== */
 
     .btn-login {
       width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #1a2e1a, #3a7a1a);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
+      height: 52px;
       margin-top: 8px;
-      transition: transform 0.1s;
+
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: white;
+
+      border: none;
+      border-radius: var(--radius-button);
+      box-shadow: var(--shadow-button);
+
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
     }
 
-    .btn-login:active { transform: scale(0.98); }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-login:hover {
+      filter: brightness(0.92);
+      box-shadow: 0 7px 20px rgba(8, 122, 69, 0.22);
+    }
+
+    .btn-login:active {
+      transform: scale(0.98);
+      filter: brightness(0.85);
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    .btn-login:disabled {
+      background: var(--color-green-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
+      filter: none;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+
+    /* =====================================================
+       MENSAJE DE ERROR
+       ===================================================== */
 
     .error {
-      background: #fff0f0;
-      border: 1px solid #ffcccc;
-      color: #cc0000;
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 13px;
-      margin-top: 14px;
       display: none;
+
+      margin-top: 16px;
+      padding: 12px 14px;
+
+      background: var(--color-error-bg);
+      color: var(--color-error);
+
+      border: 1px solid var(--color-error-border);
+      border-radius: 12px;
+
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: left;
     }
 
-    .error.visible { display: block; }
+    .error.visible {
+      display: block;
+    }
+
+
+    /* =====================================================
+       ENLACE VOLVER
+       ===================================================== */
 
     .volver {
-      display: block;
-      margin-top: 20px;
-      color: #888;
+      margin-top: 24px;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      color: var(--color-text);
       text-decoration: none;
-      font-size: 13px;
+      font-size: 14px;
+      font-weight: 500;
+
+      border-radius: 8px;
+
+      transition: color 0.15s ease;
     }
+
+    .volver svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .volver:hover {
+      color: var(--color-primary);
+    }
+
+    .volver:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
     @media (max-width: 480px) {
-      .card { padding: 30px 20px; margin: 16px; }
-      .titulo { font-size: 20px; }
-      .btn-login { font-size: 15px; padding: 14px; }
+
+      .contenedor {
+        padding: 28px 24px 140px;
+      }
+
+      .logo-img {
+        width: 150px;
+        margin-bottom: 24px;
+      }
+
+      .titulo {
+        font-size: 20px;
+      }
+
+      .btn-login {
+        font-size: 15px;
+      }
     }
+
   </style>
+  <link rel="stylesheet" href="styles/avisos.css">
 </head>
+
+
 <body>
 
-  <div class="card">
-    <div class="icono">🔐</div>
-    <div class="titulo">Acceso Administrador</div>
-    <div class="subtitulo">Solo personal autorizado</div>
+  <!-- DECORACIÓN: hojas suaves arriba a la derecha -->
+  <svg class="hojas-superior" viewBox="0 0 200 200" aria-hidden="true">
+    <path d="M200 0 L200 170 C150 150 110 90 120 0 Z" fill="#C2DDCC" opacity="0.55"/>
+    <path d="M150 0 C165 40 140 90 95 100 C90 55 110 15 150 0 Z" fill="#91C59D" opacity="0.35"/>
+    <path d="M200 60 C185 100 150 130 110 135 C115 95 150 65 200 60 Z" fill="#C2DDCC" opacity="0.6"/>
+  </svg>
+
+  <!-- DECORACIÓN: ola verde abajo a la derecha -->
+  <svg class="ola-inferior" viewBox="0 0 2400 170"
+       preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="verde-ola" gradientUnits="userSpaceOnUse"
+                      x1="1000" y1="170" x2="2400" y2="0">
+        <stop offset="0" stop-color="#056337"/>
+        <stop offset="1" stop-color="#2E9A4B"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Línea fina clara sobre la ola -->
+    <path d="M0 132 C600 132 1400 118 2000 108 C2100 104 2200 86 2275 46 C2322 22 2362 8 2400 2"
+          fill="none" stroke="#91C59D" stroke-width="1.5" opacity="0.9"/>
+
+    <!-- Ola principal: se extiende hasta el borde izquierdo -->
+    <path d="M0 170 V152 C600 152 1400 138 2000 128 C2095 126 2195 108 2265 68 C2315 40 2360 22 2400 14 V170 Z"
+          fill="url(#verde-ola)"/>
+
+    <!-- Hojas translúcidas dentro de la ola -->
+    <ellipse cx="2300" cy="135" rx="62" ry="17"
+             transform="rotate(-30 2300 135)" fill="#FFFFFF" opacity="0.07"/>
+    <ellipse cx="2350" cy="110" rx="48" ry="14"
+             transform="rotate(-38 2350 110)" fill="#FFFFFF" opacity="0.07"/>
+    <ellipse cx="2230" cy="150" rx="50" ry="14"
+             transform="rotate(-20 2230 150)" fill="#FFFFFF" opacity="0.06"/>
+    <ellipse cx="1900" cy="152" rx="90" ry="12"
+             transform="rotate(-6 1900 152)" fill="#FFFFFF" opacity="0.05"/>
+  </svg>
+
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="contenedor">
+
+    <header class="encabezado">
+
+      <!-- Logo UCO (img/ucolargo.webp) -->
+      <img
+        src="img/ucolargo.webp"
+        alt="Universidad Católica de Oriente"
+        class="logo-img"
+      >
+
+      <div class="icono-admin">
+        <i data-lucide="user-cog" aria-hidden="true"></i>
+      </div>
+
+      <h1 class="titulo">Acceso Administrador</h1>
+
+      <p class="subtitulo">Solo personal autorizado</p>
+
+    </header>
+
 
     <div class="campo">
-      <label>Correo</label>
-      <input type="email" id="input-usuario" placeholder="admin@uco.edu.co">
+      <label for="input-usuario">Correo</label>
+      <input
+        type="email"
+        id="input-usuario"
+        placeholder="admin@uco.edu.co"
+        autocomplete="username"
+      >
     </div>
 
     <div class="campo">
-      <label>Contraseña</label>
-      <input type="password" id="input-password" placeholder="••••••••">
+      <label for="input-password">Contraseña</label>
+      <input
+        type="password"
+        id="input-password"
+        placeholder="••••••••"
+        autocomplete="current-password"
+      >
     </div>
 
     <button class="btn-login" id="btn-login" onclick="login()">
       Ingresar
     </button>
 
-    <div class="error" id="mensaje-error">Usuario o contraseña incorrectos</div>
+    <div class="error" id="mensaje-error" role="alert" hidden>
+      Usuario o contraseña incorrectos
+    </div>
 
-    <a href="index.html" class="volver">← Volver al menú</a>
-  </div>
+    <a href="index.html" class="volver">
+      <i data-lucide="arrow-left" aria-hidden="true"></i>
+      Volver al menú
+    </a>
 
+  </main>
+
+
+  <!-- LÓGICA DEL LOGIN (sin cambios) -->
   <script type="module">
     import { LoginAdminController } from './src/controllers/LoginAdminController.js';
     const app = new LoginAdminController();
     app.init();
   </script>
 
+  <!-- ACTIVAR LUCIDE -->
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    } else {
+      console.error("Lucide no se cargó: revisa la conexión o la URL del script.");
+    }
+  </script>
+
 </body>
-</html>
+
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#087A45">
+  <title>Cómo funciona · Campus UCO</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/ayuda.css">
+  <link rel="stylesheet" href="styles/tutorial.css">
+</head>
+<body>
+  <main class="ayuda">
+
+    <div class="ayuda-barra">
+      <a class="ayuda-volver" href="index.html"><i data-lucide="arrow-left" aria-hidden="true"></i>Inicio</a>
+      <img class="ayuda-logo" src="img/ucolargo.webp" alt="Universidad Católica de Oriente">
+    </div>
+
+    <h1>¿Cómo funciona?</h1>
+    <p class="ayuda-intro">Elige qué quieres hacer y sigue los pasos.</p>
+
+    <div class="ayuda-tabs" role="tablist" aria-label="Secciones de la ayuda">
+      <button type="button" class="ayuda-tab" role="tab" id="tab-mapa" aria-controls="panel-mapa" data-panel="mapa">
+        <i data-lucide="map" aria-hidden="true"></i>Mapa
+      </button>
+      <button type="button" class="ayuda-tab" role="tab" id="tab-carrera" aria-controls="panel-carrera" data-panel="carrera">
+        <i data-lucide="graduation-cap" aria-hidden="true"></i>Carrera
+      </button>
+      <button type="button" class="ayuda-tab" role="tab" id="tab-libre" aria-controls="panel-libre" data-panel="libre">
+        <i data-lucide="camera" aria-hidden="true"></i>Libre
+      </button>
+    </div>
+
+    <!-- ── Mapa ── -->
+    <section class="ayuda-panel" role="tabpanel" id="panel-mapa" aria-labelledby="tab-mapa">
+      <ol class="pasos">
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="map-pin" aria-hidden="true"></i></span>
+          <div><h3>Toca un edificio</h3><p>Verás su foto, una descripción y en qué parte del campus queda.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="move" aria-hidden="true"></i></span>
+          <div><h3>Muévete por el mapa</h3><p>Arrastra para moverte y pellizca, o usa + y −, para acercarte.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="layers" aria-hidden="true"></i></span>
+          <div><h3>Revisa cada piso</h3><p>En la ficha del edificio cambia de piso para ver aulas, oficinas y laboratorios.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ── Carrera ── -->
+    <section class="ayuda-panel" role="tabpanel" id="panel-carrera" aria-labelledby="tab-carrera" hidden>
+      <ol class="pasos">
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="ticket" aria-hidden="true"></i></span>
+          <div><h3>Únete con el código</h3><p>En "Iniciar carrera" escribe tu nombre y el código que te da el organizador.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="hourglass" aria-hidden="true"></i></span>
+          <div><h3>Espera la salida</h3><p>La carrera empieza cuando el organizador la activa. La cámara se abre sola.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="scan-line" aria-hidden="true"></i></span>
+          <div><h3>Encuentra el marcador</h3><p>Ve a cada edificio de tu carrera y apunta la cámara a su marcador para que salga la pregunta.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="timer" aria-hidden="true"></i></span>
+          <div><h3>Responde rápido</h3><p>En cada edificio empiezas con 1000 puntos. Pierdes 1 por segundo y 20 más por cada minuto que pase. Una respuesta incorrecta resta 100.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="trophy" aria-hidden="true"></i></span>
+          <div><h3>Revisa tus logros</h3><p>En "Mis logros" ves qué edificios ya escaneaste y cuáles te faltan.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ── Libre ── -->
+    <section class="ayuda-panel" role="tabpanel" id="panel-libre" aria-labelledby="tab-libre" hidden>
+      <ol class="pasos">
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="camera" aria-hidden="true"></i></span>
+          <div><h3>Abre el Modo Libre</h3><p>No necesitas código ni registrarte. Acepta el permiso de la cámara.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="scan" aria-hidden="true"></i></span>
+          <div><h3>Apunta al marcador</h3><p>Sobre el marcador aparecen bloques con lo que hay en el edificio.</p></div>
+        </li>
+        <li class="paso">
+          <span class="paso-icono"><i data-lucide="navigation" aria-hidden="true"></i></span>
+          <div><h3>Sigue las flechas</h3><p>Cada bloque tiene una flecha que apunta hacia donde queda ese lugar.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <div class="ayuda-acciones">
+      <button type="button" class="btn-ayuda" id="btn-camara">
+        <i data-lucide="play" aria-hidden="true"></i>Ver cómo usar la cámara
+      </button>
+      <button type="button" class="btn-ayuda-texto" id="btn-tutorial">Repetir el tutorial completo</button>
+    </div>
+
+    <h2>Si algo no funciona</h2>
+    <div class="problemas">
+      <details class="problema">
+        <summary>La cámara no abre<i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+        <p>Acepta el permiso de la cámara cuando el navegador lo pida. Si lo rechazaste, toca el ícono junto a la dirección de la página, activa la cámara y recarga.</p>
+      </details>
+      <details class="problema">
+        <summary>No detecta el marcador<i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+        <p>Párate a 30 o 50 cm, deja el marcador completo en la pantalla y con buena luz, y mantén el celular quieto un par de segundos.</p>
+      </details>
+      <details class="problema">
+        <summary>Dice que el edificio no es de mi carrera<i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+        <p>El organizador elige qué edificios entran en cada carrera. En "Mis logros" ves la lista de los que te faltan.</p>
+      </details>
+      <details class="problema">
+        <summary>Se cerró la carrera<i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+        <p>El organizador la terminó o pasaron 3 horas desde que empezó. Los edificios que escaneaste quedan guardados.</p>
+      </details>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { mostrarTutorial } from './src/views/components/Tutorial.js';
+
+    // ── Pestañas (se puede abrir una directa con ayuda.html#carrera) ──
+    const tabs = [...document.querySelectorAll('.ayuda-tab')];
+    function abrir(nombre, foco = false) {
+      if (!tabs.some(t => t.dataset.panel === nombre)) nombre = 'mapa';
+      tabs.forEach(t => {
+        const activa = t.dataset.panel === nombre;
+        t.setAttribute('aria-selected', String(activa));
+        t.tabIndex = activa ? 0 : -1;
+        document.getElementById('panel-' + t.dataset.panel).hidden = !activa;
+        if (activa && foco) t.focus();
+      });
+      history.replaceState(null, '', '#' + nombre);
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => abrir(t.dataset.panel));
+      t.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        const sig = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+        abrir(sig.dataset.panel, true);
+      });
+    });
+    abrir(location.hash.slice(1) || 'mapa');
+
+    document.getElementById('btn-camara').addEventListener('click', () => mostrarTutorial({ desde: 'camara' }));
+    document.getElementById('btn-tutorial').addEventListener('click', () => mostrarTutorial());
+
+    if (window.lucide) lucide.createIcons();
+  </script>
+</body>
+</html>

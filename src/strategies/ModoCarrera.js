@@ -15,6 +15,9 @@ import { limpiarTodo } from '../utils/storage.js';
 import { PuntosDisplay } from '../views/components/PuntosDisplay.js';
 import { PuntosController } from '../controllers/PuntosController.js';
 
+// Cuánto se queda el panel mostrando la respuesta antes de cerrarse solo
+const TIEMPO_RESULTADO_MS = 3000;
+
 export class ModoCarrera extends GameStrategy {
   constructor(participante, sesion) {
     super();
@@ -31,6 +34,11 @@ export class ModoCarrera extends GameStrategy {
     this.targetActual = null;
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
+
+    // Evita procesar dos detecciones a la vez (MindAR puede disparar
+    // targetFound varias veces seguidas si el marcador "parpadea").
+    this._procesandoDeteccion = false;
+    this._timerEstrella = null;
   }
 
   async init(contexto) {
@@ -50,15 +58,33 @@ export class ModoCarrera extends GameStrategy {
       view.mostrarSesionCerrada();
     });
 
-    view.onResponder((letra) => this._responder(letra, view));
-    view.onContinuar(() => this._continuar(contexto));
+    // Ya no hay botón "Continuar": al tocar una opción se registra el
+    // edificio de inmediato y el panel se cierra solo unos segundos después.
+    view.onResponder((letra) => this._responder(letra, contexto));
   }
 
   async manejarDeteccion(edificio, targetEntity, contexto) {
     const { view, notificacion } = contexto;
 
+    // Si ya hay una pregunta en pantalla (sin registrar), una nueva detección
+    // no debe abrir otra: antes, perder y volver a ver el marcador mostraba
+    // una pregunta nueva (otra oportunidad de responder) mientras la
+    // estrella de la anterior seguía visible.
+    if (this.preguntaActual) return;
+    if (this._procesandoDeteccion) return;
+    this._procesandoDeteccion = true;
+    try {
+      await this._procesarDeteccion(edificio, targetEntity, contexto);
+    } finally {
+      this._procesandoDeteccion = false;
+    }
+  }
+
+  async _procesarDeteccion(edificio, targetEntity, contexto) {
+    const { view, notificacion } = contexto;
+
     if (!this.edificiosHabilitados.includes(edificio.id)) {
-      notificacion.mostrar('🚫 ' + edificio.nombre, 'Este edificio no forma parte de tu carrera', null);
+      notificacion.mostrar(edificio.nombre, 'Este edificio no forma parte de tu carrera', null, 'aviso');
       return;
     }
 
@@ -70,7 +96,7 @@ export class ModoCarrera extends GameStrategy {
       .maybeSingle();
 
     if (yaEscaneado) {
-      notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, 'Ya completaste este edificio ✅', null);
+      notificacion.mostrar(edificio.nombre, 'Ya completaste este edificio', null, 'aviso');
       return;
     }
 
@@ -86,75 +112,96 @@ export class ModoCarrera extends GameStrategy {
     this.targetActual = targetEntity;
     this.respuestaRegistrada = false;
     this.respondioCorrectamente = false;
-    this.puntosController?.detener();
+    // El contador sigue corriendo mientras se lee y responde la pregunta:
+    // los puntos se toman en el momento de responder.
     view.mostrarPreguntaAR(edificio, pregunta, targetEntity);
   }
 
-  _responder(letra, view) {
-    if (this.respuestaRegistrada) return;
-    this.respuestaRegistrada = true;
-    this.respondioCorrectamente = this.preguntaActual.respuesta_correcta === letra;
-
-    view.marcarRespuestaAR(letra, this.preguntaActual.respuesta_correcta);
-
-    if (this.respondioCorrectamente && this.targetActual) {
-      const model = this.targetActual.querySelector('a-gltf-model');
-      if (model) model.setAttribute('visible', 'true');
-    }
-
-    if (this.respondioCorrectamente) {
-      this.puntosController?.aplicarBonus();
-    } else {
-      this.puntosController?.aplicarPenalizacion();
-    }
-  }
-
-  async _continuar(contexto) {
+  async _responder(letra, contexto) {
+    if (!this.preguntaActual || this.respuestaRegistrada) return;
     const { view, notificacion } = contexto;
-    view.ocultarPreguntaAR();
+    this.respuestaRegistrada = true;
 
-    if (this.targetActual) {
-      const model = this.targetActual.querySelector('a-gltf-model');
-      if (model) model.setAttribute('visible', 'false');
-    }
+    const edificio = this.edificioActual;
+    const pregunta = this.preguntaActual;
+    const target   = this.targetActual;
+    const correcta = pregunta.respuesta_correcta === letra;
+    this.respondioCorrectamente = correcta;
 
+    view.marcarRespuestaAR(letra, pregunta.respuesta_correcta);
+
+    if (correcta) this.puntosController?.aplicarBonus();
+    else this.puntosController?.aplicarPenalizacion();
+
+    // Puntos en el momento exacto de responder (ya con la penalización)
+    const puntos = this.puntosController ? this.puntosController.calcular() : 0;
+
+    // Se registra YA, sin esperar a que el panel se cierre: si el marcador se
+    // pierde o la persona se va, el edificio igual queda completado.
+    // Los 3 segundos del panel cuentan desde que se responde (en paralelo al registro)
+    const espera = new Promise(r => setTimeout(r, TIEMPO_RESULTADO_MS));
+    let resultado = null;
+    let fallo = false;
     try {
-      const puntos = this.puntosController ? this.puntosController.obtenerPuntos() : 0;
-
-      const resultado = await registrarEscaneo(
+      resultado = await registrarEscaneo(
         this.participante.id,
         this.sesion.id,
-        this.edificioActual.id,
+        edificio.id,
         this.sesion.total_edificios,
         puntos,
-        this.preguntaActual.id,
-        this.respondioCorrectamente
+        pregunta.id,
+        correcta
       );
+      // El tramo del siguiente edificio empieza ahora mismo
+      if (resultado.duplicado) { /* ya estaba registrado: no se toca el tramo */ }
+      else if (!resultado.esUltimo) this.puntosController?.resetear(this.sesion.id);
+      else this.puntosController?.detener();
+    } catch (e) {
+      console.error('Error al registrar el escaneo:', e);
+      fallo = true;
+    }
+
+    // El panel queda unos segundos mostrando el resultado y se cierra solo
+    await espera;
+    view.ocultarPreguntaAR();
+
+    try {
+      if (fallo) {
+        notificacion.mostrar('Error', 'No se pudo registrar el edificio. Vuelve a escanear el marcador.', null, 'error');
+        return;
+      }
+      if (resultado.duplicado) {
+        notificacion.mostrar(edificio.nombre, 'Ya completaste este edificio', null, 'aviso');
+        return;
+      }
+      if (correcta) this._mostrarEstrella(target);
 
       if (resultado.esUltimo) {
         await this._mostrarPantallaFinalizacion(view);
       } else {
-        notificacion.mostrar(
-          this.edificioActual.icono + ' ' + this.edificioActual.nombre,
-          'Edificio registrado — sigue al siguiente',
-          puntos
-        );
+        notificacion.mostrar(edificio.nombre, 'Edificio registrado — sigue al siguiente', puntos, 'exito');
       }
-
-      if (this.puntosController && !resultado.esUltimo) {
-        setTimeout(() => this.puntosController.resetear(this.sesion.id), 3000);
-      }
-    } catch (e) {
-      console.error('Error:', e);
-      notificacion.mostrar('❌ Error', 'No se pudo registrar el escaneo', null);
-      this.puntosController?.resetear(this.sesion.id);
+    } finally {
+      // La pregunta terminó: ya se pueden procesar nuevas detecciones.
+      this.preguntaActual = null;
+      this.edificioActual = null;
+      this.targetActual = null;
     }
+  }
+
+  /** Muestra la estrella sobre el marcador unos segundos. */
+  _mostrarEstrella(targetEntity, ms = 4000) {
+    const model = targetEntity?.querySelector('a-gltf-model');
+    if (!model) return;
+    clearTimeout(this._timerEstrella);
+    model.setAttribute('visible', 'true');
+    this._timerEstrella = setTimeout(() => model.setAttribute('visible', 'false'), ms);
   }
 
   async _registrarSinPregunta(edificio, targetEntity, contexto) {
     const { view, notificacion } = contexto;
     try {
-      const puntos = this.puntosController ? this.puntosController.obtenerPuntos() : 0;
+      const puntos = this.puntosController ? this.puntosController.calcular() : 0;
       const resultado = await registrarEscaneo(
         this.participante.id,
         this.sesion.id,
@@ -164,31 +211,21 @@ export class ModoCarrera extends GameStrategy {
       );
 
       if (resultado.duplicado) {
-        notificacion.mostrar(edificio.icono + ' Ya escaneado', `${edificio.nombre} ya fue registrado`, null);
+        notificacion.mostrar('Ya escaneado', `${edificio.nombre} ya fue registrado`, null, 'aviso');
         return;
       }
 
-      this.puntosController?.detener();
-
-      if (targetEntity) {
-        const model = targetEntity.querySelector('a-gltf-model');
-        if (model) {
-          model.setAttribute('visible', 'true');
-          setTimeout(() => model.setAttribute('visible', 'false'), 4000);
-        }
-      }
+      this._mostrarEstrella(targetEntity);
 
       if (resultado.esUltimo) {
         await this._mostrarPantallaFinalizacion(view);
       } else {
-        notificacion.mostrar(edificio.icono + ' ' + edificio.nombre, 'Edificio registrado', puntos);
+        notificacion.mostrar(edificio.nombre, 'Edificio registrado', puntos, 'exito');
       }
 
-      if (this.puntosController && !resultado.esUltimo) {
-        setTimeout(() => this.puntosController.resetear(this.sesion.id), 3000);
-      }
+      if (!resultado.esUltimo) this.puntosController?.resetear(this.sesion.id);
     } catch (e) {
-      notificacion.mostrar('❌ Error', 'No se pudo registrar', null);
+      notificacion.mostrar('Error', 'No se pudo registrar', null, 'error');
     }
   }
 
@@ -209,7 +246,7 @@ export class ModoCarrera extends GameStrategy {
     const seg = tiempoTotal % 60;
     const tiempoStr = `${min}m ${seg}s`;
 
-    view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr);
+    view.mostrarPantallaFinalizacion(nombre, puntosTotal, tiempoStr, { sesion: this.sesion, fecha: new Date() });
   }
 
   alCargarEscena(contexto) {
@@ -256,4 +293,4 @@ export class ModoCarrera extends GameStrategy {
     this.sesionObserver?.destruir();
     this.puntosController?.detener();
   }
-}
+}

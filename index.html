@@ -1,100 +1,588 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campus</title>
+
+  <title>Campus UCO</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
+  <!-- TIPOGRAFÍA INTER -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- LUCIDE ICONS (archivo UMD exacto, versión fija) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* =====================================================
+       VARIABLES DEL DESIGN SYSTEM
+       ===================================================== */
+
+    :root {
+
+      /* Verde UCO */
+      --color-primary: #087A45;
+      --color-primary-dark: #056337;
+      --color-primary-pressed: #04532E;
+
+      /* Verdes secundarios */
+      --color-secondary: #299447;
+      --color-green-light: #91C59D;
+      --color-green-soft: #C2DDCC;
+
+      /* Fondos */
+      --color-background: #F8FAF9;
+      --color-surface: #FFFFFF;
+
+      /* Textos */
+      --color-text: #123D2A;
+      --color-text-secondary: #71817A;
+
+      /* Bordes */
+      --color-border: #E2E9E5;
+
+      /* Radios */
+      --radius-card: 18px;
+      --radius-button: 14px;
+
+      /* Sombras */
+      --shadow-card: 0 4px 16px rgba(18, 61, 42, 0.08);
+      --shadow-button: 0 4px 12px rgba(8, 122, 69, 0.18);
+    }
+
+
+    /* =====================================================
+       RESET
+       ===================================================== */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+
+    /* =====================================================
+       BODY
+       ===================================================== */
 
     body {
-      background: radial-gradient(ellipse at center, #8ab54e 0%, #5a8a2a 100%);
-      height: 100vh;
+      min-height: 100vh;
+      min-height: 100dvh;
+
+      background: var(--color-background);
+
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      font-family: Arial, sans-serif;
+      align-items: center;
+
+      font-family: 'Inter', sans-serif;
+      color: var(--color-text);
+
+      overflow-x: hidden;
+      position: relative;
     }
+
+
+    /* =====================================================
+       DECORACIÓN
+       ===================================================== */
+
+    .decoracion {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+
+    /* ESQUINA SUPERIOR IZQUIERDA */
+
+    .decoracion-superior {
+      width: 220px;
+      height: 220px;
+
+      top: -105px;
+      left: -80px;
+
+      background: #91C59D;
+
+      border-radius: 70% 30% 65% 35% / 55% 45% 55% 45%;
+
+      opacity: 0.55;
+      transform: rotate(-25deg);
+    }
+
+    .decoracion-superior::before {
+      content: "";
+      position: absolute;
+
+      width: 125px;
+      height: 75px;
+
+      top: 115px;
+      left: 95px;
+
+      background: #299447;
+
+      border-radius: 80% 20% 80% 20% / 60% 40% 60% 40%;
+
+      opacity: 0.42;
+      transform: rotate(35deg);
+    }
+
+    .decoracion-superior::after {
+      content: "";
+      position: absolute;
+
+      width: 95px;
+      height: 58px;
+
+      top: 145px;
+      left: 135px;
+
+      background: #087A45;
+
+      border-radius: 80% 20% 80% 20% / 60% 40% 60% 40%;
+
+      opacity: 0.28;
+      transform: rotate(65deg);
+    }
+
+
+    /* ESQUINA INFERIOR DERECHA */
+
+    .decoracion-inferior {
+      width: 240px;
+      height: 240px;
+
+      bottom: -130px;
+      right: -95px;
+
+      background: #91C59D;
+
+      border-radius: 30% 70% 35% 65% / 45% 55% 45% 55%;
+
+      opacity: 0.48;
+      transform: rotate(25deg);
+    }
+
+    .decoracion-inferior::before {
+      content: "";
+      position: absolute;
+
+      width: 135px;
+      height: 80px;
+
+      bottom: 125px;
+      right: 105px;
+
+      background: #299447;
+
+      border-radius: 20% 80% 20% 80% / 40% 60% 40% 60%;
+
+      opacity: 0.38;
+      transform: rotate(-35deg);
+    }
+
+    .decoracion-inferior::after {
+      content: "";
+      position: absolute;
+
+      width: 100px;
+      height: 62px;
+
+      bottom: 155px;
+      right: 145px;
+
+      background: #087A45;
+
+      border-radius: 20% 80% 20% 80% / 40% 60% 40% 60%;
+
+      opacity: 0.25;
+      transform: rotate(-65deg);
+    }
+
+
+    /* =====================================================
+       CONTENEDOR PRINCIPAL
+       ===================================================== */
+
+    .contenedor {
+      width: 100%;
+      max-width: 430px;
+      padding: 32px 24px;
+
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* =====================================================
+       ENCABEZADO
+       ===================================================== */
+
+    .encabezado {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    /* Logo UCO */
+
+    .logo-img {
+      display: block;
+      width: 168px;
+      max-width: 60%;
+      height: auto;
+      margin: 0 auto 24px;
+    }
+
+    /* Línea pequeña bajo el logo */
+
+    .divisor {
+      width: 32px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--color-green-soft);
+      margin: 0 auto 24px;
+    }
+
+    /* Título */
 
     .logo {
-      font-size: 32px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      color: var(--color-text);
       margin-bottom: 10px;
-      text-align: center;
     }
 
+    /* Subtítulo */
+
     .subtitulo {
-      color: rgba(255,255,255,0.85);
-      font-size: 16px;
-      margin-bottom: 50px;
-      text-align: center;
+      color: var(--color-text-secondary);
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 400;
     }
+
+
+    /* =====================================================
+       BOTONES
+       ===================================================== */
 
     .botones {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      width: 280px;
+      gap: 12px;
     }
 
     .btn {
-      padding: 16px 24px;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
+      width: 100%;
+      min-height: 68px;
+      padding: 16px;
+
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      background: var(--color-surface);
+      color: var(--color-text);
+
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+
       text-decoration: none;
-      text-align: center;
-    }
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
 
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-mapa {
-      background: white;
-      color: #3a7a1a;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .btn-carrera {
-      background: #2a5a0a;
-      color: white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .btn-ar {
-      background: #1a1a5e;
-      color: white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease;
     }
 
     .btn:hover {
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
       transform: translateY(-2px);
+      box-shadow: 0 7px 20px rgba(18, 61, 42, 0.11);
+      border-color: #D5E1DB;
     }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+
+    /* =====================================================
+       ICONOS DE LOS BOTONES (sin recuadro de fondo)
+       ===================================================== */
+
+    .btn-icono {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--color-primary);
+    }
+
+    .btn-icono svg {
+      width: 26px;
+      height: 26px;
+      stroke-width: 1.75;
+    }
+
+
+    /* TEXTO DEL BOTÓN */
+
+    .btn-texto {
+      flex: 1;
+      text-align: left;
+    }
+
+
+    /* FLECHAS */
+
+    .btn-flecha {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--color-text-secondary);
+      stroke-width: 2;
+    }
+
+
+    /* =====================================================
+       BOTÓN INICIAR CARRERA
+       ===================================================== */
+
+    .btn-carrera {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-button);
+    }
+
+    .btn-carrera:hover {
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+      box-shadow: 0 7px 20px rgba(8, 122, 69, 0.22);
+    }
+
+    .btn-carrera:active {
+      background: var(--color-primary-pressed);
+    }
+
+    .btn-carrera .btn-icono {
+      background: none;
+      color: white;
+    }
+
+    .btn-carrera .btn-flecha {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
     @media (max-width: 480px) {
-      .botones { width: 90%; max-width: 280px; }
-      .btn { font-size: 16px; padding: 14px; }
+
+      .contenedor {
+        padding: 28px 20px;
+      }
+
+      .encabezado {
+        margin-bottom: 30px;
+      }
+
+      .logo-img {
+        width: 150px;
+        margin-bottom: 20px;
+      }
+
+      .divisor {
+        margin-bottom: 20px;
+      }
+
+      .logo {
+        font-size: 25px;
+      }
+
+      .subtitulo {
+        font-size: 14px;
+      }
+
+      .btn {
+        min-height: 64px;
+      }
+    }
+
+    /* =====================================================
+       ENLACE DE AYUDA
+       ===================================================== */
+
+    .enlace-ayuda {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      min-height: 48px;
+      margin-top: 18px;
+
+      color: var(--color-primary);
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .enlace-ayuda svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .enlace-ayuda:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+      border-radius: 12px;
     }
   </style>
+  <link rel="stylesheet" href="styles/tutorial.css">
 </head>
+
+
 <body>
 
-  <div class="logo">Universidad Catolica De Oriente</div>
-  <div class="subtitulo">Bienvenido al mapa interactivo</div>
+  <!-- DECORACIONES -->
+  <div class="decoracion decoracion-superior"></div>
+  <div class="decoracion decoracion-inferior"></div>
 
-  <div class="botones">
-    <a href="mapa.html" class="btn btn-mapa">Mapa</a>
-    <a href="carrera.html" class="btn btn-carrera">Iniciar Carrera</a>
-    <a href="ar.html" class="btn btn-ar" onclick="localStorage.clear()">📷 Modo Libre</a>
-    <a href="login-admin.html" class="btn" style="background: rgba(255,255,255,0.2); color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">⚙️ Admin</a>
-  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="contenedor">
+
+    <!-- ENCABEZADO -->
+    <header class="encabezado">
+
+      <!-- Logo UCO (img/ucolargo.webp) -->
+      <img
+        src="img/ucolargo.webp"
+        alt="Universidad Católica de Oriente"
+        class="logo-img"
+      >
+
+      <div class="divisor"></div>
+
+      <h1 class="logo">
+        Universidad Católica<br>
+        de Oriente
+      </h1>
+
+      <p class="subtitulo">
+        Bienvenido al mapa interactivo
+      </p>
+
+    </header>
+
+
+    <!-- BOTONES PRINCIPALES -->
+    <nav class="botones">
+
+      <!-- MAPA -->
+      <a href="mapa.html" class="btn">
+        <span class="btn-icono">
+          <i data-lucide="map"></i>
+        </span>
+        <span class="btn-texto">Mapa</span>
+        <i data-lucide="chevron-right" class="btn-flecha" aria-hidden="true"></i>
+      </a>
+
+      <!-- INICIAR CARRERA -->
+      <a href="carrera.html" class="btn btn-carrera">
+        <span class="btn-icono">
+          <i data-lucide="graduation-cap"></i>
+        </span>
+        <span class="btn-texto">Iniciar Carrera</span>
+        <i data-lucide="chevron-right" class="btn-flecha" aria-hidden="true"></i>
+      </a>
+
+      <!-- MODO LIBRE -->
+      <a href="ar.html" class="btn" onclick="limpiarCarrera()">
+        <span class="btn-icono">
+          <i data-lucide="camera"></i>
+        </span>
+        <span class="btn-texto">Modo Libre</span>
+        <i data-lucide="chevron-right" class="btn-flecha" aria-hidden="true"></i>
+      </a>
+
+      <!-- ADMINISTRACIÓN -->
+      <a href="login-admin.html" class="btn">
+        <span class="btn-icono">
+          <i data-lucide="settings"></i>
+        </span>
+        <span class="btn-texto">Administración</span>
+        <i data-lucide="chevron-right" class="btn-flecha" aria-hidden="true"></i>
+      </a>
+
+    </nav>
+
+    <!-- AYUDA -->
+    <a href="ayuda.html" class="enlace-ayuda">
+      <i data-lucide="circle-help" aria-hidden="true"></i>
+      ¿Cómo funciona?
+    </a>
+
+  </main>
+
+
+  <!-- TUTORIAL: se muestra solo la primera vez que se abre la app -->
+  <script type="module">
+    import { mostrarTutorial, tutorialPendiente } from './src/views/components/Tutorial.js';
+    if (tutorialPendiente()) mostrarTutorial();
+  </script>
+
+  <script>
+    // Modo Libre: borra solo los datos de una carrera anterior (antes se
+    // usaba localStorage.clear(), que también borraba otras cosas, como
+    // la marca de que ya se vio el tutorial).
+    function limpiarCarrera() {
+      ['participante', 'sesion', 'puntos_tramo', 'puntos_actuales', 'puntos_timestamp', 'puntos_sesion']
+        .forEach(k => localStorage.removeItem(k));
+    }
+  </script>
+
+  <!-- ACTIVAR LUCIDE -->
+  <script>
+    if (window.lucide) {
+      lucide.createIcons();
+    } else {
+      console.error("Lucide no se cargó: revisa la conexión o la URL del script.");
+    }
+  </script>
 
 </body>
-</html>
+
+</html>

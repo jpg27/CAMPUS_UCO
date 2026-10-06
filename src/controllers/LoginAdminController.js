@@ -4,6 +4,7 @@
  * nada de credenciales hardcodeadas ni sessionStorage como "autenticación".
  */
 import { iniciarSesionAdmin, obtenerSesionAdmin } from '../models/AuthModel.js';
+import { mostrarAviso, ocultarAviso } from '../views/components/Avisos.js';
 
 export class LoginAdminController {
   async init() {
@@ -27,13 +28,11 @@ export class LoginAdminController {
       const email    = document.getElementById('input-usuario').value.trim();
       const password = document.getElementById('input-password').value.trim();
       const btn      = document.getElementById('btn-login');
-      const error    = document.getElementById('mensaje-error');
-
-      error.classList.remove('visible');
+      ocultarAviso();
 
       if (!email || !password) {
-        error.textContent = 'Completa usuario y contraseña';
-        error.classList.add('visible');
+        mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Escribe tu correo y tu contraseña.' });
+        (email ? document.getElementById('input-password') : document.getElementById('input-usuario')).focus();
         return;
       }
 
@@ -44,8 +43,7 @@ export class LoginAdminController {
         await iniciarSesionAdmin(email, password);
         window.location.href = 'admin.html';
       } catch (e) {
-        error.textContent = 'Usuario o contraseña incorrectos';
-        error.classList.add('visible');
+        mostrarAviso({ tipo: 'error', titulo: 'No pudimos iniciar sesión', texto: 'El correo o la contraseña no son correctos.' });
         btn.disabled = false;
         btn.textContent = 'Ingresar';
       }

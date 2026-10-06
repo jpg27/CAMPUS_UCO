@@ -2,27 +2,36 @@
 // CarreraView.js — Vista de unirse a carrera
 // Extraído fielmente de carrera.html original
 // ═══════════════════════════════════════════
+import { mostrarAviso, ocultarAviso } from './components/Avisos.js';
 
 export class CarreraView {
   obtenerDatosFormulario() {
     return {
-      nombre: document.getElementById('input-nombre').value.trim(),
+      // Quita espacios repetidos: "Juan   Pérez" → "Juan Pérez"
+      nombre: document.getElementById('input-nombre').value.trim().replace(/\s+/g, ' '),
       codigo: document.getElementById('input-codigo').value.trim()
     };
   }
 
-  mostrarError(msg) {
-    const error = document.getElementById('mensaje-error');
-    error.textContent = msg;
-    error.classList.add('visible');
+  /** Muestra el error como notificación de la app y marca el campo con problema. */
+  mostrarError(texto, { titulo = 'Revisa tus datos', tipo = 'aviso', campo = null } = {}) {
+    mostrarAviso({ tipo, titulo, texto });
+    if (campo) {
+      const input = document.getElementById(campo);
+      input?.setAttribute('aria-invalid', 'true');
+      input?.focus();
+    }
   }
 
   ocultarError() {
-    document.getElementById('mensaje-error').classList.remove('visible');
+    ocultarAviso();
+    document.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
   }
 
   deshabilitarBoton(texto) {
     const btn = document.getElementById('btn-unirse');
+    // Guarda el contenido original (ícono ▶ + texto) para restaurarlo después
+    this._htmlBoton ??= btn.innerHTML;
     btn.disabled = true;
     btn.textContent = texto;
   }
@@ -30,7 +39,8 @@ export class CarreraView {
   habilitarBoton() {
     const btn = document.getElementById('btn-unirse');
     btn.disabled = false;
-    btn.textContent = ' Unirse a la carrera';
+    if (this._htmlBoton) btn.innerHTML = this._htmlBoton;
+    else btn.textContent = 'Unirse a la carrera';
   }
 
   mostrarEspera(nombre, sesion) {
@@ -42,12 +52,12 @@ export class CarreraView {
 
   mostrarSesionActivada() {
     document.querySelector('.espera-estado').innerHTML =
-      '<span style="color: #3a7a1a; font-weight: bold;"> ¡Iniciando carrera!</span>';
+      '<span style="color: var(--color-primary); font-weight: 700;">¡Iniciando carrera!</span>';
   }
 
   mostrarSesionCerrada() {
     document.querySelector('.espera-estado').innerHTML =
-      '<span style="color: #cc0000;"> La sesión fue cerrada</span>';
+      '<span style="color: var(--color-error, #B42318); font-weight: 600;">La sesión fue cerrada</span>';
   }
 
   onUnirse(callback) {

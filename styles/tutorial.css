@@ -1,0 +1,143 @@
+/* ═══════════════════════════════════════════
+   tutorial.css — Tutorial deslizable (primera vez / desde la ayuda)
+   Usa las variables de styles/tokens.css; los valores después de la coma
+   son el respaldo para páginas que no lo cargan (p. ej. index.html).
+   ═══════════════════════════════════════════ */
+
+.tutorial {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column;
+  background: var(--color-background, #F8FAF9);
+  font-family: var(--fuente, 'Inter', system-ui, sans-serif);
+  color: var(--color-text, #123D2A);
+}
+.tutorial[hidden] { display: none; }
+
+.tutorial-barra {
+  display: flex; justify-content: flex-end;
+  padding: max(14px, env(safe-area-inset-top)) 16px 0;
+}
+.tutorial-saltar {
+  min-height: 40px; padding: 0 14px;
+  border: 0; border-radius: 999px;
+  background: transparent; color: var(--color-text-secondary, #71817A);
+  font: 600 var(--t-s, .875rem) var(--fuente, 'Inter', system-ui, sans-serif); cursor: pointer;
+}
+
+/* Carril horizontal: cada tarjeta ocupa todo el ancho y se desliza con el dedo */
+.tutorial-carril {
+  flex: 1; min-height: 0;
+  display: flex;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.tutorial-carril::-webkit-scrollbar { display: none; }
+
+.tutorial-paso {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  display: flex; flex-direction: column; align-items: center;
+  /* "safe": si el contenido no cabe, se alinea arriba en vez de cortarse
+     por arriba y por abajo; y la tarjeta puede desplazarse en vertical */
+  justify-content: safe center;
+  overflow-y: auto;
+  gap: clamp(12px, 3dvh, 22px);
+  padding: 12px 28px;
+  text-align: center;
+}
+.tutorial-ilustracion {
+  flex: none;
+  /* El tamaño depende también del ALTO de la pantalla: en un portátil
+     (pantalla baja) la ilustración se achica y el texto cabe completo */
+  width: min(78vw, 300px, 40dvh); aspect-ratio: 1;
+  display: grid; place-items: center;
+  border-radius: 32px;
+  background: var(--color-green-tint, #EAF5EE);
+}
+.tutorial-ilustracion svg { width: 82%; height: 82%; overflow: visible; }
+
+.tutorial-texto { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.tutorial-paso h2 {
+  font-size: 1.5rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.2;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+.tutorial-paso p {
+  color: var(--color-text-secondary, #71817A);
+  font-size: var(--t-m, 1rem); line-height: 1.5;
+  max-width: 32ch;
+  text-wrap: pretty;
+}
+
+.tutorial-pie {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px 24px calc(20px + env(safe-area-inset-bottom));
+  max-width: 520px; width: 100%; margin: 0 auto;
+}
+.tutorial-puntos { display: flex; gap: 6px; }
+.tutorial-puntos span {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--color-border, #E2E9E5);
+  transition: width .25s, background .25s;
+}
+.tutorial-puntos span[aria-current="true"] { width: 22px; background: var(--color-primary, #087A45); }
+
+.tutorial-siguiente {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 50px; padding: 0 24px;
+  border: 0; border-radius: var(--radius-button, 14px);
+  background: var(--color-primary, #087A45); color: #fff;
+  font: 700 var(--t-m, 1rem) var(--fuente, 'Inter', system-ui, sans-serif);
+  box-shadow: var(--shadow-button, 0 4px 12px rgba(8, 122, 69, 0.18));
+  cursor: pointer;
+}
+.tutorial-siguiente svg { width: 18px; height: 18px; }
+
+/* ── Animaciones de las ilustraciones ── */
+.tut-escaneo { animation: tut-escaneo 2.4s ease-in-out infinite; }
+@keyframes tut-escaneo {
+  0%, 100% { transform: translateY(0); opacity: .9; }
+  50%      { transform: translateY(62px); opacity: .9; }
+}
+.tut-estrella { transform-origin: 150px 92px; animation: tut-estrella 2.4s ease-in-out infinite; }
+@keyframes tut-estrella {
+  0%, 55%  { transform: scale(0); opacity: 0; }
+  70%      { transform: scale(1.15); opacity: 1; }
+  80%, 100%{ transform: scale(1); opacity: 1; }
+}
+.tut-pin { animation: tut-pin 2s ease-in-out infinite; }
+@keyframes tut-pin {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tut-escaneo, .tut-estrella, .tut-pin { animation: none; }
+  .tut-estrella { transform: none; opacity: 1; }
+  .tutorial-carril { scroll-behavior: auto; }
+}
+
+@media (min-width: 900px) and (min-height: 760px) {
+  .tutorial-paso h2 { font-size: 1.8rem; }
+}
+
+/* Pantallas bajas (portátiles, celular en horizontal) */
+@media (max-height: 640px) {
+  .tutorial-paso h2 { font-size: 1.3rem; }
+  .tutorial-paso p { font-size: .95rem; line-height: 1.4; }
+  .tutorial-ilustracion { border-radius: 24px; }
+  .tutorial-pie { padding-top: 10px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+}
+
+/* Celular en horizontal: ilustración a la izquierda y texto a la derecha */
+@media (max-height: 480px) and (orientation: landscape) {
+  .tutorial-paso {
+    flex-direction: row; justify-content: center;
+    gap: 28px; padding: 4px 32px;
+    text-align: left;
+  }
+  .tutorial-ilustracion { width: min(38vw, 58dvh); }
+  .tutorial-texto { align-items: flex-start; gap: 8px; max-width: 46ch; }
+}
