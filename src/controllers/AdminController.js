@@ -9,12 +9,10 @@ import {
   activarSesion as activarSesionDB, 
   cerrarSesion as cerrarSesionDB,
   cerrarSesionesCaducadas,
-  conEstadoReal,
-  estaCaducada,
   eliminarSesion
 } from '../models/SesionModel.js';
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
-import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
+import { obtenerPreguntas, crearPregunta, actualizarPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo } from '../utils/formatters.js';
 import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
 import { mostrarAviso, confirmar } from '../views/components/Avisos.js';
@@ -24,16 +22,14 @@ export class AdminController {
     this.sesionActual = null;
     this.suscripcion = null;
     this.edificioSeleccionado = null;
+    this.preguntasCargadas = new Map();   // id → pregunta (para editar)
+    this.preguntaEditando = null;         // id de la pregunta en edición
   }
 
   destruir() {
     if (this.suscripcion) {
       supabase.removeChannel(this.suscripcion);
       this.suscripcion = null;
-    }
-    if (this.canalSesiones) {
-      supabase.removeChannel(this.canalSesiones);
-      this.canalSesiones = null;
     }
   }
 
@@ -51,47 +47,9 @@ export class AdminController {
     this._initTabPreguntas();
     this._exposeWindowFunctions();
     
-    // Cambios en "sesiones" en tiempo real: si una sesión se cierra sola
-    // (job de pg_cron o el autocierre de abajo) o desde otro dispositivo, el
-    // historial y el panel de control se actualizan sin recargar la página.
-    this._escucharSesiones();
-
     // Autocierre de sesiones activas (inicial y cada 5 minutos)
-    await this._autocierre();
-    setInterval(() => this._autocierre(), 5 * 60 * 1000);
-  }
-
-  async _autocierre() {
-    const cerradas = await cerrarSesionesCaducadas();
-    // La sesión abierta en el panel también se marca si ya caducó, aunque la
-    // base no se haya podido actualizar desde aquí.
-    if (estaCaducada(this.sesionActual)) cerradas.push(this.sesionActual.id);
-    if (cerradas.length) this._alCambiarSesiones(cerradas.map(id => ({ id, estado: 'cerrada' })));
-  }
-
-  _escucharSesiones() {
-    this.canalSesiones = supabase
-      .channel('admin-sesiones')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sesiones' },
-        (payload) => this._alCambiarSesiones([payload.new || payload.old]))
-      .subscribe();
-  }
-
-  /** Refresca lo que esté en pantalla cuando cambia el estado de una o más sesiones. */
-  _alCambiarSesiones(cambios) {
-    const historialVisible = document.getElementById('pantalla-historial')?.classList.contains('visible');
-    if (historialVisible) this._cargarHistorialEnSegundoPlano();
-
-    // La sesión abierta en el panel de control se cerró sin que el admin la cerrara
-    const actual = this.sesionActual;
-    const cambio = actual && cambios.find(c => c?.id === actual.id);
-    if (cambio && cambio.estado === 'cerrada' && actual.estado !== 'cerrada') {
-      actual.estado = 'cerrada';
-      this._actualizarBadge('cerrada');
-      document.getElementById('btn-activar').disabled = true;
-      document.getElementById('btn-cerrar').disabled  = true;
-      mostrarAviso({ tipo: 'aviso', titulo: 'La sesión se cerró', texto: `"${actual.nombre}" se cerró automáticamente al cumplir el tiempo máximo.`, duracion: 8000 });
-    }
+    await cerrarSesionesCaducadas();
+    setInterval(cerrarSesionesCaducadas, 5 * 60 * 1000);
   }
 
   // ── Grid de edificios (nueva carrera) ──
@@ -133,6 +91,7 @@ export class AdminController {
   async _seleccionarEdificioPreguntas(edificio, btnEl) {
     document.querySelectorAll('.preg-edificio-btn').forEach(b => b.classList.remove('activo'));
     btnEl.classList.add('activo');
+    this._salirDeEdicion();
     this.edificioSeleccionado = edificio;
     document.getElementById('seccion-preguntas-edificio').style.display = 'block';
     await this._cargarPreguntasEdificio(edificio.id);
@@ -143,26 +102,60 @@ export class AdminController {
     lista.innerHTML = '<p style="color:#888;font-size:14px;">Cargando...</p>';
 
     const preguntas = await obtenerPreguntas(edificioId);
+    this.preguntasCargadas = new Map(preguntas.map(p => [String(p.id), p]));
 
     if (preguntas.length === 0) {
       lista.innerHTML = '<p style="color:#888;font-size:14px;text-align:center;padding:16px;">No hay preguntas para este edificio</p>';
       return;
     }
 
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     lista.innerHTML = preguntas.map(p => `
-      <div class="pregunta-item">
+      <div class="pregunta-item${String(p.id) === this.preguntaEditando ? ' editando' : ''}" data-id="${esc(p.id)}">
         <div class="pregunta-item-header">
-          <div class="preg-texto">${p.pregunta}</div>
-          <button class="btn-peligro" onclick="borrarPregunta('${p.id}')">🗑️ Eliminar</button>
+          <div class="preg-texto">${esc(p.pregunta)}</div>
+          <div class="preg-acciones">
+            <button class="btn-editar" onclick="editarPregunta('${esc(p.id)}')"><i data-lucide="pencil" aria-hidden="true"></i>Editar</button>
+            <button class="btn-peligro" onclick="borrarPregunta('${esc(p.id)}')"><i data-lucide="trash-2" aria-hidden="true"></i>Eliminar</button>
+          </div>
         </div>
         <div class="preg-opciones">
-          <span class="${p.respuesta_correcta === 'a' ? 'correcta' : ''}">A) ${p.opcion_a}</span><br>
-          <span class="${p.respuesta_correcta === 'b' ? 'correcta' : ''}">B) ${p.opcion_b}</span><br>
-          <span class="${p.respuesta_correcta === 'c' ? 'correcta' : ''}">C) ${p.opcion_c}</span><br>
-          <span class="${p.respuesta_correcta === 'd' ? 'correcta' : ''}">D) ${p.opcion_d}</span>
+          <span class="${p.respuesta_correcta === 'a' ? 'correcta' : ''}">A) ${esc(p.opcion_a)}</span><br>
+          <span class="${p.respuesta_correcta === 'b' ? 'correcta' : ''}">B) ${esc(p.opcion_b)}</span><br>
+          <span class="${p.respuesta_correcta === 'c' ? 'correcta' : ''}">C) ${esc(p.opcion_c)}</span><br>
+          <span class="${p.respuesta_correcta === 'd' ? 'correcta' : ''}">D) ${esc(p.opcion_d)}</span>
         </div>
       </div>
     `).join('');
+  }
+
+  // ── Edición de preguntas ──
+  _limpiarFormularioPregunta() {
+    ['nueva-pregunta', 'nueva-opcion-a', 'nueva-opcion-b', 'nueva-opcion-c', 'nueva-opcion-d']
+      .forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('nueva-respuesta-correcta').value = 'a';
+  }
+
+  /** Pone el formulario en modo "Nueva pregunta". */
+  _salirDeEdicion() {
+    this.preguntaEditando = null;
+    document.getElementById('titulo-form-pregunta').textContent = 'Nueva pregunta';
+    document.getElementById('bloque-form-pregunta').classList.remove('modo-edicion');
+    document.getElementById('btn-guardar-pregunta').innerHTML = '<i data-lucide="save" aria-hidden="true"></i>Guardar pregunta';
+    document.getElementById('btn-cancelar-edicion').hidden = true;
+    document.getElementById('aviso-edicion-activa').hidden = true;
+    document.querySelectorAll('.pregunta-item.editando').forEach(el => el.classList.remove('editando'));
+  }
+
+  async _hayCarreraActiva() {
+    try {
+      const { count } = await supabase.from('sesiones')
+        .select('id', { count: 'exact', head: true })
+        .eq('estado', 'activa');
+      return (count || 0) > 0;
+    } catch (e) {
+      return false;
+    }
   }
 
   // ── Exponer funciones al window ──
@@ -256,19 +249,62 @@ export class AdminController {
         return;
       }
 
+      const opciones = { a: opA, b: opB, c: opC, d: opD };
+      const editando = this.preguntaEditando;
+      const btn = document.getElementById('btn-guardar-pregunta');
+      btn.disabled = true;
       try {
-        await crearPregunta(this.edificioSeleccionado.id, pregunta, { a: opA, b: opB, c: opC, d: opD }, correcta);
-        document.getElementById('nueva-pregunta').value = '';
-        document.getElementById('nueva-opcion-a').value = '';
-        document.getElementById('nueva-opcion-b').value = '';
-        document.getElementById('nueva-opcion-c').value = '';
-        document.getElementById('nueva-opcion-d').value = '';
-        document.getElementById('nueva-respuesta-correcta').value = 'a';
+        if (editando) {
+          await actualizarPregunta(editando, pregunta, opciones, correcta);
+        } else {
+          await crearPregunta(this.edificioSeleccionado.id, pregunta, opciones, correcta);
+        }
+        this._limpiarFormularioPregunta();
+        this._salirDeEdicion();
         await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
-        mostrarAviso({ tipo: 'exito', titulo: 'Pregunta guardada', texto: `Se agregó a ${this.edificioSeleccionado.nombre}.` });
+        mostrarAviso(editando
+          ? { tipo: 'exito', titulo: 'Cambios guardados', texto: 'La pregunta se actualizó.' }
+          : { tipo: 'exito', titulo: 'Pregunta guardada', texto: `Se agregó a ${this.edificioSeleccionado.nombre}.` });
       } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No se pudo guardar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
+        console.error('[Admin] Error guardando pregunta:', e);
+        mostrarAviso({ tipo: 'error', titulo: editando ? 'No se pudieron guardar los cambios' : 'No se pudo guardar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
+      } finally {
+        btn.disabled = false;
       }
+    };
+
+    window.editarPregunta = async (preguntaId) => {
+      const p = this.preguntasCargadas.get(String(preguntaId));
+      if (!p) return;
+      this.preguntaEditando = String(p.id);
+
+      document.getElementById('nueva-pregunta').value = p.pregunta || '';
+      document.getElementById('nueva-opcion-a').value = p.opcion_a || '';
+      document.getElementById('nueva-opcion-b').value = p.opcion_b || '';
+      document.getElementById('nueva-opcion-c').value = p.opcion_c || '';
+      document.getElementById('nueva-opcion-d').value = p.opcion_d || '';
+      document.getElementById('nueva-respuesta-correcta').value = p.respuesta_correcta || 'a';
+
+      document.getElementById('titulo-form-pregunta').textContent = 'Editar pregunta';
+      document.getElementById('bloque-form-pregunta').classList.add('modo-edicion');
+      document.getElementById('btn-guardar-pregunta').innerHTML = '<i data-lucide="save" aria-hidden="true"></i>Guardar cambios';
+      document.getElementById('btn-cancelar-edicion').hidden = false;
+
+      document.querySelectorAll('.pregunta-item').forEach(el =>
+        el.classList.toggle('editando', el.dataset.id === this.preguntaEditando));
+
+      const bloque = document.getElementById('bloque-form-pregunta');
+      bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('nueva-pregunta').focus({ preventScroll: true });
+
+      const aviso = document.getElementById('aviso-edicion-activa');
+      aviso.hidden = true;
+      if (await this._hayCarreraActiva() && this.preguntaEditando === String(p.id)) aviso.hidden = false;
+    };
+
+    window.cancelarEdicionPregunta = () => {
+      this._limpiarFormularioPregunta();
+      this._salirDeEdicion();
     };
 
     window.borrarPregunta = async (preguntaId) => {
@@ -276,6 +312,10 @@ export class AdminController {
       if (!ok) return;
       try {
         await eliminarPregunta(preguntaId);
+        if (this.preguntaEditando === String(preguntaId)) {
+          this._limpiarFormularioPregunta();
+          this._salirDeEdicion();
+        }
         await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
       } catch (e) {
         mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
@@ -283,10 +323,7 @@ export class AdminController {
     };
 
     window.verDetalleSesion = async (sesionId, { forzarDetalle = false } = {}) => {
-      const { data: sesionBD } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
-      // Si ya pasó el tiempo máximo se muestra como cerrada aunque la base
-      // todavía no se haya actualizado.
-      const sesion = conEstadoReal(sesionBD);
+      const { data: sesion } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
 
       // Una sesión activa o en borrador se abre en el panel de control
       // ("Nueva carrera"), con el ranking en tiempo real y los botones
@@ -527,10 +564,6 @@ export class AdminController {
   }
 
   async _cargarHistorial(fechaInicio = null, fechaFin = null) {
-    // Antes de mostrar estados, cerrar las que ya pasaron el tiempo máximo
-    // (por si el job de pg_cron no ha corrido todavía).
-    await cerrarSesionesCaducadas();
-
     let query = supabase
       .from('sesiones')
       .select('*')
@@ -543,8 +576,7 @@ export class AdminController {
       query = query.lte('creada_en', fechaFin + 'T23:59:59Z');
     }
 
-    const { data: datos } = await query;
-    const sesiones = (datos || []).map(conEstadoReal);
+    const { data: sesiones } = await query;
 
     const contenedor = document.getElementById('contenedor-lista-sesiones');
     document.getElementById('detalle-sesion').classList.remove('visible');

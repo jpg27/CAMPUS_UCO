@@ -48,6 +48,25 @@ export async function crearPregunta(edificioId, pregunta, opciones, respuestaCor
   return data;
 }
 
+export async function actualizarPregunta(preguntaId, pregunta, opciones, respuestaCorrecta) {
+  const { data, error } = await supabase
+    .from('preguntas')
+    .update({
+      pregunta,
+      opcion_a: opciones.a,
+      opcion_b: opciones.b,
+      opcion_c: opciones.c,
+      opcion_d: opciones.d,
+      respuesta_correcta: respuestaCorrecta
+    })
+    .eq('id', preguntaId)
+    .select()
+    .single();
+  // Si RLS bloquea el UPDATE no vuelve ninguna fila y .single() da error.
+  if (error) throw error;
+  return data;
+}
+
 export async function eliminarPregunta(preguntaId) {
   const { error } = await supabase
     .from('preguntas')
