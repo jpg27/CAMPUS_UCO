@@ -7,6 +7,13 @@
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // Service Worker: guarda la app en caché para que el Modo Libre y el mapa funcionen sin conexión (BP-04).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
 
   <!-- Tipografía Inter (solo la usa la pantalla de finalización por ahora) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
