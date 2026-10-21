@@ -254,6 +254,43 @@
     }
     .ar-logros-vacio { text-align: center; color: var(--color-text-secondary); padding: 16px 0; }
 
+    /* Resumen de aciertos y detalle de cada pregunta */
+    .logros-resumen {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 0 0 12px;
+    }
+    .logros-resumen[hidden] { display: none; }
+    .logros-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+      background: #F1F4F2; color: var(--color-text);
+    }
+    .logros-chip svg { width: 15px; height: 15px; }
+    .logros-chip.ok  { background: #EAF5EE; color: #087A45; }
+    .logros-chip.mal { background: #FDF0EF; color: #B3261E; }
+    .ar-logro.con-detalle { flex-wrap: wrap; cursor: pointer; }
+    .ar-logro-boton {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 0; background: none; border: none; color: inherit;
+      font: inherit; text-align: left; cursor: pointer;
+    }
+    .ar-logro-boton:focus-visible { outline: 2px solid #087A45; outline-offset: 4px; border-radius: 8px; }
+    .ar-logro-chevron { width: 18px; height: 18px; flex: none; color: var(--color-text-secondary); transition: transform .2s ease; }
+    .ar-logro.abierto .ar-logro-chevron { transform: rotate(180deg); }
+    .ar-logro-detalle {
+      width: 100%; margin-top: 10px; padding-top: 10px;
+      border-top: 1px dashed rgba(200, 150, 12, .45);
+      font-size: 13px; line-height: 1.45;
+    }
+    .ar-logro-detalle[hidden] { display: none; }
+    .ar-logro-detalle .det-pregunta { font-weight: 600; margin-bottom: 6px; }
+    .ar-logro-detalle .det-fila { display: flex; gap: 6px; align-items: baseline; margin-top: 3px; }
+    .ar-logro-detalle .det-etq { flex: none; color: var(--color-text-secondary); min-width: 96px; }
+    .ar-logro-detalle .det-ok  { color: #087A45; font-weight: 600; }
+    .ar-logro-detalle .det-mal { color: #B3261E; font-weight: 600; }
+    .ar-logro-detalle .det-nota { margin-top: 6px; color: var(--color-text-secondary); font-size: 12px; }
+
     /* ═════════════════════════════════════════════════
        "SIN SESIÓN" / "CARRERA FINALIZADA" (nuevo diseño)
        ═════════════════════════════════════════════════ */
@@ -541,6 +578,19 @@
       padding: 24px 24px 28px;
     }
 
+    /* Variante: el organizador cerró la carrera antes de que terminara */
+    .fin-subtitulo {
+      margin: 8px 0 0;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .fin-subtitulo[hidden] { display: none; }
+    .finalizacion-card.incompleta .finalizacion-icono {
+      background: linear-gradient(135deg, #C8960C, #E0B43A);
+    }
+    .finalizacion-card.incompleta .nombre-jugador { color: #8A6400; }
+
     .fin-validacion {
       display: flex; gap: 12px; align-items: flex-start;
       padding: 14px; margin-bottom: 18px;
@@ -732,16 +782,17 @@
           <div class="barra-fill" id="logros-barra" style="width:0%"></div>
         </div>
       </div>
+      <div class="logros-resumen" id="logros-resumen" hidden></div>
       <ul id="logros-lista" class="ar-logros"></ul>
     </div>
   </div>
 
   <!-- PANTALLA DE FINALIZACIÓN DE CARRERA -->
   <div id="panel-finalizacion" role="dialog" aria-modal="true" aria-labelledby="fin-titulo">
-    <div class="finalizacion-card">
+    <div class="finalizacion-card" id="fin-card">
 
       <div class="finalizacion-header">
-        <div class="finalizacion-icono">
+        <div class="finalizacion-icono" id="fin-icono">
           <!-- Trofeo -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
@@ -754,6 +805,7 @@
         </div>
         <h2 id="fin-titulo">¡Carrera completada!</h2>
         <div class="nombre-jugador" id="fin-nombre">Jugador</div>
+        <p class="fin-subtitulo" id="fin-subtitulo" hidden></p>
       </div>
 
       <div class="finalizacion-body">
@@ -775,7 +827,7 @@
               <polyline points="12 6 12 12 16 14"/>
             </svg>
             <div class="valor" id="fin-tiempo">0m</div>
-            <div class="label">Tiempo</div>
+            <div class="label" id="fin-tiempo-label">Tiempo</div>
           </div>
 
         </div>

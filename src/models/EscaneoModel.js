@@ -3,7 +3,7 @@
  */
 import { supabase } from '../config.js';
 
-export async function registrarEscaneo(participanteId, sesionId, edificioId, totalEdificios, puntos = 0, preguntaId = null, respondioCorrectamente = null) {
+export async function registrarEscaneo(participanteId, sesionId, edificioId, totalEdificios, puntos = 0, preguntaId = null, respondioCorrectamente = null, respuestaElegida = null) {
   const { data: yaEscaneado } = await supabase
     .from('escaneos')
     .select('id')
@@ -21,20 +21,27 @@ export async function registrarEscaneo(participanteId, sesionId, edificioId, tot
   const esPrimero = count === 0;
   const esUltimo  = count + 1 === totalEdificios;
 
-  const { data, error } = await supabase
-    .from('escaneos')
-    .insert({
-      participante_id: participanteId,
-      sesion_id: sesionId,
-      edificio_id: edificioId,
-      es_primero: esPrimero,
-      es_ultimo: esUltimo,
-      puntos,
-      pregunta_id: preguntaId,
-      respondio_correctamente: respondioCorrectamente
-    })
-    .select()
-    .single();
+  const fila = {
+    participante_id: participanteId,
+    sesion_id: sesionId,
+    edificio_id: edificioId,
+    es_primero: esPrimero,
+    es_ultimo: esUltimo,
+    puntos,
+    pregunta_id: preguntaId,
+    respondio_correctamente: respondioCorrectamente
+  };
+  // La letra elegida (a-d) se guarda para el panel de logros. Requiere la
+  // columna respuesta_elegida (SQL del 21 oct 2026); si todavía no existe,
+  // se reintenta sin ella para no bloquear la carrera.
+  if (respuestaElegida) fila.respuesta_elegida = respuestaElegida;
+
+  let { data, error } = await supabase.from('escaneos').insert(fila).select().single();
+
+  if (error && fila.respuesta_elegida && /respuesta_elegida/.test(error.message || '')) {
+    delete fila.respuesta_elegida;
+    ({ data, error } = await supabase.from('escaneos').insert(fila).select().single());
+  }
 
   if (error) {
     // 23505 = violación de la restricción única (participante_id, edificio_id)

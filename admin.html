@@ -341,9 +341,6 @@
       padding-top: 20px;
     }
 
-    #lista-preguntas-edificio {
-      margin-bottom: 20px;
-    }
 
 
     /* =====================================================
@@ -960,37 +957,198 @@
     .ganador-card .nombre { font-size: 22px; font-weight: 700; color: #1A1A1A; }
     .ganador-card .stats  { font-size: 14px; color: #333; margin-top: 6px; }
 
+    .ranking-nota {
+      margin: 0 0 12px;
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .participante-item.incompleto { opacity: 0.85; }
+    .participante-item.incompleto .participante-tiempo { color: var(--color-text-secondary); }
+
 
     /* =====================================================
-       PREGUNTAS
+       PREGUNTAS (acordeón por edificio)
        ===================================================== */
+
+    .preg-ayuda {
+      margin: -6px 0 16px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+    }
+
+    .preg-cargando {
+      padding: 16px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .preg-acordeon {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .acc-item {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+      overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .acc-item.abierto {
+      border-color: var(--color-green-light);
+      box-shadow: 0 4px 14px rgba(18, 61, 42, 0.08);
+    }
+
+    .acc-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 56px;
+      padding: 12px 16px;
+
+      background: none;
+      border: none;
+      color: var(--color-text);
+
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .acc-header:hover { background: #F6FAF7; }
+    .acc-header:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+    .acc-item.abierto .acc-header { background: var(--color-green-tint); }
+
+    .acc-icono { font-size: 18px; line-height: 1; }
+    .acc-nombre { flex: 1; min-width: 0; }
+
+    .acc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      padding: 4px 10px;
+
+      background: var(--color-green-tint);
+      color: var(--color-primary-dark);
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .acc-item.abierto .acc-badge { background: var(--color-surface); }
+
+    .acc-badge.vacio {
+      background: #FFF6E5;
+      color: #8A5A00;
+    }
+
+    .acc-badge svg { width: 14px; height: 14px; }
+
+    .acc-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--color-text-secondary);
+      transition: transform 0.2s ease;
+    }
+
+    .acc-item.abierto .acc-chevron { transform: rotate(180deg); }
+
+    .acc-panel {
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--color-border);
+      animation: accAbrir 0.2s ease;
+    }
+
+    .acc-panel[hidden] { display: none; }
+
+    @keyframes accAbrir {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .acc-vacio {
+      margin: 0 0 12px;
+      padding: 12px;
+      background: #FFF6E5;
+      color: #8A5A00;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
 
     .pregunta-item {
       background: var(--color-background);
       border: 1px solid var(--color-border);
       border-left: 4px solid var(--color-primary);
       border-radius: 14px;
-
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
-    .pregunta-item .preg-texto     { font-weight: 600; color: var(--color-text); font-size: 15px; margin-bottom: 8px; }
-    .pregunta-item .preg-opciones  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; }
-    .pregunta-item .preg-opciones span.correcta { color: var(--color-primary); font-weight: 700; }
+    .pregunta-item.oculta-por-edicion { display: none; }
+
+    .pregunta-item .preg-texto { font-weight: 600; color: var(--color-text); font-size: 15px; line-height: 1.4; }
 
     .pregunta-item-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .pregunta-item.editando {
-      border-color: var(--color-primary);
-      border-left-width: 6px;
-      background: var(--color-green-tint);
+    .preg-opciones {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
     }
+
+    .preg-opciones li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .preg-opciones li.correcta { color: var(--color-primary); font-weight: 700; }
+
+    .op-letra {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+    }
+
+    .preg-opciones li.correcta .op-letra {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+    }
+
+    .op-check { width: 16px; height: 16px; }
 
     .preg-acciones {
       display: flex;
@@ -1018,13 +1176,126 @@
     .btn-editar svg { width: 17px; height: 17px; }
     .btn-editar:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
-    .bloque-nueva.modo-edicion .subtitulo-seccion { color: var(--color-primary); }
+    .btn-nueva-pregunta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 48px;
+
+      background: var(--color-surface);
+      color: var(--color-primary);
+      border: 1.5px dashed var(--color-green-light);
+      border-radius: var(--radius-button);
+
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-nueva-pregunta:hover { background: var(--color-green-tint); border-color: var(--color-primary); }
+    .btn-nueva-pregunta:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .btn-nueva-pregunta svg { width: 18px; height: 18px; }
+    .btn-nueva-pregunta[hidden] { display: none; }
+
+    /* Formulario de pregunta (se mueve dentro del edificio abierto) */
+    .form-pregunta {
+      margin-bottom: 10px;
+      padding: 16px;
+      background: var(--color-green-tint);
+      border: 1px solid var(--color-green-light);
+      border-radius: 14px;
+      animation: accAbrir 0.2s ease;
+    }
+
+    .form-pregunta[hidden] { display: none; }
+
+    .form-pregunta-titulo {
+      margin: 0 0 12px;
+      color: var(--color-primary-dark);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .form-pregunta .campo { margin-bottom: 12px; }
+
+    .opciones-ayuda {
+      margin: -2px 0 8px;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+    }
+
+    .opcion-fila {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      padding: 4px 4px 4px 10px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .opcion-fila.es-correcta {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+
+    .opcion-fila input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin: 0;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    .opcion-fila .op-letra { width: 26px; height: 26px; font-size: 12px; }
+    .opcion-fila.es-correcta .op-letra { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
+
+    .form-pregunta .campo .opcion-fila input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .form-pregunta .campo .opcion-fila input[type="text"]:focus {
+      border: none;
+      box-shadow: none;
+    }
+
+    .opcion-fila:focus-within { border-color: var(--color-primary); }
+
+    .form-error {
+      margin: 4px 0 12px;
+      padding: 10px 12px;
+      background: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid var(--color-error-border);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .form-error[hidden] { display: none; }
 
     .aviso-edicion {
       display: flex;
       align-items: flex-start;
       gap: 8px;
-      margin: -4px 0 16px;
+      margin: 0 0 12px;
       padding: 10px 12px;
       background: #FFF6E5;
       color: #8A5A00;
@@ -1039,54 +1310,21 @@
 
     .form-pregunta-acciones {
       display: flex;
-      flex-direction: column;
       gap: 10px;
-    }
-
-    .form-pregunta-acciones .btn-secundario { width: 100%; height: 50px; }
-    .form-pregunta-acciones .btn-secundario[hidden] { display: none; }
-
-    @media (max-width: 520px) {
-      .pregunta-item-header { flex-direction: column; }
-      .preg-acciones { width: 100%; }
-      .preg-acciones button { flex: 1; justify-content: center; height: 42px; }
-    }
-
-    .preg-edificio-selector {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
       margin-top: 4px;
     }
 
-    .preg-edificio-btn {
-      padding: 12px;
+    .form-pregunta-acciones .btn { flex: 1; height: 48px; margin: 0; }
+    .form-pregunta-acciones .btn-secundario { flex: 1; height: 48px; }
 
-      background: var(--color-surface);
-      color: var(--color-text);
-
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-input);
-
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      text-align: center;
-      cursor: pointer;
-
-      transition: border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .preg-edificio-btn:hover {
-      border-color: var(--color-green-light);
-      background: #F6FAF7;
-    }
-
-    .preg-edificio-btn.activo {
-      border-color: var(--color-primary);
-      background: var(--color-green-tint);
-      color: var(--color-primary-dark);
-      font-weight: 600;
+    @media (max-width: 520px) {
+      .pregunta-item-header { flex-direction: column; gap: 10px; }
+      .preg-acciones { width: 100%; }
+      .preg-acciones button { flex: 1; justify-content: center; height: 42px; }
+      .form-pregunta { padding: 14px 12px; }
+      .form-pregunta-acciones { flex-direction: column-reverse; }
+      .form-pregunta-acciones .btn,
+      .form-pregunta-acciones .btn-secundario { flex: none; width: 100%; }
     }
 
 
@@ -1343,67 +1581,65 @@
           <i data-lucide="circle-help" aria-hidden="true"></i>
           Gestionar preguntas por edificio
         </h2>
+        <p class="preg-ayuda">Toca un edificio para ver, crear o editar sus preguntas.</p>
 
-        <div class="campo">
-          <label>Selecciona el edificio</label>
-          <div class="preg-edificio-selector" id="preg-edificio-selector"></div>
-        </div>
+        <div class="preg-acordeon" id="preg-acordeon"></div>
 
-        <div id="seccion-preguntas-edificio" style="display:none;">
-          <div id="lista-preguntas-edificio"></div>
+        <!-- El formulario se mueve dentro del edificio abierto; aquí queda guardado mientras no se usa -->
+        <div id="form-pregunta-estacion" hidden>
+          <form class="form-pregunta" id="form-pregunta" novalidate hidden>
+            <h3 class="form-pregunta-titulo">Nueva pregunta</h3>
 
-          <div class="bloque-nueva" id="bloque-form-pregunta">
-            <h3 class="subtitulo-seccion">
-              <i data-lucide="circle-plus" aria-hidden="true"></i>
-              <span id="titulo-form-pregunta">Nueva pregunta</span>
-            </h3>
-
-            <p class="aviso-edicion" id="aviso-edicion-activa" hidden>
+            <p class="aviso-edicion" hidden>
               <i data-lucide="triangle-alert" aria-hidden="true"></i>
               Hay una carrera activa: los cambios se aplican de inmediato a quienes saquen esta pregunta.
             </p>
 
             <div class="campo">
-              <label for="nueva-pregunta">Pregunta</label>
-              <textarea id="nueva-pregunta" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-a">Opción A</label>
-              <input type="text" id="nueva-opcion-a" placeholder="Ingeniería">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-b">Opción B</label>
-              <input type="text" id="nueva-opcion-b" placeholder="Agronomía">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-c">Opción C</label>
-              <input type="text" id="nueva-opcion-c" placeholder="Enfermería">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-d">Opción D</label>
-              <input type="text" id="nueva-opcion-d" placeholder="Deportes">
-            </div>
-            <div class="campo">
-              <label for="nueva-respuesta-correcta">Respuesta correcta</label>
-              <select id="nueva-respuesta-correcta">
-                <option value="a">A</option>
-                <option value="b">B</option>
-                <option value="c">C</option>
-                <option value="d">D</option>
-              </select>
+              <label for="preg-texto">Pregunta</label>
+              <textarea id="preg-texto" maxlength="300" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
             </div>
 
+            <div class="campo">
+              <label id="preg-opciones-label">Opciones</label>
+              <p class="opciones-ayuda">Marca el círculo de la respuesta correcta.</p>
+              <div role="radiogroup" aria-labelledby="preg-opciones-label">
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="a" aria-label="La opción A es la correcta">
+                  <span class="op-letra" aria-hidden="true">A</span>
+                  <input type="text" id="preg-op-a" maxlength="120" placeholder="Opción A" aria-label="Opción A">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="b" aria-label="La opción B es la correcta">
+                  <span class="op-letra" aria-hidden="true">B</span>
+                  <input type="text" id="preg-op-b" maxlength="120" placeholder="Opción B" aria-label="Opción B">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="c" aria-label="La opción C es la correcta">
+                  <span class="op-letra" aria-hidden="true">C</span>
+                  <input type="text" id="preg-op-c" maxlength="120" placeholder="Opción C" aria-label="Opción C">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="d" aria-label="La opción D es la correcta">
+                  <span class="op-letra" aria-hidden="true">D</span>
+                  <input type="text" id="preg-op-d" maxlength="120" placeholder="Opción D" aria-label="Opción D">
+                </div>
+              </div>
+            </div>
+
+            <p class="form-error" role="alert" hidden></p>
+
             <div class="form-pregunta-acciones">
-              <button class="btn btn-crear" id="btn-guardar-pregunta" onclick="guardarPregunta()">
-                <i data-lucide="save" aria-hidden="true"></i>
-                Guardar pregunta
-              </button>
-              <button class="btn-secundario" id="btn-cancelar-edicion" onclick="cancelarEdicionPregunta()" hidden>
+              <button type="button" class="btn-secundario" data-accion="cancelar">
                 <i data-lucide="x" aria-hidden="true"></i>
-                Cancelar edición
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-crear btn-guardar">
+                <i data-lucide="save" aria-hidden="true"></i>
+                <span class="btn-guardar-texto">Guardar pregunta</span>
               </button>
             </div>
-          </div>
+          </form>
         </div>
 
       </div>

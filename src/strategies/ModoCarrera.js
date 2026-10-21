@@ -6,12 +6,13 @@
  */
 import { GameStrategy } from './GameStrategy.js';
 import { registrarEscaneo } from '../models/EscaneoModel.js';
-import { obtenerPreguntaAleatoria } from '../models/PreguntaModel.js';
+import { obtenerPreguntaAleatoria, obtenerPreguntasPorIds } from '../models/PreguntaModel.js';
+import { resumirEscaneos } from '../utils/clasificacion.js';
 import { obtenerEdificiosSesion } from '../models/EdificioModel.js';
 import { supabase, PUNTOS } from '../config.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
 import { SesionObserver } from '../observers/SesionObserver.js';
-import { limpiarTodo } from '../utils/storage.js';
+import { limpiarTodo, guardarCookieCarrera, vencimientoCarrera } from '../utils/storage.js';
 import { PuntosDisplay } from '../views/components/PuntosDisplay.js';
 import { PuntosController } from '../controllers/PuntosController.js';
 
@@ -39,6 +40,8 @@ export class ModoCarrera extends GameStrategy {
     // targetFound varias veces seguidas si el marcador "parpadea").
     this._procesandoDeteccion = false;
     this._timerEstrella = null;
+    this._finalizado = false;     // ya vio la pantalla de carrera completada
+    this._cerrada = false;        // la sesión ya se cerró (evita repetir el resumen)
   }
 
   async init(contexto) {
@@ -51,16 +54,81 @@ export class ModoCarrera extends GameStrategy {
     this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);
 
     this.sesionObserver = new SesionObserver(this.sesion.id);
-    this.unsubSesionCerrada = eventBus.on(EVENTOS.SESION_CERRADA, () => {
-      this.puntosController?.detener();
-      limpiarTodo();
-      view.detenerAR();
-      view.mostrarSesionCerrada();
-    });
+    this.unsubSesionCerrada = eventBus.on(EVENTOS.SESION_CERRADA, () => this._alCerrarSesion(view));
 
     // Ya no hay botón "Continuar": al tocar una opción se registra el
     // edificio de inmediato y el panel se cierra solo unos segundos después.
     view.onResponder((letra) => this._responder(letra, contexto));
+
+    // Si la carrera se cerró (o el participante terminó) mientras la app
+    // estaba cerrada o sin conexión, mostrarlo apenas abre la cámara.
+    await this._revisarEstadoAlAbrir(view);
+  }
+
+  async _revisarEstadoAlAbrir(view) {
+    try {
+      const [{ data: sesion }, { data: yo }] = await Promise.all([
+        supabase.from('sesiones').select('estado, activada_en, creada_en, codigo').eq('id', this.sesion.id).maybeSingle(),
+        supabase.from('participantes').select('completado').eq('id', this.participante.id).maybeSingle()
+      ]);
+      if (yo?.completado) {
+        await this._mostrarPantallaFinalizacion(view);
+        try { view.detenerAR(); } catch (e) { /* cámara aún no iniciada */ }
+      } else if (!sesion) {
+        // La sesión fue eliminada por el organizador
+        this._cerrada = true;
+        this.puntosController?.detener();
+        try { view.detenerAR(); } catch (e) { /* cámara aún no iniciada */ }
+        view.mostrarSesionCerrada();
+        limpiarTodo();
+      } else if (sesion.estado === 'cerrada') {
+        await this._alCerrarSesion(view);
+      } else {
+        // Carrera en curso: la cookie de reconexión vence 3 h después de activarse
+        const ses = { ...this.sesion, ...sesion };
+        guardarCookieCarrera(
+          { s: ses.id, p: this.participante.id, n: this.participante.nombre, c: ses.codigo },
+          vencimientoCarrera(ses)
+        );
+      }
+    } catch (e) {
+      // Sin conexión: se sigue normal y el observer avisará cuando vuelva
+    }
+  }
+
+  /**
+   * El organizador cerró la carrera. Si el participante ya había terminado,
+   * se deja su pantalla final; si no, se le muestra "Carrera incompleta"
+   * con los edificios y los puntos que alcanzó a sumar.
+   */
+  async _alCerrarSesion(view) {
+    if (this._cerrada) return;
+    this._cerrada = true;
+    this.puntosController?.detener();
+    // Apagar la cámara no debe impedir que se muestre el resumen
+    try { view.ocultarPreguntaAR?.(); } catch (e) { /* sin pregunta abierta */ }
+    try { view.detenerAR(); } catch (e) { console.warn('[ModoCarrera] No se pudo detener la cámara:', e); }
+
+    if (this._finalizado) { limpiarTodo(); return; }
+
+    try {
+      const { data: escaneos, error } = await supabase
+        .from('escaneos')
+        .select('puntos, respondio_correctamente')
+        .eq('participante_id', this.participante.id)
+        .eq('sesion_id', this.sesion.id);
+      if (error) throw error;
+      const resumen = resumirEscaneos(escaneos || []);
+      view.mostrarCarreraIncompleta(
+        this.participante.nombre || 'Participante',
+        { ...resumen, total: this.sesion.total_edificios || 0 },
+        { sesion: this.sesion, fecha: new Date() }
+      );
+    } catch (e) {
+      view.mostrarSesionCerrada();
+    } finally {
+      limpiarTodo();
+    }
   }
 
   async manejarDeteccion(edificio, targetEntity, contexto) {
@@ -150,7 +218,8 @@ export class ModoCarrera extends GameStrategy {
         this.sesion.total_edificios,
         puntos,
         pregunta.id,
-        correcta
+        correcta,
+        letra
       );
       // El tramo del siguiente edificio empieza ahora mismo
       if (resultado.duplicado) { /* ya estaba registrado: no se toca el tramo */ }
@@ -230,6 +299,7 @@ export class ModoCarrera extends GameStrategy {
   }
 
   async _mostrarPantallaFinalizacion(view) {
+    this._finalizado = true;
     this.puntosController?.detener();
 
     const { data: datosFinales } = await supabase
@@ -264,9 +334,10 @@ export class ModoCarrera extends GameStrategy {
   async mostrarLogros(contexto) {
     const { view } = contexto;
 
+    // select('*') para incluir respuesta_elegida si la columna ya existe
     const { data: escaneos } = await supabase
       .from('escaneos')
-      .select('edificio_id, escaneado_en, puntos, respondio_correctamente')
+      .select('*')
       .eq('participante_id', this.participante.id)
       .eq('sesion_id', this.sesion.id);
 
@@ -277,7 +348,9 @@ export class ModoCarrera extends GameStrategy {
       .order('orden');
 
     const puntosAcumulados = (escaneos || []).reduce((sum, e) => sum + (e.puntos || 0), 0);
-    view.renderizarLogros(edificiosSesion, escaneos, puntosAcumulados);
+    const preguntas = await obtenerPreguntasPorIds((escaneos || []).map(e => e.pregunta_id));
+    const mapa = new Map(preguntas.map(p => [String(p.id), p]));
+    view.renderizarLogros(edificiosSesion, escaneos, puntosAcumulados, mapa);
   }
 
   estaActivo() {

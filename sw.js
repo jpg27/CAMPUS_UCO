@@ -12,7 +12,7 @@
  * Al cambiar archivos de la app, sube VERSION para que los teléfonos descarguen
  * la nueva versión.
  */
-const VERSION = 'v1-2026-10-17';
+const VERSION = 'v3-2026-10-21';
 const CACHE = `campus-uco-${VERSION}`;
 
 // Archivos propios (rutas relativas a la carpeta donde está sw.js).
@@ -53,6 +53,7 @@ const ARCHIVOS_APP = [
   'src/strategies/GameStrategy.js',
   'src/strategies/ModoCarrera.js',
   'src/strategies/ModoLibre.js',
+  'src/utils/clasificacion.js',
   'src/utils/formatters.js',
   'src/utils/storage.js',
   'src/views/ARView.js',

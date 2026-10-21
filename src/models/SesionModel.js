@@ -70,6 +70,18 @@ export async function cerrarSesionesCaducadas() {
   }
 }
 
+/** Sesión por id, solo si sigue abierta (borrador o activa y sin caducar). */
+export async function obtenerSesionAbiertaPorId(sesionId) {
+  const { data, error } = await supabase
+    .from('sesiones')
+    .select('*')
+    .eq('id', sesionId)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (!['borrador', 'activa'].includes(data.estado) || estaCaducada(data)) return null;
+  return data;
+}
+
 export async function obtenerSesionPorCodigo(codigo) {
   const { data, error } = await supabase
     .from('sesiones')
