@@ -12,7 +12,7 @@
  * Al cambiar archivos de la app, sube VERSION para que los teléfonos descarguen
  * la nueva versión.
  */
-const VERSION = 'v3-2026-10-21';
+const VERSION = 'v9-2026-10-23';
 const CACHE = `campus-uco-${VERSION}`;
 
 // Archivos propios (rutas relativas a la carpeta donde está sw.js).
@@ -210,7 +210,13 @@ self.addEventListener('fetch', (event) => {
 async function redPrimero(req, esPagina) {
   const cache = await caches.open(CACHE);
   try {
-    const resp = await conLimite(fetch(req), 4000);
+    // Archivos propios: se revalidan con el servidor para no recibir una
+    // copia vieja de la caché HTTP del navegador.
+    const mismoOrigen = new URL(req.url).origin === self.location.origin;
+    const peticion = mismoOrigen ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req);
+    let resp = await conLimite(peticion, 4000);
+    // Una página que llegó por redirección no se puede entregar así a la navegación
+    if (resp.redirected && esPagina) resp = await conLimite(fetch(req), 4000);
     if (resp.ok) cache.put(req, resp.clone());
     return resp;
   } catch (_) {

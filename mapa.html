@@ -10,6 +10,22 @@
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
   <link rel="manifest" href="manifest.json">
   <script>
+    // Vista del administrador (mapa dentro del panel): se marca antes de pintar
+    // para que la barra Mapa / Carrera / Libre / Más nunca aparezca.
+    if (new URLSearchParams(location.search).get('vista') === 'admin') {
+      document.documentElement.classList.add('vista-admin');
+    }
+  </script>
+  <!-- Reglas de la vista admin en línea: funcionan aunque el navegador
+       todavía tenga guardada una versión anterior de mapa.css -->
+  <style>
+    .vista-admin .nav { display: none !important; }
+    .vista-admin .app { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) auto !important; grid-template-areas: "mapa" "ficha" !important; }
+    @media (min-width: 900px) {
+      .vista-admin .app { grid-template-columns: minmax(0, 1fr) 360px !important; grid-template-rows: 100% !important; grid-template-areas: "mapa ficha" !important; }
+    }
+  </style>
+  <script>
     // Service Worker: guarda la app en caché para que el Modo Libre y el mapa funcionen sin conexión (BP-04).
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
@@ -18,7 +34,7 @@
   <!-- Íconos Lucide: misma versión fija que el resto de páginas -->
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="styles/tokens.css">
-  <link rel="stylesheet" href="styles/mapa.css">
+  <link rel="stylesheet" href="styles/mapa.css?v=7">
 </head>
 <body>
 

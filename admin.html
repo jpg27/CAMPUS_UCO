@@ -965,6 +965,20 @@
     }
 
     .participante-item.incompleto { opacity: 0.85; }
+
+    /* Toda la fila abre el progreso del participante */
+    .participante-item.clicable {
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .participante-item.clicable:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 14px rgba(18, 61, 42, 0.10);
+    }
+    .participante-item.clicable:hover .btn-participante { color: var(--color-primary); text-decoration-color: var(--color-primary); }
+    .participante-item.clicable:active { transform: scale(0.995); }
+    .participante-item.clicable:focus-within { border-color: var(--color-primary); }
+    .participante-item.clicable .btn-participante:focus-visible { outline: none; }
     .participante-item.incompleto .participante-tiempo { color: var(--color-text-secondary); }
 
 
@@ -1408,11 +1422,399 @@
     }
 
     @media (max-width: 420px) {
-      /* Las tres pestañas caben sin scroll si se ocultan sus íconos */
+      /* Las cuatro pestañas caben sin scroll si se ocultan sus íconos */
       .tab svg {
         display: none;
       }
+      .tab {
+        padding: 11px 6px;
+        font-size: 13px;
+      }
     }
+
+    /* =====================================================
+       MAPA (vista de consulta dentro del panel)
+       ===================================================== */
+
+    /* Solo el mapa, sin título ni bordes extra */
+    .card-mapa {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .mapa-admin {
+      display: block;
+      width: 100%;
+      /* Móvil: llena la pantalla debajo de las pestañas */
+      height: calc(100vh - 88px);
+      height: calc(100dvh - 88px);
+      min-height: 420px;
+      border: 0;
+      background: var(--color-background);
+    }
+
+
+    /* =====================================================
+       ESCRITORIO (≥ 900px): MENÚ LATERAL IZQUIERDO
+       ===================================================== */
+
+    @media (min-width: 900px) {
+
+      .lateral {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2;
+        width: 260px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px 16px 20px;
+        overflow-y: auto;
+
+        background: var(--color-surface);
+        border-right: 1px solid var(--color-border);
+      }
+
+      /* El encabezado se reparte dentro del menú: logo y título arriba,
+         botones de salida al final */
+      .lateral .header { display: contents; }
+
+      .header-logo {
+        flex: none;
+        justify-content: flex-start;
+        margin: 0 0 4px;
+      }
+
+      .logo-img { height: 38px; }
+
+      .header-marca { padding: 0 6px; }
+      .header h1 { font-size: 19px; }
+      .header-sub { font-size: 13px; }
+
+      .tabs {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+
+        flex-direction: column;
+        gap: 4px;
+        overflow: visible;
+        background: none;
+      }
+
+      .tab {
+        flex: none;
+        justify-content: flex-start;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+
+      .tab:hover { background: var(--color-background); }
+
+      .tab.activo {
+        background: var(--color-green-tint);
+        color: var(--color-primary);
+        box-shadow: inset 3px 0 0 var(--color-primary);
+      }
+
+      .header-btns {
+        order: 99;
+        margin-top: auto;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+
+      .header-btns a,
+      .header-btns button {
+        justify-content: flex-start;
+        box-shadow: none;
+      }
+
+      /* Área de trabajo a la derecha del menú */
+      .contenido {
+        max-width: none;
+        margin: 0 0 0 260px;
+        padding: 32px 40px 48px;
+      }
+
+      .pantalla {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      /* Pestaña Mapa: el mapa ocupa todo el espacio a la derecha del menú */
+      body.en-mapa { overflow: hidden; }
+      body.en-mapa .contenido { padding: 0; }
+      body.en-mapa #pantalla-mapa { max-width: none; }
+
+      body.en-mapa .card-mapa {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      body.en-mapa .mapa-admin {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+      }
+
+      body.en-mapa .hojas-superior { display: none; }
+
+      .lateral,
+      .contenido { transition: width 0.2s ease, margin-left 0.2s ease, padding 0.2s ease; }
+
+      /* ── Menú contraído: íconos con el nombre debajo (como la barra de los estudiantes) ── */
+      body.menu-contraido .lateral {
+        width: 92px;
+        gap: 6px;
+        padding: 16px 8px;
+      }
+
+      body.menu-contraido .contenido { margin-left: 92px; }
+
+      body.menu-contraido .header-marca,
+      body.menu-contraido .logo-img { display: none; }
+
+      body.menu-contraido .header-logo {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      body.menu-contraido .lateral-emblema {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      body.menu-contraido .tabs { gap: 4px; }
+
+      body.menu-contraido .tab,
+      body.menu-contraido .header-btns a,
+      body.menu-contraido .header-btns button {
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        min-height: 64px;
+        height: auto;
+        padding: 8px 4px;
+        border: 0;
+        background: none;
+        font-size: 12px;
+        line-height: 1.2;
+        text-align: center;
+        white-space: normal;
+      }
+
+      body.menu-contraido .tab svg,
+      body.menu-contraido .header-btns svg { width: 20px; height: 20px; }
+
+      body.menu-contraido .tab.activo {
+        background: var(--color-green-tint);
+        box-shadow: none;
+      }
+
+      body.menu-contraido .header-btns { gap: 2px; }
+      body.menu-contraido .header-btns a:hover,
+      body.menu-contraido .header-btns button:hover { background: var(--color-background); }
+
+      body.menu-contraido .ico-contraer { display: none; }
+      body:not(.menu-contraido) .ico-expandir { display: none; }
+
+      /* Logo y botón de contraer en la misma fila */
+      .header-logo {
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-contraer {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: 9px;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      }
+
+      .btn-contraer:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: var(--color-green-tint);
+      }
+
+      .btn-contraer:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+      .btn-contraer svg { width: 17px; height: 17px; stroke-width: 2; }
+    }
+
+    /* Los íconos no capturan el clic: siempre llega al botón o pestaña que los contiene */
+    .tab svg, .tab i,
+    button svg, button i,
+    a svg, a i,
+    [onclick] svg, [onclick] i { pointer-events: none; }
+
+    /* El emblema y el botón de contraer solo existen en el menú de escritorio */
+    .lateral-emblema { display: none; }
+    .lateral-emblema img { width: 100%; height: 100%; display: block; }
+    @media (max-width: 899px) {
+      .btn-contraer { display: none !important; }
+      .lateral-emblema { display: none !important; }
+    }
+
+    /* =====================================================
+       DETALLE DE PARTICIPANTE
+       ===================================================== */
+
+    .btn-participante {
+      padding: 0;
+      background: none;
+      border: none;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: var(--color-green-soft);
+      text-underline-offset: 3px;
+    }
+
+    .btn-participante:hover { color: var(--color-primary); text-decoration-color: var(--color-primary); }
+    .btn-participante:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 4px; }
+
+    .mp-capa {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(18, 61, 42, 0.45);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    .mp-capa[hidden] { display: none; }
+
+    .mp-hoja {
+      width: 100%;
+      max-width: 560px;
+      max-height: 88vh;
+      max-height: 88dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 30px rgba(18, 61, 42, 0.2);
+      animation: mpSubir 0.25s ease;
+    }
+
+    @media (min-width: 640px) {
+      .mp-capa { align-items: center; padding: 24px; }
+      .mp-hoja { border-radius: 24px; }
+    }
+
+    @keyframes mpSubir {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
+    }
+
+    .mp-cabecera {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px 20px 12px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .mp-titulos h2 { font-size: 19px; font-weight: 700; color: var(--color-text); }
+    .mp-titulos p { margin-top: 4px; font-size: 13px; color: var(--color-text-secondary); }
+
+    .mp-cerrar {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+
+    .mp-cerrar svg { width: 18px; height: 18px; }
+
+    .mp-cuerpo {
+      padding: 16px 20px 24px;
+      overflow-y: auto;
+    }
+
+    .mp-total {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 14px 16px;
+      background: #FFF3CD;
+      border-radius: 16px;
+      color: #6B5100;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mp-total strong { font-size: 30px; font-weight: 800; color: #6B5100; font-variant-numeric: tabular-nums; }
+
+    .mp-progreso { margin: 14px 0 10px; }
+    .mp-progreso-etq { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+    .mp-barra { height: 8px; border-radius: 999px; background: var(--color-border); overflow: hidden; }
+    .mp-barra span { display: block; height: 100%; background: var(--color-primary); border-radius: inherit; }
+
+    .mp-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+    .mp-chip { padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F1F4F2; color: var(--color-text); }
+    .mp-chip.ok  { background: var(--color-green-tint); color: var(--color-primary); }
+    .mp-chip.mal { background: var(--color-error-bg); color: var(--color-error); }
+
+    .mp-lista { list-style: none; display: grid; gap: 8px; padding: 0; margin: 0; }
+
+    .mp-edificio {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--color-background);
+      border: 1.5px solid var(--color-border);
+    }
+
+    .mp-edificio.hecho { background: #FFF8E1; border-color: rgba(200, 150, 12, 0.4); }
+
+    .mp-fila { display: flex; align-items: center; gap: 10px; }
+    .mp-ed-nombre { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; color: var(--color-text); }
+    .mp-ed-estado { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; font-weight: 500; }
+    .mp-ed-pts { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; color: var(--color-text); }
+
+    .mp-detalle { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(200, 150, 12, 0.45); font-size: 13px; line-height: 1.45; }
+    .mp-pregunta { font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+    .mp-dato { display: flex; gap: 8px; align-items: baseline; margin-top: 3px; }
+    .mp-dato .etq { flex: none; min-width: 92px; color: var(--color-text-secondary); }
+    .mp-dato .ok  { color: var(--color-primary); font-weight: 600; }
+    .mp-dato .mal { color: var(--color-error); font-weight: 600; }
+    .mp-nota { margin-top: 6px; font-size: 12px; color: var(--color-text-secondary); }
 
   </style>
   <link rel="stylesheet" href="styles/avisos.css">
@@ -1420,6 +1822,26 @@
 
 
 <body>
+  <script>
+    // Menú lateral contraído (solo escritorio): se aplica antes de pintar
+    try { if (localStorage.getItem('adminMenuContraido') === '1') document.body.classList.add('menu-contraido'); } catch (e) {}
+    window.alternarMenu = () => {
+      const contraido = document.body.classList.toggle('menu-contraido');
+      const btn = document.querySelector('.btn-contraer');
+      if (btn) {
+        btn.setAttribute('aria-expanded', String(!contraido));
+        btn.setAttribute('aria-label', contraido ? 'Expandir menú' : 'Contraer menú');
+        btn.title = contraido ? 'Expandir menú' : 'Contraer menú';
+      }
+      try { localStorage.setItem('adminMenuContraido', contraido ? '1' : '0'); } catch (e) {}
+    };
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.body.classList.contains('menu-contraido')) {
+        document.body.classList.remove('menu-contraido');
+        window.alternarMenu();   // reaplica para dejar textos y aria al día
+      }
+    });
+  </script>
 
   <!-- DECORACIÓN: hojas suaves arriba a la derecha -->
   <svg class="hojas-superior" viewBox="0 0 200 200" aria-hidden="true">
@@ -1428,6 +1850,9 @@
     <path d="M200 60 C185 100 150 130 110 135 C115 95 150 65 200 60 Z" fill="#C2DDCC" opacity="0.6"/>
   </svg>
 
+
+  <!-- LATERAL: encabezado + pestañas (arriba en móvil, menú izquierdo en escritorio) -->
+  <aside class="lateral">
 
   <!-- ENCABEZADO -->
   <header class="header">
@@ -1439,6 +1864,13 @@
         alt="Universidad Católica de Oriente"
         class="logo-img"
       >
+      <!-- Emblema: solo se ve con el menú contraído -->
+      <span class="lateral-emblema" aria-hidden="true"><img src="img/uco-emblema.webp" alt=""></span>
+      <!-- Contraer / expandir el menú (solo escritorio) -->
+      <button type="button" class="btn-contraer" onclick="alternarMenu()" aria-expanded="true" aria-label="Contraer menú" title="Contraer menú">
+        <i data-lucide="panel-left-close" class="ico-contraer" aria-hidden="true"></i>
+        <i data-lucide="panel-left-open" class="ico-expandir" aria-hidden="true"></i>
+      </button>
     </div>
 
     <div class="header-marca">
@@ -1455,10 +1887,6 @@
         <i data-lucide="log-out" aria-hidden="true"></i>
         Cerrar sesión
       </button>
-      <a href="index.html">
-        <i data-lucide="arrow-left" aria-hidden="true"></i>
-        Salir
-      </a>
     </div>
 
   </header>
@@ -1478,7 +1906,13 @@
       <i data-lucide="clipboard-list" aria-hidden="true"></i>
       Historial
     </div>
+    <div class="tab" id="tab-mapa" onclick="cambiarTab('mapa')">
+      <i data-lucide="map" aria-hidden="true"></i>
+      Mapa
+    </div>
   </div>
+
+  </aside>
 
 
   <div class="contenido">
@@ -1699,6 +2133,14 @@
 
     </div>
 
+
+    <!-- ═══ TAB: MAPA ═══ -->
+    <div class="pantalla" id="pantalla-mapa">
+      <div class="card card-mapa">
+        <iframe id="mapa-admin" class="mapa-admin" title="Mapa del campus"></iframe>
+      </div>
+    </div>
+
   </div>
 
 
@@ -1708,6 +2150,20 @@
     const app = new AdminController();
     app.init();
   </script>
+
+  <!-- DETALLE DE UN PARTICIPANTE (lo que vio en "Mis logros") -->
+  <div class="mp-capa" id="modal-participante" hidden>
+    <div class="mp-hoja" role="dialog" aria-modal="true" aria-labelledby="mp-nombre">
+      <div class="mp-cabecera">
+        <div class="mp-titulos">
+          <h2 id="mp-nombre">Participante</h2>
+          <p id="mp-sub"></p>
+        </div>
+        <button type="button" class="mp-cerrar" id="mp-cerrar" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+      </div>
+      <div class="mp-cuerpo" id="mp-cuerpo"></div>
+    </div>
+  </div>
 
   <!-- ACTIVAR LUCIDE (también en el contenido que genera el JS) -->
   <script>

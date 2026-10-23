@@ -12,8 +12,8 @@ import {
   eliminarSesion
 } from '../models/SesionModel.js';
 import { obtenerParticipantes } from '../models/ParticipanteModel.js';
-import { obtenerTodasLasPreguntas, crearPregunta, actualizarPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
-import { formatearTiempo } from '../utils/formatters.js';
+import { obtenerTodasLasPreguntas, obtenerPreguntasPorIds, crearPregunta, actualizarPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
+import { formatearTiempo, formatearHora } from '../utils/formatters.js';
 import { clasificarParticipantes, formatearPuntos } from '../utils/clasificacion.js';
 import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
 import { mostrarAviso, confirmar } from '../views/components/Avisos.js';
@@ -52,6 +52,7 @@ export class AdminController {
     this._initEdificiosGrid();
     this._initTabPreguntas();
     this._exposeWindowFunctions();
+    this._conectarDetalleParticipante();
     
     // Autocierre de sesiones activas (inicial y cada 5 minutos)
     await cerrarSesionesCaducadas();
@@ -407,6 +408,21 @@ export class AdminController {
         this._cargarHistorial();
       }
       if (tab === 'preguntas') this._initTabPreguntas();
+      // El mapa se carga la primera vez que se abre la pestaña
+      if (tab === 'mapa') {
+        const marco = document.getElementById('mapa-admin');
+        if (marco && !marco.getAttribute('src')) {
+          marco.addEventListener('load', () => this._prepararMapaAdmin(marco));
+          // "v" evita que el navegador use una copia vieja de mapa.html
+          marco.setAttribute('src', 'mapa.html?vista=admin&v=6');
+        }
+      }
+      // En escritorio el mapa ocupa todo el espacio a la derecha del menú
+      document.body.classList.toggle('en-mapa', tab === 'mapa');
+      // En móvil se sube la página hasta las pestañas para que el mapa llene la pantalla
+      if (tab === 'mapa' && window.matchMedia('(max-width: 899px)').matches) {
+        document.querySelector('.tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     };
 
     window.filtrarHistorial = () => {
@@ -462,7 +478,15 @@ export class AdminController {
         this._cargarRanking();   // muestra los incompletos con sus puntos parciales
         document.getElementById('btn-cerrar').disabled = true;
 
-        setTimeout(() => this._reiniciarPanelControl(), 1500);
+        // Lleva al historial de esa carrera para ver el resultado final
+        const sesionId = this.sesionActual.id;
+        mostrarAviso({ tipo: 'exito', titulo: 'Carrera finalizada', texto: 'Este es el resultado final de la carrera.' });
+        setTimeout(async () => {
+          this._reiniciarPanelControl();
+          window.cambiarTab('historial');
+          await window.verDetalleSesion(sesionId, { forzarDetalle: true });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 1200);
       } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo finalizar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
@@ -651,6 +675,147 @@ export class AdminController {
     badge.className = 'estado-badge estado-' + estado;
   }
 
+  // ═══════════════════════════════════════════
+  // Detalle de un participante: lo mismo que ve en "Mis logros"
+  // ═══════════════════════════════════════════
+  /**
+   * Quita del mapa embebido la barra de los estudiantes (Mapa / Carrera /
+   * Libre / Más). Se hace desde el panel, así funciona aunque el navegador
+   * tenga guardada una versión anterior de mapa.html o mapa.css.
+   */
+  _prepararMapaAdmin(marco) {
+    try {
+      const doc = marco.contentDocument;
+      if (!doc) return;
+      doc.documentElement.classList.add('vista-admin');
+      const nav = doc.querySelector('.nav');
+      if (nav) { nav.hidden = true; nav.style.setProperty('display', 'none', 'important'); }
+      if (!doc.getElementById('estilo-vista-admin')) {
+        const st = doc.createElement('style');
+        st.id = 'estilo-vista-admin';
+        st.textContent = `
+          .nav { display: none !important; }
+          .app { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) auto !important; grid-template-areas: "mapa" "ficha" !important; }
+          @media (min-width: 900px) {
+            .app { grid-template-columns: minmax(0, 1fr) 360px !important; grid-template-rows: 100% !important; grid-template-areas: "mapa ficha" !important; }
+          }`;
+        doc.head.appendChild(st);
+      }
+    } catch (e) { /* otro origen: no se puede tocar */ }
+  }
+
+  _conectarDetalleParticipante() {
+    const capa = document.getElementById('modal-participante');
+    if (!capa) return;
+    document.addEventListener('click', (ev) => {
+      // Toda la fila abre el detalle, no solo el nombre
+      const fila = ev.target.closest('.participante-item.clicable');
+      const btn = ev.target.closest('.btn-participante') || fila?.querySelector('.btn-participante');
+      if (btn) this._verParticipante(btn.dataset.pid, btn.dataset.sesion, btn);
+    });
+    const cerrar = () => this._cerrarDetalleParticipante();
+    document.getElementById('mp-cerrar').addEventListener('click', cerrar);
+    capa.addEventListener('click', (ev) => { if (ev.target === capa) cerrar(); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !capa.hidden) cerrar(); });
+  }
+
+  _cerrarDetalleParticipante() {
+    document.getElementById('modal-participante').hidden = true;
+    this._origenDetalle?.focus?.();
+  }
+
+  async _verParticipante(participanteId, sesionId, origen = null) {
+    this._origenDetalle = origen;
+    const capa = document.getElementById('modal-participante');
+    const cuerpo = document.getElementById('mp-cuerpo');
+    document.getElementById('mp-nombre').textContent = origen?.textContent?.trim() || 'Participante';
+    document.getElementById('mp-sub').textContent = '';
+    cuerpo.innerHTML = '<p class="ranking-vacio">Cargando...</p>';
+    capa.hidden = false;
+    document.getElementById('mp-cerrar').focus();
+
+    try {
+      const [{ data: p }, { data: escaneos }, { data: edificios }, { data: sesion }] = await Promise.all([
+        supabase.from('participantes').select('*').eq('id', participanteId).maybeSingle(),
+        supabase.from('escaneos').select('*').eq('participante_id', participanteId),
+        supabase.from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden'),
+        supabase.from('sesiones').select('estado, total_edificios').eq('id', sesionId).maybeSingle()
+      ]);
+      if (!p) { cuerpo.innerHTML = '<p class="ranking-vacio">Este participante ya no existe.</p>'; return; }
+      const preguntas = await obtenerPreguntasPorIds((escaneos || []).map(e => e.pregunta_id));
+      this._renderDetalleParticipante(p, escaneos || [], edificios || [], sesion,
+        new Map(preguntas.map(q => [String(q.id), q])));
+    } catch (e) {
+      console.error('[Admin] Error cargando participante:', e);
+      cuerpo.innerHTML = '<p class="ranking-vacio">No se pudo cargar. Revisa tu conexión.</p>';
+    }
+  }
+
+  _renderDetalleParticipante(p, escaneos, edificios, sesion, preguntas) {
+    const total = edificios.length || sesion?.total_edificios || 0;
+    const hechos = escaneos.length;
+    const suma = escaneos.reduce((a, e) => a + (e.puntos || 0), 0);
+    const puntos = p.completado && p.puntos_total != null ? p.puntos_total : suma;
+    const correctas = escaneos.filter(e => e.respondio_correctamente === true).length;
+    const incorrectas = escaneos.filter(e => e.respondio_correctamente === false).length;
+
+    const estado = p.completado
+      ? `Completó la carrera${p.posicion ? ` · ${p.posicion}.º lugar` : ''} · ${formatearTiempo(p.tiempo_total || 0)}`
+      : sesion?.estado === 'cerrada' ? `Carrera incompleta · ${hechos} de ${total} edificios` : `En carrera · ${hechos} de ${total} edificios`;
+    document.getElementById('mp-nombre').textContent = p.nombre;
+    document.getElementById('mp-sub').textContent = estado;
+
+    const opcion = (q, letra) => letra && q ? `${letra.toUpperCase()}) ${esc(q['opcion_' + letra])}` : '';
+    const lista = edificios.map(ed => {
+      const e = escaneos.find(x => x.edificio_id === ed.edificio_id);
+      const info = obtenerEdificioInfo(ed.edificio_id);
+      if (!e) {
+        return `<li class="mp-edificio"><div class="mp-fila"><div class="mp-ed-nombre">${esc(info?.nombre || ed.nombre)}<div class="mp-ed-estado">Pendiente</div></div></div></li>`;
+      }
+      const q = e.pregunta_id != null ? preguntas.get(String(e.pregunta_id)) : null;
+      const acierto = e.respondio_correctamente;
+      let detalle = '';
+      if (q) {
+        const elegida = e.respuesta_elegida;
+        detalle = `
+          <div class="mp-detalle">
+            <div class="mp-pregunta">${esc(q.pregunta)}</div>
+            ${elegida
+              ? `<div class="mp-dato"><span class="etq">Respondió</span><span class="${acierto ? 'ok' : 'mal'}">${opcion(q, elegida)}</span></div>`
+              : `<div class="mp-dato"><span class="etq">Resultado</span><span class="${acierto ? 'ok' : 'mal'}">${acierto ? 'Respuesta correcta' : 'Respuesta incorrecta'}</span></div>`}
+            ${!acierto || !elegida ? `<div class="mp-dato"><span class="etq">Correcta</span><span class="ok">${opcion(q, q.respuesta_correcta)}</span></div>` : ''}
+            ${acierto === false ? '<div class="mp-nota">Se restaron 100 puntos por la respuesta incorrecta.</div>' : ''}
+          </div>`;
+      } else if (e.pregunta_id == null) {
+        detalle = '<div class="mp-detalle"><div class="mp-nota">Este edificio no tenía preguntas: se registró sin trivia.</div></div>';
+      }
+      return `
+        <li class="mp-edificio hecho">
+          <div class="mp-fila">
+            <div class="mp-ed-nombre">${esc(info?.nombre || ed.nombre)}
+              <div class="mp-ed-estado">Escaneado a las ${formatearHora(e.escaneado_en)}</div>
+            </div>
+            <span class="mp-ed-pts">${formatearPuntos(e.puntos)} pts</span>
+          </div>
+          ${detalle}
+        </li>`;
+    }).join('');
+
+    document.getElementById('mp-cuerpo').innerHTML = `
+      <div class="mp-total"><strong>${formatearPuntos(puntos)}</strong> puntos</div>
+      <div class="mp-progreso">
+        <div class="mp-progreso-etq"><span>Progreso</span><span>${hechos} / ${total} edificios</span></div>
+        <div class="mp-barra"><span style="width:${total ? Math.min(100, hechos / total * 100) : 0}%"></span></div>
+      </div>
+      ${correctas + incorrectas > 0 ? `
+        <div class="mp-resumen">
+          <span class="mp-chip ok">${correctas} ${correctas === 1 ? 'correcta' : 'correctas'}</span>
+          <span class="mp-chip mal">${incorrectas} ${incorrectas === 1 ? 'incorrecta' : 'incorrectas'}</span>
+          ${incorrectas ? `<span class="mp-chip">−${formatearPuntos(incorrectas * 100)} por errores</span>` : ''}
+        </div>` : ''}
+      <ul class="mp-lista">${lista || '<li class="ranking-vacio">Esta carrera no tiene edificios.</li>'}</ul>`;
+  }
+
   _iniciarRanking() {
     const sesionId = this.sesionActual.id;
     const recargar = () => this._programarRanking();
@@ -737,10 +902,11 @@ export class AdminController {
     }
 
     return `
-      <div class="participante-item ${clase}">
+      <div class="participante-item clicable ${clase}" title="Ver el progreso de ${esc(p.nombre)}">
         <div class="pos-badge ${pos && pos <= 3 ? 'pos-' + pos : 'pos-n'}">${badge}</div>
         <div class="participante-info">
-          <div class="participante-nombre">${esc(p.nombre)}</div>
+          <button type="button" class="participante-nombre btn-participante" data-pid="${esc(p.id)}" data-sesion="${esc(p.sesion_id)}"
+            aria-label="Ver las respuestas de ${esc(p.nombre)}">${esc(p.nombre)}</button>
           <div class="participante-estado">${estado}</div>
         </div>
         <div class="participante-tiempo">${derecha}</div>
