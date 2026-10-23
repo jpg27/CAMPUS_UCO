@@ -448,12 +448,12 @@ export class AdminController {
         this._actualizarBadge('activa');
         document.getElementById('btn-activar').disabled = true;
         document.getElementById('btn-cerrar').disabled  = false;
-      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo activar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo iniciar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.cerrarSesion = async () => {
       if (!this.sesionActual) return;
-      const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${this.sesionActual.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+      const ok = await confirmar({ titulo: '¿Finalizar la carrera?', texto: `Los participantes de "${this.sesionActual.nombre}" verán que la carrera terminó.`, aceptar: 'Finalizar carrera', peligro: true });
       if (!ok) return;
       try {
         await cerrarSesionDB(this.sesionActual.id);
@@ -463,7 +463,7 @@ export class AdminController {
         document.getElementById('btn-cerrar').disabled = true;
 
         setTimeout(() => this._reiniciarPanelControl(), 1500);
-      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo finalizar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.verDetalleSesion = async (sesionId, { forzarDetalle = false } = {}) => {
@@ -544,7 +544,7 @@ export class AdminController {
       btnCerrarHist.style.display = sePuedeCerrar ? 'inline-flex' : 'none';
       btnCerrarHist.disabled = false;
       btnCerrarHist.onclick = async () => {
-        const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${sesion.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+        const ok = await confirmar({ titulo: '¿Finalizar la carrera?', texto: `Los participantes de "${sesion.nombre}" verán que la carrera terminó.`, aceptar: 'Finalizar carrera', peligro: true });
         if (!ok) return;
         btnCerrarHist.disabled = true;
         try {
@@ -554,7 +554,7 @@ export class AdminController {
           await window.verDetalleSesion(sesionId, { forzarDetalle: true });
           this._cargarHistorialEnSegundoPlano();
         } catch (e) {
-          mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' });
+          mostrarAviso({ tipo: 'error', titulo: 'No se pudo finalizar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' });
           btnCerrarHist.disabled = false;
         }
       };
