@@ -551,6 +551,16 @@ export class ARView {
     document.getElementById('sin-sesion').style.display = 'flex';
   }
 
+  /** El organizador eliminó a este participante de la carrera. */
+  mostrarRetirado() {
+    document.getElementById('sin-sesion-modal').classList.add('finalizada');
+    document.getElementById('sin-sesion-titulo').textContent       = 'Ya no estás en la carrera';
+    document.getElementById('sin-sesion-texto').textContent        = 'El organizador te retiró de esta carrera. Si fue un error, vuelve a unirte con el código.';
+    document.getElementById('sin-sesion-enlace-texto').textContent = 'Volver a unirme';
+    document.getElementById('sin-sesion-enlace').href              = 'carrera.html';
+    document.getElementById('sin-sesion').style.display = 'flex';
+  }
+
   // ── Paneles 3D de puntos de interés (Modo Libre, Cambio 1) ──
   mostrarPuntosInteres(edificio, targetEntity) {
     this.ocultarPuntosInteres();

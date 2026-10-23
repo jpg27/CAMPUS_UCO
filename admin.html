@@ -1768,6 +1768,28 @@
       overflow-y: auto;
     }
 
+    .mp-botones {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .mp-eliminar {
+      height: 38px;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    .mp-eliminar[hidden] { display: none; }
+    .mp-eliminar:disabled { opacity: 0.6; cursor: wait; }
+
+    /* En pantallas angostas solo queda el ícono */
+    @media (max-width: 480px) {
+      .mp-eliminar { width: 38px; padding: 0; justify-content: center; }
+      .mp-eliminar span { display: none; }
+    }
+
     .mp-total {
       display: flex;
       align-items: baseline;
@@ -2159,7 +2181,14 @@
           <h2 id="mp-nombre">Participante</h2>
           <p id="mp-sub"></p>
         </div>
-        <button type="button" class="mp-cerrar" id="mp-cerrar" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+        <div class="mp-botones">
+          <button type="button" class="btn-peligro mp-eliminar" id="mp-eliminar" hidden
+            title="Eliminar de la carrera (útil para duplicados o pruebas)" aria-label="Eliminar de la carrera">
+            <i data-lucide="user-x" aria-hidden="true"></i>
+            <span>Eliminar de la carrera</span>
+          </button>
+          <button type="button" class="mp-cerrar" id="mp-cerrar" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+        </div>
       </div>
       <div class="mp-cuerpo" id="mp-cuerpo"></div>
     </div>

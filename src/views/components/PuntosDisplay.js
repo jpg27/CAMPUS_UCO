@@ -29,4 +29,34 @@ export class PuntosDisplay {
             this.container.style.display = 'none';
         }
     }
+
+    /**
+     * Reacción del chip al responder.
+     *  - 'mal': se pone rojo, tiembla y deja caer un "−100" (delta negativo).
+     *  - 'bien': late en verde.
+     * El número flotante va en <body> porque el chip se repinta cada medio
+     * segundo y borraría cualquier cosa que tenga adentro.
+     */
+    animarCambio(delta, tipo) {
+        const chip = this.container;
+        if (!chip || chip.style.display === 'none') return;
+        const clase = tipo === 'mal' ? 'penalizado' : 'acierto';
+        chip.classList.remove('penalizado', 'acierto');
+        void chip.offsetWidth;               // reinicia la animación si se repite
+        chip.classList.add(clase);
+        clearTimeout(this._timerAnim);
+        this._timerAnim = setTimeout(() => chip.classList.remove(clase), 1600);
+
+        if (tipo === 'mal' && delta) {
+            const r = chip.getBoundingClientRect();
+            const flotante = document.createElement('div');
+            flotante.className = 'puntos-flotante';
+            flotante.setAttribute('aria-hidden', 'true');
+            flotante.textContent = `−${Math.abs(delta)}`;
+            flotante.style.left = `${r.left + r.width / 2}px`;
+            flotante.style.top = `${r.bottom + 4}px`;
+            document.body.appendChild(flotante);
+            setTimeout(() => flotante.remove(), 1700);
+        }
+    }
 }

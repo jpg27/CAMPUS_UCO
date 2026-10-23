@@ -182,6 +182,84 @@
     }
     #notificacion .not-puntos:empty { display: none; }
 
+    #notificacion .not-lado {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    #notificacion .not-lado:has(.not-puntos:empty):has(.not-detalle:empty) { display: none; }
+
+    /* Respuesta incorrecta: puntos en ámbar y la cuenta de la penalización */
+    #notificacion.tipo-aviso .not-puntos {
+      background: #FFF3CD;
+      color: #856404;
+      border: 1px solid #F1DE9A;
+      box-shadow: none;
+    }
+    #notificacion .not-detalle {
+      color: #B3261E;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    #notificacion .not-detalle:empty { display: none; }
+
+    /* ── Reacción del chip de puntos al responder ── */
+    .ar-chip-puntos { transition: background 0.25s ease, color 0.25s ease; }
+    .ar-chip-puntos.penalizado {
+      background: #FDE2E0;
+      color: #B3261E;
+      box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.18), 0 4px 16px rgba(18, 61, 42, 0.16);
+      animation: chip-temblor 0.45s ease;
+    }
+    .ar-chip-puntos.acierto {
+      background: #DDF1E4;
+      color: #087A45;
+      box-shadow: 0 0 0 3px rgba(8, 122, 69, 0.18), 0 4px 16px rgba(18, 61, 42, 0.16);
+      animation: chip-latido 0.5s ease;
+    }
+    @keyframes chip-temblor {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    @keyframes chip-latido {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+
+    .puntos-flotante {
+      position: fixed;
+      z-index: 1100;
+      transform: translateX(-50%);
+      padding: 5px 10px;
+      background: #FFFFFF;
+      color: #B3261E;
+      border: 1px solid #F3CFCC;
+      border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(179, 38, 30, 0.25);
+      font: 800 17px/1 'Inter', Arial, sans-serif;
+      pointer-events: none;
+      animation: puntos-caer 1.6s ease-out forwards;
+    }
+    @keyframes puntos-caer {
+      0%   { opacity: 0; transform: translate(-50%, -6px) scale(0.9); }
+      15%  { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+      70%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, 34px) scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ar-chip-puntos.penalizado, .ar-chip-puntos.acierto { animation: none; }
+      .puntos-flotante { animation: puntos-aparecer 1.6s linear forwards; }
+      @keyframes puntos-aparecer { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       #notificacion { transition: none; }
     }
@@ -756,7 +834,10 @@
       <div class="not-titulo" id="not-titulo">Edificio escaneado</div>
       <div class="not-desc"   id="not-desc">Registro guardado</div>
     </div>
-    <div class="not-puntos" id="not-puntos"></div>
+    <div class="not-lado">
+      <div class="not-puntos" id="not-puntos"></div>
+      <div class="not-detalle" id="not-detalle"></div>
+    </div>
   </div>
 
   <!-- La pregunta de trivia ahora se muestra en 3D, anclada al marcador

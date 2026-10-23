@@ -11,7 +11,7 @@ import {
   cerrarSesionesCaducadas,
   eliminarSesion
 } from '../models/SesionModel.js';
-import { obtenerParticipantes } from '../models/ParticipanteModel.js';
+import { obtenerParticipantes, eliminarParticipante } from '../models/ParticipanteModel.js';
 import { obtenerTodasLasPreguntas, obtenerPreguntasPorIds, crearPregunta, actualizarPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
 import { formatearTiempo, formatearHora } from '../utils/formatters.js';
 import { clasificarParticipantes, formatearPuntos } from '../utils/clasificacion.js';
@@ -731,6 +731,7 @@ export class AdminController {
     document.getElementById('mp-nombre').textContent = origen?.textContent?.trim() || 'Participante';
     document.getElementById('mp-sub').textContent = '';
     cuerpo.innerHTML = '<p class="ranking-vacio">Cargando...</p>';
+    document.getElementById('mp-eliminar').hidden = true;
     capa.hidden = false;
     document.getElementById('mp-cerrar').focus();
 
@@ -814,6 +815,42 @@ export class AdminController {
           ${incorrectas ? `<span class="mp-chip">−${formatearPuntos(incorrectas * 100)} por errores</span>` : ''}
         </div>` : ''}
       <ul class="mp-lista">${lista || '<li class="ranking-vacio">Esta carrera no tiene edificios.</li>'}</ul>`;
+
+    const btnEliminar = document.getElementById('mp-eliminar');
+    btnEliminar.hidden = false;
+    btnEliminar.disabled = false;
+    btnEliminar.onclick = () => this._eliminarParticipante(p, hechos);
+  }
+
+  /** Quita a un participante de la carrera tras confirmarlo. */
+  async _eliminarParticipante(p, hechos) {
+    const ok = await confirmar({
+      titulo: `¿Eliminar a ${p.nombre}?`,
+      texto: hechos
+        ? `Se borrarán sus ${hechos} ${hechos === 1 ? 'edificio registrado' : 'edificios registrados'} y sus puntos. Esta acción no se puede deshacer.`
+        : 'Saldrá del ranking de esta carrera. Esta acción no se puede deshacer.',
+      aceptar: 'Eliminar',
+      peligro: true
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById('mp-eliminar');
+    if (btn) btn.disabled = true;
+    try {
+      await eliminarParticipante(p.id, p.sesion_id);
+      this._origenDetalle = null;   // su fila ya no existe
+      this._cerrarDetalleParticipante();
+      mostrarAviso({ tipo: 'exito', titulo: 'Participante eliminado', texto: `${p.nombre} ya no está en la carrera.` });
+      // Refrescar donde se esté viendo la carrera
+      if (this.sesionActual?.id === p.sesion_id) this._cargarRanking();
+      if (document.getElementById('detalle-sesion')?.classList.contains('visible')) {
+        window.verDetalleSesion(p.sesion_id, { forzarDetalle: true });
+      }
+    } catch (e) {
+      console.error('[Admin] Error eliminando participante:', e);
+      if (btn) btn.disabled = false;
+      mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar', texto: 'Revisa tu conexión o vuelve a iniciar sesión e intenta de nuevo.' });
+    }
   }
 
   _iniciarRanking() {

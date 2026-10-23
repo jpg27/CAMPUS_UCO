@@ -71,7 +71,9 @@ export class ModoCarrera extends GameStrategy {
         supabase.from('sesiones').select('estado, activada_en, creada_en, codigo').eq('id', this.sesion.id).maybeSingle(),
         supabase.from('participantes').select('completado').eq('id', this.participante.id).maybeSingle()
       ]);
-      if (yo?.completado) {
+      if (sesion && !yo) {
+        this._retirado(view);
+      } else if (yo?.completado) {
         await this._mostrarPantallaFinalizacion(view);
         try { view.detenerAR(); } catch (e) { /* cámara aún no iniciada */ }
       } else if (!sesion) {
@@ -94,6 +96,25 @@ export class ModoCarrera extends GameStrategy {
     } catch (e) {
       // Sin conexión: se sigue normal y el observer avisará cuando vuelva
     }
+  }
+
+  /** El organizador eliminó a este participante: se detiene todo y se avisa. */
+  _retirado(view) {
+    if (this._cerrada) return;
+    this._cerrada = true;
+    this.puntosController?.detener();
+    try { view.ocultarPreguntaAR?.(); } catch (e) { /* sin pregunta abierta */ }
+    try { view.detenerAR(); } catch (e) { /* cámara aún no iniciada */ }
+    view.mostrarRetirado();
+    limpiarTodo();
+  }
+
+  /** ¿Sigue existiendo este participante? (false solo si se confirmó que no) */
+  async _sigoEnLaCarrera() {
+    try {
+      const { data, error } = await supabase.from('participantes').select('id').eq('id', this.participante.id).maybeSingle();
+      return error ? true : !!data;
+    } catch (e) { return true; }
   }
 
   /**
@@ -198,11 +219,19 @@ export class ModoCarrera extends GameStrategy {
 
     view.marcarRespuestaAR(letra, pregunta.respuesta_correcta);
 
+    // Puntos justo antes de responder (para mostrar la cuenta si se equivoca)
+    const antes = this.puntosController ? this.puntosController.calcular() : 0;
+
     if (correcta) this.puntosController?.aplicarBonus();
     else this.puntosController?.aplicarPenalizacion();
 
     // Puntos en el momento exacto de responder (ya con la penalización)
     const puntos = this.puntosController ? this.puntosController.calcular() : 0;
+    const descuento = Math.max(0, antes - puntos);
+
+    // Reacción inmediata en el chip de puntos (y vibración al fallar)
+    this.puntosController?.display?.animarCambio?.(correcta ? 0 : -descuento, correcta ? 'bien' : 'mal');
+    if (!correcta) { try { navigator.vibrate?.([80, 60, 80]); } catch (e) { /* sin vibración */ } }
 
     // Se registra YA, sin esperar a que el panel se cierre: si el marcador se
     // pierde o la persona se va, el edificio igual queda completado.
@@ -236,6 +265,7 @@ export class ModoCarrera extends GameStrategy {
 
     try {
       if (fallo) {
+        if (!(await this._sigoEnLaCarrera())) { this._retirado(view); return; }
         notificacion.mostrar('Error', 'No se pudo registrar el edificio. Vuelve a escanear el marcador.', null, 'error');
         return;
       }
@@ -247,8 +277,20 @@ export class ModoCarrera extends GameStrategy {
 
       if (resultado.esUltimo) {
         await this._mostrarPantallaFinalizacion(view);
+      } else if (correcta) {
+        notificacion.mostrar(`¡Correcto! · ${edificio.nombre}`, 'Edificio registrado — sigue al siguiente', puntos, 'exito');
       } else {
-        notificacion.mostrar(edificio.nombre, 'Edificio registrado — sigue al siguiente', puntos, 'exito');
+        // Ámbar y con la cuenta: se entiende que sumó menos por la penalización
+        notificacion.mostrar(
+          `${edificio.nombre} · Respuesta incorrecta`,
+          'Edificio registrado. Sigue al siguiente.',
+          puntos,
+          'aviso',
+          {
+            detalle: descuento ? `${antes.toLocaleString('es-CO')} − ${descuento.toLocaleString('es-CO')} penalización` : '',
+            duracion: 6500
+          }
+        );
       }
     } finally {
       // La pregunta terminó: ya se pueden procesar nuevas detecciones.
@@ -294,6 +336,7 @@ export class ModoCarrera extends GameStrategy {
 
       if (!resultado.esUltimo) this.puntosController?.resetear(this.sesion.id);
     } catch (e) {
+      if (!(await this._sigoEnLaCarrera())) { this._retirado(view); return; }
       notificacion.mostrar('Error', 'No se pudo registrar', null, 'error');
     }
   }
