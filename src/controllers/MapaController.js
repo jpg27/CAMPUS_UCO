@@ -17,7 +17,10 @@ export class MapaController {
     this.sesionObserver = null;
     this.participante = obtenerParticipante();
     this.sesion = obtenerSesion();
-    this.enCarrera = !!(this.sesion && this.participante);
+    // mapa.html?vista=admin: el mapa dentro del panel del administrador.
+    // Siempre se ve como antes de una carrera (sin puntos ni progreso).
+    this.vistaAdmin = new URLSearchParams(location.search).get('vista') === 'admin';
+    this.enCarrera = !this.vistaAdmin && !!(this.sesion && this.participante);
 
     // Estado de la carrera para pines y ficha (null si no hay carrera)
     this.escaneados = new Set();
@@ -25,6 +28,13 @@ export class MapaController {
   }
 
   init() {
+    if (this.vistaAdmin) {
+      document.documentElement.classList.add('vista-admin');
+      // La barra Mapa / Carrera / Libre / Más es solo para estudiantes
+      // (se oculta, no se borra: otras partes del mapa usan sus botones)
+      const nav = document.querySelector('.nav');
+      if (nav) { nav.hidden = true; nav.style.display = 'none'; }
+    }
     this.view.init({
       onSeleccionar:   (edificio) => this.seleccionar(edificio),
       onDeseleccionar: () => this.deseleccionar()
@@ -42,7 +52,7 @@ export class MapaController {
     }
 
     // ── Escuchar cierre de sesión ──
-    if (this.sesion) {
+    if (this.sesion && !this.vistaAdmin) {
       this.sesionObserver = new SesionObserver(this.sesion.id);
       eventBus.on(EVENTOS.SESION_CERRADA, () => {
         if (this.puntosController) this.puntosController.detener();

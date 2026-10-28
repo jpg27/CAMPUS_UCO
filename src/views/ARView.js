@@ -551,6 +551,16 @@ export class ARView {
     document.getElementById('sin-sesion').style.display = 'flex';
   }
 
+  /** El organizador eliminó a este participante de la carrera. */
+  mostrarRetirado() {
+    document.getElementById('sin-sesion-modal').classList.add('finalizada');
+    document.getElementById('sin-sesion-titulo').textContent       = 'Ya no estás en la carrera';
+    document.getElementById('sin-sesion-texto').textContent        = 'El organizador te retiró de esta carrera. Si fue un error, vuelve a unirte con el código.';
+    document.getElementById('sin-sesion-enlace-texto').textContent = 'Volver a unirme';
+    document.getElementById('sin-sesion-enlace').href              = 'carrera.html';
+    document.getElementById('sin-sesion').style.display = 'flex';
+  }
+
   // ── Paneles 3D de puntos de interés (Modo Libre, Cambio 1) ──
   mostrarPuntosInteres(edificio, targetEntity) {
     this.ocultarPuntosInteres();
@@ -711,15 +721,42 @@ export class ARView {
   }
 
   // ── Panel de logros ──
-  renderizarLogros(edificiosSesion, escaneos, puntosTotal) {
-    const escaneadosIds = (escaneos || []).map(e => e.edificio_id);
+  /**
+   * Panel "Mis logros": puntos, progreso, resumen de aciertos y, por cada
+   * edificio, la pregunta con la respuesta elegida y la correcta.
+   * @param {Map} preguntas  id → pregunta (puede venir vacío)
+   */
+  renderizarLogros(edificiosSesion, escaneos, puntosTotal, preguntas = new Map()) {
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const lista_esc     = escaneos || [];
+    const escaneadosIds = lista_esc.map(e => e.edificio_id);
     const total         = edificiosSesion ? edificiosSesion.length : 0;
     const completados   = Math.min(escaneadosIds.length, total);
     const porcentaje    = total > 0 ? (completados / total) * 100 : 0;
+    const correctas     = lista_esc.filter(e => e.respondio_correctamente === true).length;
+    const incorrectas   = lista_esc.filter(e => e.respondio_correctamente === false).length;
 
-    document.getElementById('logros-puntos').textContent         = puntosTotal;
+    document.getElementById('logros-puntos').textContent         = Number(puntosTotal || 0).toLocaleString('es-CO');
     document.getElementById('logros-texto-progreso').textContent = `${completados} / ${total} edificios`;
     document.getElementById('logros-barra').style.width          = porcentaje + '%';
+
+    const SVG_OK  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>';
+    const SVG_MAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>';
+    const SVG_CHEVRON = '<svg class="ar-logro-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+
+    const resumen = document.getElementById('logros-resumen');
+    if (resumen) {
+      if (correctas + incorrectas > 0) {
+        resumen.innerHTML = `
+          <span class="logros-chip ok">${SVG_OK}${correctas} ${correctas === 1 ? 'correcta' : 'correctas'}</span>
+          <span class="logros-chip mal">${SVG_MAL}${incorrectas} ${incorrectas === 1 ? 'incorrecta' : 'incorrectas'}</span>
+          ${incorrectas > 0 ? `<span class="logros-chip">−${(incorrectas * PUNTOS.PENALIZACION).toLocaleString('es-CO')} por errores</span>` : ''}`;
+        resumen.hidden = false;
+      } else {
+        resumen.innerHTML = '';
+        resumen.hidden = true;
+      }
+    }
 
     const lista = document.getElementById('logros-lista');
     if (!edificiosSesion || edificiosSesion.length === 0) {
@@ -727,27 +764,68 @@ export class ARView {
       return;
     }
 
+    const textoOpcion = (p, letra) => letra && p ? `${letra.toUpperCase()}) ${esc(p['opcion_' + letra])}` : '';
+
     lista.innerHTML = edificiosSesion.map(ed => {
       const escaneado = escaneadosIds.includes(ed.edificio_id);
       const info      = obtenerEdificioInfo(ed.edificio_id);
-      const escaneo   = (escaneos || []).find(e => e.edificio_id === ed.edificio_id);
+      const escaneo   = lista_esc.find(e => e.edificio_id === ed.edificio_id);
       const hora      = escaneo ? formatearHora(escaneo.escaneado_en) : null;
       const pts       = escaneo?.puntos || 0;
       const acierto   = escaneo?.respondio_correctamente;
       const resultado = acierto === true ? ', <span class="ok">respuesta correcta</span>'
                       : acierto === false ? ', <span class="mal">respuesta incorrecta</span>' : '';
+      const pregunta  = escaneo?.pregunta_id != null ? preguntas.get(String(escaneo.pregunta_id)) : null;
 
-      return `
-        <li class="ar-logro ${escaneado ? 'hecho' : ''}">
+      const cabecera = `
           <span class="ar-logro-icono">${icono(escaneado ? 'check' : 'candado')}</span>
           <div class="ar-logro-info">
-            <div class="ar-logro-nombre">${info.nombre}</div>
+            <div class="ar-logro-nombre">${esc(info.nombre)}</div>
             <div class="ar-logro-estado">${escaneado ? `Escaneado a las ${hora}${resultado}` : 'Pendiente'}</div>
           </div>
-          ${escaneado ? `<span class="ar-logro-pts">${pts} pts</span>` : ''}
-        </li>
-      `;
+          ${escaneado ? `<span class="ar-logro-pts">${pts.toLocaleString('es-CO')} pts</span>` : ''}`;
+
+      // Sin pregunta asociada (edificio sin trivia o pendiente): fila simple
+      if (!pregunta) {
+        return `<li class="ar-logro ${escaneado ? 'hecho' : ''}">${cabecera}</li>`;
+      }
+
+      const elegida = escaneo.respuesta_elegida || null;
+      const filaElegida = elegida
+        ? `<div class="det-fila"><span class="det-etq">Tu respuesta</span><span class="${acierto ? 'det-ok' : 'det-mal'}">${textoOpcion(pregunta, elegida)}</span></div>`
+        : '';
+      const filaCorrecta = (!acierto || !elegida)
+        ? `<div class="det-fila"><span class="det-etq">Correcta</span><span class="det-ok">${textoOpcion(pregunta, pregunta.respuesta_correcta)}</span></div>`
+        : '';
+      const nota = acierto === false ? `<div class="det-nota">Se restaron ${PUNTOS.PENALIZACION} puntos por la respuesta incorrecta.</div>` : '';
+      const idDet = `logro-det-${esc(ed.edificio_id)}`;
+
+      return `
+        <li class="ar-logro hecho con-detalle">
+          <button type="button" class="ar-logro-boton" aria-expanded="false" aria-controls="${idDet}">
+            ${cabecera}
+            ${SVG_CHEVRON}
+          </button>
+          <div class="ar-logro-detalle" id="${idDet}" hidden>
+            <div class="det-pregunta">${esc(pregunta.pregunta)}</div>
+            ${filaElegida}
+            ${filaCorrecta}
+            ${nota}
+          </div>
+        </li>`;
     }).join('');
+
+    // Abrir / cerrar el detalle de cada edificio
+    lista.querySelectorAll('.ar-logro-boton').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const li = btn.closest('.ar-logro');
+        const det = li.querySelector('.ar-logro-detalle');
+        const abrir = det.hidden;
+        det.hidden = !abrir;
+        li.classList.toggle('abierto', abrir);
+        btn.setAttribute('aria-expanded', String(abrir));
+      });
+    });
   }
 
   mostrarLogros() {
@@ -759,15 +837,50 @@ export class ARView {
   }
 
   mostrarPantallaFinalizacion(nombre, puntos, tiempo, { sesion = null, fecha = new Date() } = {}) {
+    this._prepararFinalizacion({ incompleta: false });
     document.getElementById('fin-nombre').textContent = nombre;
-    document.getElementById('fin-puntos').textContent = puntos;
+    document.getElementById('fin-puntos').textContent = Number(puntos || 0).toLocaleString('es-CO');
     document.getElementById('fin-tiempo').textContent = tiempo;
+    this._mostrarMetaFinalizacion(sesion, fecha);
+    document.getElementById('panel-finalizacion').classList.add('visible');
+  }
+
+  /**
+   * El organizador cerró la carrera antes de que el participante terminara:
+   * misma tarjeta de finalización, pero con los edificios logrados y los
+   * puntos parciales.
+   */
+  mostrarCarreraIncompleta(nombre, { edificios = 0, total = 0, puntos = 0 } = {}, { sesion = null, fecha = new Date() } = {}) {
+    this._prepararFinalizacion({ incompleta: true });
+    document.getElementById('fin-nombre').textContent = nombre;
+    document.getElementById('fin-puntos').textContent = Number(puntos || 0).toLocaleString('es-CO');
+    document.getElementById('fin-tiempo').textContent = `${edificios}/${total}`;
+    const sub = document.getElementById('fin-subtitulo');
+    if (sub) {
+      sub.textContent = edificios > 0
+        ? `El organizador cerró la carrera. Completaste ${edificios} de ${total} edificios.`
+        : 'El organizador cerró la carrera antes de que registraras algún edificio.';
+      sub.hidden = false;
+    }
+    this._mostrarMetaFinalizacion(sesion, fecha);
+    document.getElementById('panel-finalizacion').classList.add('visible');
+  }
+
+  _prepararFinalizacion({ incompleta }) {
+    document.getElementById('fin-card')?.classList.toggle('incompleta', incompleta);
+    document.getElementById('fin-titulo').textContent = incompleta ? 'Carrera incompleta' : '¡Carrera completada!';
+    const etq = document.getElementById('fin-tiempo-label');
+    if (etq) etq.textContent = incompleta ? 'Edificios' : 'Tiempo';
+    const sub = document.getElementById('fin-subtitulo');
+    if (sub && !incompleta) sub.hidden = true;
+  }
+
+  _mostrarMetaFinalizacion(sesion, fecha) {
     // Sesión y fecha/hora en la captura de pantalla, para que el organizador
     // pueda comprobar que es de esta carrera.
     const cuando = fecha.toLocaleString('es-CO', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
     const meta = document.getElementById('fin-meta');
     if (meta) meta.textContent = sesion ? `${sesion.nombre || 'Carrera'} (${sesion.codigo || ''}), ${cuando}` : cuando;
-    document.getElementById('panel-finalizacion').classList.add('visible');
   }
 
   detenerAR() {

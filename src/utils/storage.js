@@ -86,9 +86,55 @@ export function limpiarProgresoLibre() {
   localStorage.removeItem('progreso_libre');
 }
 
+// ── Cookie de reconexión a la carrera ──
+// Guarda en el navegador a qué carrera se unió la persona y con qué
+// participante, para que si recarga, cierra la app o borra sin querer los
+// datos de la carrera (p. ej. tocando "Modo Libre"), vuelva a entrar con el
+// MISMO participante en vez de crear uno nuevo.
+// La cookie vence cuando vence la carrera (3 horas desde que se activó),
+// así que solo sirve mientras la carrera está abierta.
+const COOKIE_CARRERA = 'campus_carrera';
+export const HORAS_MAX_CARRERA = 3;
+
+function rutaCookie() {
+  const p = location.pathname;
+  return p.slice(0, p.lastIndexOf('/') + 1) || '/';
+}
+
+/** Momento (ms) en que vence la carrera: activación (o creación) + 3 h. */
+export function vencimientoCarrera(sesion) {
+  const base = new Date(sesion?.activada_en || sesion?.creada_en || Date.now()).getTime();
+  return base + HORAS_MAX_CARRERA * 60 * 60 * 1000;
+}
+
+/**
+ * @param {{s:string, p:string, n:string, c:string}} datos
+ *        s = id de la sesión, p = id del participante, n = nombre, c = código
+ */
+export function guardarCookieCarrera(datos, venceEnMs) {
+  const segundos = Math.floor((venceEnMs - Date.now()) / 1000);
+  if (segundos <= 0) { borrarCookieCarrera(); return; }
+  const seguro = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${COOKIE_CARRERA}=${encodeURIComponent(JSON.stringify(datos))}; Max-Age=${segundos}; Path=${rutaCookie()}; SameSite=Lax${seguro}`;
+}
+
+export function leerCookieCarrera() {
+  const par = document.cookie.split('; ').find(c => c.startsWith(COOKIE_CARRERA + '='));
+  if (!par) return null;
+  try {
+    const datos = JSON.parse(decodeURIComponent(par.slice(COOKIE_CARRERA.length + 1)));
+    return datos && datos.s && datos.p ? datos : null;
+  } catch { return null; }
+}
+
+export function borrarCookieCarrera() {
+  document.cookie = `${COOKIE_CARRERA}=; Max-Age=0; Path=${rutaCookie()}; SameSite=Lax`;
+}
+
 // ── Limpiar todo al cerrar sesión ──
 export function limpiarTodo() {
   limpiarParticipante();
   limpiarSesion();
   limpiarPuntos();
+  borrarCookieCarrera();
 }

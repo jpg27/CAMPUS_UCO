@@ -9,31 +9,33 @@ import {
   activarSesion as activarSesionDB, 
   cerrarSesion as cerrarSesionDB,
   cerrarSesionesCaducadas,
-  conEstadoReal,
-  estaCaducada,
   eliminarSesion
 } from '../models/SesionModel.js';
-import { obtenerParticipantes } from '../models/ParticipanteModel.js';
-import { obtenerPreguntas, crearPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
-import { formatearTiempo } from '../utils/formatters.js';
+import { obtenerParticipantes, eliminarParticipante } from '../models/ParticipanteModel.js';
+import { obtenerTodasLasPreguntas, obtenerPreguntasPorIds, crearPregunta, actualizarPregunta, eliminarPregunta } from '../models/PreguntaModel.js';
+import { formatearTiempo, formatearHora } from '../utils/formatters.js';
+import { clasificarParticipantes, formatearPuntos } from '../utils/clasificacion.js';
 import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
 import { mostrarAviso, confirmar } from '../views/components/Avisos.js';
+
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
 export class AdminController {
   constructor() {
     this.sesionActual = null;
     this.suscripcion = null;
-    this.edificioSeleccionado = null;
+    this.preguntasCargadas = new Map();   // id → pregunta (para editar)
+    this.preguntasPorEdificio = null;     // edificio_id → [preguntas]
+    this.edificioAbierto = null;          // edificio desplegado en el acordeón
+    this.formModo = null;                 // 'nueva' | 'editar' | null
+    this.preguntaEditando = null;         // id de la pregunta en edición
   }
 
   destruir() {
+    clearInterval(this._timerRanking);
     if (this.suscripcion) {
       supabase.removeChannel(this.suscripcion);
       this.suscripcion = null;
-    }
-    if (this.canalSesiones) {
-      supabase.removeChannel(this.canalSesiones);
-      this.canalSesiones = null;
     }
   }
 
@@ -50,48 +52,11 @@ export class AdminController {
     this._initEdificiosGrid();
     this._initTabPreguntas();
     this._exposeWindowFunctions();
+    this._conectarDetalleParticipante();
     
-    // Cambios en "sesiones" en tiempo real: si una sesión se cierra sola
-    // (job de pg_cron o el autocierre de abajo) o desde otro dispositivo, el
-    // historial y el panel de control se actualizan sin recargar la página.
-    this._escucharSesiones();
-
     // Autocierre de sesiones activas (inicial y cada 5 minutos)
-    await this._autocierre();
-    setInterval(() => this._autocierre(), 5 * 60 * 1000);
-  }
-
-  async _autocierre() {
-    const cerradas = await cerrarSesionesCaducadas();
-    // La sesión abierta en el panel también se marca si ya caducó, aunque la
-    // base no se haya podido actualizar desde aquí.
-    if (estaCaducada(this.sesionActual)) cerradas.push(this.sesionActual.id);
-    if (cerradas.length) this._alCambiarSesiones(cerradas.map(id => ({ id, estado: 'cerrada' })));
-  }
-
-  _escucharSesiones() {
-    this.canalSesiones = supabase
-      .channel('admin-sesiones')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sesiones' },
-        (payload) => this._alCambiarSesiones([payload.new || payload.old]))
-      .subscribe();
-  }
-
-  /** Refresca lo que esté en pantalla cuando cambia el estado de una o más sesiones. */
-  _alCambiarSesiones(cambios) {
-    const historialVisible = document.getElementById('pantalla-historial')?.classList.contains('visible');
-    if (historialVisible) this._cargarHistorialEnSegundoPlano();
-
-    // La sesión abierta en el panel de control se cerró sin que el admin la cerrara
-    const actual = this.sesionActual;
-    const cambio = actual && cambios.find(c => c?.id === actual.id);
-    if (cambio && cambio.estado === 'cerrada' && actual.estado !== 'cerrada') {
-      actual.estado = 'cerrada';
-      this._actualizarBadge('cerrada');
-      document.getElementById('btn-activar').disabled = true;
-      document.getElementById('btn-cerrar').disabled  = true;
-      mostrarAviso({ tipo: 'aviso', titulo: 'La sesión se cerró', texto: `"${actual.nombre}" se cerró automáticamente al cumplir el tiempo máximo.`, duracion: 8000 });
-    }
+    await cerrarSesionesCaducadas();
+    setInterval(cerrarSesionesCaducadas, 5 * 60 * 1000);
   }
 
   // ── Grid de edificios (nueva carrera) ──
@@ -115,54 +80,314 @@ export class AdminController {
     });
   }
 
-  // ── Tab preguntas: selector de edificio ──
-  _initTabPreguntas() {
-    const selector = document.getElementById('preg-edificio-selector');
-    if (!selector) return;
-    selector.innerHTML = '';
-    EDIFICIOS.forEach(e => {
-      const btn = document.createElement('button');
-      btn.className = 'preg-edificio-btn';
-      btn.textContent = e.icono + ' ' + e.nombre;
-      btn.onclick = () => this._seleccionarEdificioPreguntas(e, btn);
-      selector.appendChild(btn);
-    });
-    document.getElementById('seccion-preguntas-edificio').style.display = 'none';
+  // ═══════════════════════════════════════════
+  // Tab Preguntas: acordeón por edificio
+  // ═══════════════════════════════════════════
+  // Cada edificio es una tarjeta plegable con su número de preguntas.
+  // El formulario (#form-pregunta) es uno solo y se mueve dentro del
+  // edificio abierto: al final de la lista para crear, o en el lugar de la
+  // pregunta para editarla.
+
+  async _initTabPreguntas() {
+    const acordeon = document.getElementById('preg-acordeon');
+    if (!acordeon) return;
+    if (!this._preguntasListo) {
+      this._preguntasListo = true;
+      this._conectarAcordeon(acordeon);
+      this._conectarFormularioPregunta();
+    }
+    await this._recargarPreguntas();
   }
 
-  async _seleccionarEdificioPreguntas(edificio, btnEl) {
-    document.querySelectorAll('.preg-edificio-btn').forEach(b => b.classList.remove('activo'));
-    btnEl.classList.add('activo');
-    this.edificioSeleccionado = edificio;
-    document.getElementById('seccion-preguntas-edificio').style.display = 'block';
-    await this._cargarPreguntasEdificio(edificio.id);
-  }
-
-  async _cargarPreguntasEdificio(edificioId) {
-    const lista = document.getElementById('lista-preguntas-edificio');
-    lista.innerHTML = '<p style="color:#888;font-size:14px;">Cargando...</p>';
-
-    const preguntas = await obtenerPreguntas(edificioId);
-
-    if (preguntas.length === 0) {
-      lista.innerHTML = '<p style="color:#888;font-size:14px;text-align:center;padding:16px;">No hay preguntas para este edificio</p>';
+  async _recargarPreguntas() {
+    const acordeon = document.getElementById('preg-acordeon');
+    if (!this.preguntasPorEdificio) {
+      acordeon.innerHTML = '<p class="preg-cargando">Cargando preguntas...</p>';
+    }
+    let preguntas = [];
+    try {
+      preguntas = await obtenerTodasLasPreguntas();
+    } catch (e) {
+      acordeon.innerHTML = '<p class="preg-cargando">No se pudieron cargar las preguntas. Revisa tu conexión.</p>';
       return;
     }
+    this.preguntasCargadas = new Map(preguntas.map(p => [String(p.id), p]));
+    this.preguntasPorEdificio = {};
+    preguntas.forEach(p => {
+      (this.preguntasPorEdificio[p.edificio_id] ||= []).push(p);
+    });
+    this._renderAcordeon();
+  }
 
-    lista.innerHTML = preguntas.map(p => `
-      <div class="pregunta-item">
+  _renderAcordeon() {
+    const acordeon = document.getElementById('preg-acordeon');
+    const form = document.getElementById('form-pregunta');
+    // El formulario vuelve a su "estacionamiento" antes de redibujar
+    document.getElementById('form-pregunta-estacion').appendChild(form);
+
+    acordeon.innerHTML = EDIFICIOS.map(e => {
+      const lista = this.preguntasPorEdificio[e.id] || [];
+      const abierto = this.edificioAbierto === e.id;
+      const n = lista.length;
+      const badge = n === 0
+        ? '<span class="acc-badge vacio"><i data-lucide="triangle-alert" aria-hidden="true"></i>Sin preguntas</span>'
+        : `<span class="acc-badge">${n} ${n === 1 ? 'pregunta' : 'preguntas'}</span>`;
+      return `
+        <section class="acc-item${abierto ? ' abierto' : ''}" data-ed="${esc(e.id)}">
+          <button type="button" class="acc-header" aria-expanded="${abierto}" aria-controls="acc-panel-${esc(e.id)}">
+            <span class="acc-icono" aria-hidden="true">${e.icono || ''}</span>
+            <span class="acc-nombre">${esc(e.nombre)}</span>
+            ${badge}
+            <i data-lucide="chevron-down" class="acc-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="acc-panel" id="acc-panel-${esc(e.id)}" ${abierto ? '' : 'hidden'}>
+            <div class="acc-lista">
+              ${n === 0
+                ? '<p class="acc-vacio">Este edificio no tiene preguntas: en la carrera se registrará sin trivia.</p>'
+                : lista.map(p => this._htmlPregunta(p)).join('')}
+            </div>
+            <button type="button" class="btn-nueva-pregunta" data-accion="nueva">
+              <i data-lucide="plus" aria-hidden="true"></i>Nueva pregunta
+            </button>
+          </div>
+        </section>`;
+    }).join('');
+
+    // Si había un formulario abierto, volver a colocarlo donde estaba
+    if (this.formModo && this.edificioAbierto) this._colocarFormulario();
+  }
+
+  _htmlPregunta(p) {
+    const op = (letra, texto) => `
+      <li class="${p.respuesta_correcta === letra ? 'correcta' : ''}">
+        <span class="op-letra">${letra.toUpperCase()}</span>${esc(texto)}
+        ${p.respuesta_correcta === letra ? '<i data-lucide="check" class="op-check" aria-label="Respuesta correcta"></i>' : ''}
+      </li>`;
+    return `
+      <article class="pregunta-item" data-id="${esc(p.id)}">
         <div class="pregunta-item-header">
-          <div class="preg-texto">${p.pregunta}</div>
-          <button class="btn-peligro" onclick="borrarPregunta('${p.id}')">🗑️ Eliminar</button>
+          <div class="preg-texto">${esc(p.pregunta)}</div>
+          <div class="preg-acciones">
+            <button type="button" class="btn-editar" data-accion="editar" data-id="${esc(p.id)}"><i data-lucide="pencil" aria-hidden="true"></i>Editar</button>
+            <button type="button" class="btn-peligro" data-accion="eliminar" data-id="${esc(p.id)}"><i data-lucide="trash-2" aria-hidden="true"></i>Eliminar</button>
+          </div>
         </div>
-        <div class="preg-opciones">
-          <span class="${p.respuesta_correcta === 'a' ? 'correcta' : ''}">A) ${p.opcion_a}</span><br>
-          <span class="${p.respuesta_correcta === 'b' ? 'correcta' : ''}">B) ${p.opcion_b}</span><br>
-          <span class="${p.respuesta_correcta === 'c' ? 'correcta' : ''}">C) ${p.opcion_c}</span><br>
-          <span class="${p.respuesta_correcta === 'd' ? 'correcta' : ''}">D) ${p.opcion_d}</span>
-        </div>
-      </div>
-    `).join('');
+        <ul class="preg-opciones">
+          ${op('a', p.opcion_a)}${op('b', p.opcion_b)}${op('c', p.opcion_c)}${op('d', p.opcion_d)}
+        </ul>
+      </article>`;
+  }
+
+  _conectarAcordeon(acordeon) {
+    acordeon.addEventListener('click', async (ev) => {
+      const header = ev.target.closest('.acc-header');
+      if (header) {
+        const id = header.closest('.acc-item').dataset.ed;
+        await this._alternarEdificio(id);
+        return;
+      }
+      const btn = ev.target.closest('[data-accion]');
+      if (!btn || btn.closest('#form-pregunta')) return;
+      const accion = btn.dataset.accion;
+      if (accion === 'nueva') await this._abrirFormulario('nueva');
+      else if (accion === 'editar') await this._abrirFormulario('editar', btn.dataset.id);
+      else if (accion === 'eliminar') await this._eliminarPregunta(btn.dataset.id);
+    });
+  }
+
+  async _alternarEdificio(id) {
+    const abrir = this.edificioAbierto !== id;
+    if (this.formModo && !(await this._confirmarDescartar())) return;
+    this._cerrarFormulario({ redibujar: false });
+    this.edificioAbierto = abrir ? id : null;
+    document.querySelectorAll('#preg-acordeon .acc-item').forEach(item => {
+      const esEste = abrir && item.dataset.ed === id;
+      item.classList.toggle('abierto', esEste);
+      item.querySelector('.acc-header').setAttribute('aria-expanded', String(esEste));
+      item.querySelector('.acc-panel').hidden = !esEste;
+    });
+    if (abrir) {
+      const item = document.querySelector(`#preg-acordeon .acc-item[data-ed="${CSS.escape(id)}"]`);
+      item?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  /** true si se puede descartar lo escrito en el formulario. */
+  async _confirmarDescartar() {
+    const f = this._leerFormulario();
+    const original = this.formModo === 'editar' ? this.preguntasCargadas.get(this.preguntaEditando) : null;
+    const vacio = !f.pregunta && !f.opciones.a && !f.opciones.b && !f.opciones.c && !f.opciones.d;
+    const sinCambios = original
+      ? f.pregunta === original.pregunta && f.correcta === original.respuesta_correcta &&
+        ['a', 'b', 'c', 'd'].every(l => f.opciones[l] === original['opcion_' + l])
+      : vacio;
+    if (sinCambios) return true;
+    return confirmar({ titulo: '¿Descartar los cambios?', texto: 'Tienes cambios sin guardar en la pregunta.', aceptar: 'Descartar', peligro: true });
+  }
+
+  // ── Formulario ──
+  _conectarFormularioPregunta() {
+    const form = document.getElementById('form-pregunta');
+    form.addEventListener('submit', (ev) => { ev.preventDefault(); this._guardarFormulario(); });
+    form.querySelector('[data-accion="cancelar"]').addEventListener('click', () => {
+      this._cerrarFormulario();
+    });
+    // Resaltar la fila de la opción marcada como correcta
+    form.addEventListener('change', (ev) => {
+      if (ev.target.name === 'preg-correcta') this._marcarFilaCorrecta();
+    });
+    form.addEventListener('input', () => this._mostrarErrorFormulario(''));
+  }
+
+  async _abrirFormulario(modo, preguntaId = null) {
+    if (this.formModo && !(await this._confirmarDescartar())) return;
+    this.formModo = modo;
+    this.preguntaEditando = modo === 'editar' ? String(preguntaId) : null;
+
+    const form = document.getElementById('form-pregunta');
+    const p = modo === 'editar' ? this.preguntasCargadas.get(this.preguntaEditando) : null;
+    form.querySelector('#preg-texto').value = p?.pregunta || '';
+    ['a', 'b', 'c', 'd'].forEach(l => {
+      form.querySelector('#preg-op-' + l).value = p ? (p['opcion_' + l] || '') : '';
+    });
+    form.querySelectorAll('input[name="preg-correcta"]').forEach(r => {
+      r.checked = !!p && r.value === p.respuesta_correcta;
+    });
+    form.querySelector('.form-pregunta-titulo').textContent = modo === 'editar' ? 'Editar pregunta' : 'Nueva pregunta';
+    form.querySelector('.btn-guardar-texto').textContent = modo === 'editar' ? 'Guardar cambios' : 'Guardar pregunta';
+    this._mostrarErrorFormulario('');
+    this._marcarFilaCorrecta();
+
+    const aviso = form.querySelector('.aviso-edicion');
+    aviso.hidden = true;
+    if (modo === 'editar') {
+      this._hayCarreraActiva().then(activa => {
+        if (activa && this.formModo === 'editar' && this.preguntaEditando === String(preguntaId)) aviso.hidden = false;
+      });
+    }
+
+    this._colocarFormulario();
+    form.querySelector('#preg-texto').focus({ preventScroll: true });
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  /** Coloca el formulario dentro del edificio abierto según el modo. */
+  _colocarFormulario() {
+    const form = document.getElementById('form-pregunta');
+    const item = document.querySelector(`#preg-acordeon .acc-item[data-ed="${CSS.escape(this.edificioAbierto || '')}"]`);
+    if (!item) return;
+    item.querySelectorAll('.pregunta-item.oculta-por-edicion').forEach(el => el.classList.remove('oculta-por-edicion'));
+    const btnNueva = item.querySelector('.btn-nueva-pregunta');
+    if (this.formModo === 'editar') {
+      const art = item.querySelector(`.pregunta-item[data-id="${CSS.escape(this.preguntaEditando)}"]`);
+      if (!art) return;
+      art.classList.add('oculta-por-edicion');
+      art.after(form);
+      btnNueva.hidden = false;
+    } else {
+      btnNueva.before(form);
+      btnNueva.hidden = true;
+    }
+    form.hidden = false;
+  }
+
+  _cerrarFormulario({ redibujar = true } = {}) {
+    const form = document.getElementById('form-pregunta');
+    this.formModo = null;
+    this.preguntaEditando = null;
+    form.hidden = true;
+    document.querySelectorAll('.pregunta-item.oculta-por-edicion').forEach(el => el.classList.remove('oculta-por-edicion'));
+    document.querySelectorAll('#preg-acordeon .btn-nueva-pregunta').forEach(b => { b.hidden = false; });
+    document.getElementById('form-pregunta-estacion').appendChild(form);
+    if (redibujar) { /* nada más: la lista ya está al día */ }
+  }
+
+  _leerFormulario() {
+    const form = document.getElementById('form-pregunta');
+    const val = (sel) => form.querySelector(sel).value.trim();
+    return {
+      pregunta: val('#preg-texto'),
+      opciones: { a: val('#preg-op-a'), b: val('#preg-op-b'), c: val('#preg-op-c'), d: val('#preg-op-d') },
+      correcta: form.querySelector('input[name="preg-correcta"]:checked')?.value || null
+    };
+  }
+
+  _marcarFilaCorrecta() {
+    document.querySelectorAll('#form-pregunta .opcion-fila').forEach(fila => {
+      fila.classList.toggle('es-correcta', fila.querySelector('input[type="radio"]').checked);
+    });
+  }
+
+  _mostrarErrorFormulario(texto) {
+    const el = document.querySelector('#form-pregunta .form-error');
+    el.textContent = texto;
+    el.hidden = !texto;
+  }
+
+  /** Devuelve el mensaje de error o null si el formulario es válido. */
+  _validarFormulario(f) {
+    if (!f.pregunta) return 'Escribe la pregunta.';
+    const vacias = ['a', 'b', 'c', 'd'].filter(l => !f.opciones[l]);
+    if (vacias.length) return `Completa la opción ${vacias.map(l => l.toUpperCase()).join(', ')}.`;
+    const normal = (t) => t.toLocaleLowerCase('es').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ');
+    const vistos = {};
+    for (const l of ['a', 'b', 'c', 'd']) {
+      const k = normal(f.opciones[l]);
+      if (vistos[k]) return `Las opciones ${vistos[k].toUpperCase()} y ${l.toUpperCase()} son iguales.`;
+      vistos[k] = l;
+    }
+    if (!f.correcta) return 'Marca cuál opción es la respuesta correcta.';
+    return null;
+  }
+
+  async _guardarFormulario() {
+    const f = this._leerFormulario();
+    const error = this._validarFormulario(f);
+    if (error) { this._mostrarErrorFormulario(error); return; }
+
+    const btn = document.querySelector('#form-pregunta .btn-guardar');
+    const editando = this.formModo === 'editar' ? this.preguntaEditando : null;
+    const edificio = EDIFICIOS.find(e => e.id === this.edificioAbierto);
+    btn.disabled = true;
+    try {
+      if (editando) await actualizarPregunta(editando, f.pregunta, f.opciones, f.correcta);
+      else await crearPregunta(this.edificioAbierto, f.pregunta, f.opciones, f.correcta);
+      this._cerrarFormulario();
+      await this._recargarPreguntas();
+      mostrarAviso(editando
+        ? { tipo: 'exito', titulo: 'Cambios guardados', texto: 'La pregunta se actualizó.' }
+        : { tipo: 'exito', titulo: 'Pregunta guardada', texto: `Se agregó a ${edificio?.nombre || 'el edificio'}.` });
+    } catch (e) {
+      console.error('[Admin] Error guardando pregunta:', e);
+      this._mostrarErrorFormulario(editando
+        ? 'No se pudieron guardar los cambios. Revisa tu conexión e intenta de nuevo.'
+        : 'No se pudo guardar la pregunta. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async _eliminarPregunta(preguntaId) {
+    const ok = await confirmar({ titulo: '¿Eliminar esta pregunta?', texto: 'Esta acción no se puede deshacer.', aceptar: 'Eliminar', peligro: true });
+    if (!ok) return;
+    try {
+      await eliminarPregunta(preguntaId);
+      if (this.preguntaEditando === String(preguntaId)) this._cerrarFormulario();
+      await this._recargarPreguntas();
+    } catch (e) {
+      mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
+    }
+  }
+
+  async _hayCarreraActiva() {
+    try {
+      const { count } = await supabase.from('sesiones')
+        .select('id', { count: 'exact', head: true })
+        .eq('estado', 'activa');
+      return (count || 0) > 0;
+    } catch (e) {
+      return false;
+    }
   }
 
   // ── Exponer funciones al window ──
@@ -183,6 +408,21 @@ export class AdminController {
         this._cargarHistorial();
       }
       if (tab === 'preguntas') this._initTabPreguntas();
+      // El mapa se carga la primera vez que se abre la pestaña
+      if (tab === 'mapa') {
+        const marco = document.getElementById('mapa-admin');
+        if (marco && !marco.getAttribute('src')) {
+          marco.addEventListener('load', () => this._prepararMapaAdmin(marco));
+          // "v" evita que el navegador use una copia vieja de mapa.html
+          marco.setAttribute('src', 'mapa.html?vista=admin&v=6');
+        }
+      }
+      // En escritorio el mapa ocupa todo el espacio a la derecha del menú
+      document.body.classList.toggle('en-mapa', tab === 'mapa');
+      // En móvil se sube la página hasta las pestañas para que el mapa llene la pantalla
+      if (tab === 'mapa' && window.matchMedia('(max-width: 899px)').matches) {
+        document.querySelector('.tabs')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     };
 
     window.filtrarHistorial = () => {
@@ -224,69 +464,34 @@ export class AdminController {
         this._actualizarBadge('activa');
         document.getElementById('btn-activar').disabled = true;
         document.getElementById('btn-cerrar').disabled  = false;
-      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo activar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo iniciar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.cerrarSesion = async () => {
       if (!this.sesionActual) return;
-      const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${this.sesionActual.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+      const ok = await confirmar({ titulo: '¿Finalizar la carrera?', texto: `Los participantes de "${this.sesionActual.nombre}" verán que la carrera terminó.`, aceptar: 'Finalizar carrera', peligro: true });
       if (!ok) return;
       try {
         await cerrarSesionDB(this.sesionActual.id);
         this.sesionActual.estado = 'cerrada';
         this._actualizarBadge('cerrada');
+        this._cargarRanking();   // muestra los incompletos con sus puntos parciales
         document.getElementById('btn-cerrar').disabled = true;
 
-        setTimeout(() => this._reiniciarPanelControl(), 1500);
-      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
-    };
-
-    window.guardarPregunta = async () => {
-      if (!this.edificioSeleccionado) { mostrarAviso({ tipo: 'aviso', titulo: 'Elige un edificio', texto: 'Selecciona el edificio al que pertenece la pregunta.' }); return; }
-
-      const pregunta = document.getElementById('nueva-pregunta').value.trim();
-      const opA = document.getElementById('nueva-opcion-a').value.trim();
-      const opB = document.getElementById('nueva-opcion-b').value.trim();
-      const opC = document.getElementById('nueva-opcion-c').value.trim();
-      const opD = document.getElementById('nueva-opcion-d').value.trim();
-      const correcta = document.getElementById('nueva-respuesta-correcta').value;
-
-      if (!pregunta || !opA || !opB || !opC || !opD) {
-        mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Completa la pregunta, las cuatro opciones y la respuesta correcta.' });
-        return;
-      }
-
-      try {
-        await crearPregunta(this.edificioSeleccionado.id, pregunta, { a: opA, b: opB, c: opC, d: opD }, correcta);
-        document.getElementById('nueva-pregunta').value = '';
-        document.getElementById('nueva-opcion-a').value = '';
-        document.getElementById('nueva-opcion-b').value = '';
-        document.getElementById('nueva-opcion-c').value = '';
-        document.getElementById('nueva-opcion-d').value = '';
-        document.getElementById('nueva-respuesta-correcta').value = 'a';
-        await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
-        mostrarAviso({ tipo: 'exito', titulo: 'Pregunta guardada', texto: `Se agregó a ${this.edificioSeleccionado.nombre}.` });
-      } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No se pudo guardar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
-      }
-    };
-
-    window.borrarPregunta = async (preguntaId) => {
-      const ok = await confirmar({ titulo: '¿Eliminar esta pregunta?', texto: 'Esta acción no se puede deshacer.', aceptar: 'Eliminar', peligro: true });
-      if (!ok) return;
-      try {
-        await eliminarPregunta(preguntaId);
-        await this._cargarPreguntasEdificio(this.edificioSeleccionado.id);
-      } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la pregunta', texto: 'Revisa tu conexión e intenta de nuevo.' });
-      }
+        // Lleva al historial de esa carrera para ver el resultado final
+        const sesionId = this.sesionActual.id;
+        mostrarAviso({ tipo: 'exito', titulo: 'Carrera finalizada', texto: 'Este es el resultado final de la carrera.' });
+        setTimeout(async () => {
+          this._reiniciarPanelControl();
+          window.cambiarTab('historial');
+          await window.verDetalleSesion(sesionId, { forzarDetalle: true });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 1200);
+      } catch (e) { mostrarAviso({ tipo: 'error', titulo: 'No se pudo finalizar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' }); }
     };
 
     window.verDetalleSesion = async (sesionId, { forzarDetalle = false } = {}) => {
-      const { data: sesionBD } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
-      // Si ya pasó el tiempo máximo se muestra como cerrada aunque la base
-      // todavía no se haya actualizado.
-      const sesion = conEstadoReal(sesionBD);
+      const { data: sesion } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
 
       // Una sesión activa o en borrador se abre en el panel de control
       // ("Nueva carrera"), con el ranking en tiempo real y los botones
@@ -298,20 +503,24 @@ export class AdminController {
 
       document.getElementById('lista-sesiones').style.display = 'none';
       document.getElementById('detalle-sesion').classList.add('visible');
-      const { data: participantes } = await supabase.from('participantes').select('*').eq('sesion_id', sesionId)
-        .order('posicion', { ascending: true, nullsFirst: false });
-      const { data: edificios } = await supabase.from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden');
+      const [{ data: participantesDB }, { data: escaneosDB }, { data: edificios }] = await Promise.all([
+        supabase.from('participantes').select('*').eq('sesion_id', sesionId),
+        supabase.from('escaneos').select('participante_id, puntos, respondio_correctamente').eq('sesion_id', sesionId),
+        supabase.from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden')
+      ]);
+      const participantes = clasificarParticipantes(participantesDB || [], escaneosDB || []);
+      const incompletos = participantes.filter(p => !p.completado).length;
 
-      const ganador = (participantes || []).filter(p => p.completado)[0];
+      const ganador = participantes.filter(p => p.completado)[0];
       let html = `
         <div class="card">
-          <h2>${sesion.nombre}
+          <h2>${esc(sesion.nombre)}
             <span class="estado-badge estado-${sesion.estado}">${sesion.estado}</span>
           </h2>
           <div style="color:#555; font-size:14px; margin-bottom:16px;">
-            Código: <strong>${sesion.codigo}</strong> ·
+            Código: <strong>${esc(sesion.codigo)}</strong> ·
             ${sesion.total_edificios} edificios ·
-            ${(participantes||[]).length} participantes
+            ${participantes.length} participantes
           </div>
       `;
 
@@ -319,35 +528,21 @@ export class AdminController {
         html += `
           <div class="ganador-card">
             <div class="trofeo">🏆</div>
-            <div class="nombre">🥇 ${ganador.nombre}</div>
-            <div class="stats">⭐ ${ganador.puntos_total || 0} puntos · ⏱️ ${formatearTiempo(ganador.tiempo_total || 0)}</div>
+            <div class="nombre">🥇 ${esc(ganador.nombre)}</div>
+            <div class="stats">⭐ ${formatearPuntos(ganador.puntos)} puntos · ⏱️ ${formatearTiempo(ganador.tiempo_total || 0)}</div>
           </div>
         `;
       }
 
-      html += '<h3 style="color:#1a2e1a; margin-bottom:12px;">Ranking final</h3>';
+      html += '<h3 style="color:#1a2e1a; margin-bottom:6px;">Ranking final</h3>';
+      if (incompletos > 0) {
+        html += `<p class="ranking-nota">Primero quienes completaron la carrera, por puntos. Después ${incompletos === 1 ? 'quien no terminó' : `los ${incompletos} que no terminaron`}, por edificios y puntos.</p>`;
+      }
 
-      if (!participantes || participantes.length === 0) {
+      if (participantes.length === 0) {
         html += '<div class="ranking-vacio">Sin participantes</div>';
       } else {
-        html += participantes.map(p => {
-          const pos   = p.posicion;
-          const emoji = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos ? `#${pos}` : '⏳';
-          const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
-          return `
-            <div class="participante-item ${clase}">
-              <div class="pos-badge ${pos <= 3 ? 'pos-' + pos : 'pos-n'}">${emoji}</div>
-              <div class="participante-info">
-                <div class="participante-nombre">${p.nombre}</div>
-                <div class="participante-estado">
-                  ${p.completado
-                    ? `✅ ⭐ ${p.puntos_total || 0} pts · ⏱️ ${formatearTiempo(p.tiempo_total || 0)}`
-                    : '❌ No completó'}
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
+        html += participantes.map(p => this._htmlParticipante(p, sesion.total_edificios || 0, { cerrada: true })).join('');
       }
 
       html += '</div>';
@@ -373,7 +568,7 @@ export class AdminController {
       btnCerrarHist.style.display = sePuedeCerrar ? 'inline-flex' : 'none';
       btnCerrarHist.disabled = false;
       btnCerrarHist.onclick = async () => {
-        const ok = await confirmar({ titulo: '¿Cerrar la sesión?', texto: `Los participantes de "${sesion.nombre}" verán que la carrera terminó.`, aceptar: 'Cerrar sesión', peligro: true });
+        const ok = await confirmar({ titulo: '¿Finalizar la carrera?', texto: `Los participantes de "${sesion.nombre}" verán que la carrera terminó.`, aceptar: 'Finalizar carrera', peligro: true });
         if (!ok) return;
         btnCerrarHist.disabled = true;
         try {
@@ -383,7 +578,7 @@ export class AdminController {
           await window.verDetalleSesion(sesionId, { forzarDetalle: true });
           this._cargarHistorialEnSegundoPlano();
         } catch (e) {
-          mostrarAviso({ tipo: 'error', titulo: 'No se pudo cerrar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' });
+          mostrarAviso({ tipo: 'error', titulo: 'No se pudo finalizar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' });
           btnCerrarHist.disabled = false;
         }
       };
@@ -437,6 +632,7 @@ export class AdminController {
   /** Vuelve "Nueva carrera" al formulario de crear sesión. */
   _reiniciarPanelControl() {
     this.sesionActual = null;
+    clearInterval(this._timerRanking);
     if (this.suscripcion) { this.suscripcion.unsubscribe(); this.suscripcion = null; }
     document.getElementById('card-control').classList.add('seccion-oculta');
     document.getElementById('card-ranking').classList.add('seccion-oculta');
@@ -479,58 +675,283 @@ export class AdminController {
     badge.className = 'estado-badge estado-' + estado;
   }
 
+  // ═══════════════════════════════════════════
+  // Detalle de un participante: lo mismo que ve en "Mis logros"
+  // ═══════════════════════════════════════════
+  /**
+   * Quita del mapa embebido la barra de los estudiantes (Mapa / Carrera /
+   * Libre / Más). Se hace desde el panel, así funciona aunque el navegador
+   * tenga guardada una versión anterior de mapa.html o mapa.css.
+   */
+  _prepararMapaAdmin(marco) {
+    try {
+      const doc = marco.contentDocument;
+      if (!doc) return;
+      doc.documentElement.classList.add('vista-admin');
+      const nav = doc.querySelector('.nav');
+      if (nav) { nav.hidden = true; nav.style.setProperty('display', 'none', 'important'); }
+      if (!doc.getElementById('estilo-vista-admin')) {
+        const st = doc.createElement('style');
+        st.id = 'estilo-vista-admin';
+        st.textContent = `
+          .nav { display: none !important; }
+          .app { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr) auto !important; grid-template-areas: "mapa" "ficha" !important; }
+          @media (min-width: 900px) {
+            .app { grid-template-columns: minmax(0, 1fr) 360px !important; grid-template-rows: 100% !important; grid-template-areas: "mapa ficha" !important; }
+          }`;
+        doc.head.appendChild(st);
+      }
+    } catch (e) { /* otro origen: no se puede tocar */ }
+  }
+
+  _conectarDetalleParticipante() {
+    const capa = document.getElementById('modal-participante');
+    if (!capa) return;
+    document.addEventListener('click', (ev) => {
+      // Toda la fila abre el detalle, no solo el nombre
+      const fila = ev.target.closest('.participante-item.clicable');
+      const btn = ev.target.closest('.btn-participante') || fila?.querySelector('.btn-participante');
+      if (btn) this._verParticipante(btn.dataset.pid, btn.dataset.sesion, btn);
+    });
+    const cerrar = () => this._cerrarDetalleParticipante();
+    document.getElementById('mp-cerrar').addEventListener('click', cerrar);
+    capa.addEventListener('click', (ev) => { if (ev.target === capa) cerrar(); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !capa.hidden) cerrar(); });
+  }
+
+  _cerrarDetalleParticipante() {
+    document.getElementById('modal-participante').hidden = true;
+    this._origenDetalle?.focus?.();
+  }
+
+  async _verParticipante(participanteId, sesionId, origen = null) {
+    this._origenDetalle = origen;
+    const capa = document.getElementById('modal-participante');
+    const cuerpo = document.getElementById('mp-cuerpo');
+    document.getElementById('mp-nombre').textContent = origen?.textContent?.trim() || 'Participante';
+    document.getElementById('mp-sub').textContent = '';
+    cuerpo.innerHTML = '<p class="ranking-vacio">Cargando...</p>';
+    document.getElementById('mp-eliminar').hidden = true;
+    capa.hidden = false;
+    document.getElementById('mp-cerrar').focus();
+
+    try {
+      const [{ data: p }, { data: escaneos }, { data: edificios }, { data: sesion }] = await Promise.all([
+        supabase.from('participantes').select('*').eq('id', participanteId).maybeSingle(),
+        supabase.from('escaneos').select('*').eq('participante_id', participanteId),
+        supabase.from('edificios_sesion').select('*').eq('sesion_id', sesionId).order('orden'),
+        supabase.from('sesiones').select('estado, total_edificios').eq('id', sesionId).maybeSingle()
+      ]);
+      if (!p) { cuerpo.innerHTML = '<p class="ranking-vacio">Este participante ya no existe.</p>'; return; }
+      const preguntas = await obtenerPreguntasPorIds((escaneos || []).map(e => e.pregunta_id));
+      this._renderDetalleParticipante(p, escaneos || [], edificios || [], sesion,
+        new Map(preguntas.map(q => [String(q.id), q])));
+    } catch (e) {
+      console.error('[Admin] Error cargando participante:', e);
+      cuerpo.innerHTML = '<p class="ranking-vacio">No se pudo cargar. Revisa tu conexión.</p>';
+    }
+  }
+
+  _renderDetalleParticipante(p, escaneos, edificios, sesion, preguntas) {
+    const total = edificios.length || sesion?.total_edificios || 0;
+    const hechos = escaneos.length;
+    const suma = escaneos.reduce((a, e) => a + (e.puntos || 0), 0);
+    const puntos = p.completado && p.puntos_total != null ? p.puntos_total : suma;
+    const correctas = escaneos.filter(e => e.respondio_correctamente === true).length;
+    const incorrectas = escaneos.filter(e => e.respondio_correctamente === false).length;
+
+    const estado = p.completado
+      ? `Completó la carrera${p.posicion ? ` · ${p.posicion}.º lugar` : ''} · ${formatearTiempo(p.tiempo_total || 0)}`
+      : sesion?.estado === 'cerrada' ? `Carrera incompleta · ${hechos} de ${total} edificios` : `En carrera · ${hechos} de ${total} edificios`;
+    document.getElementById('mp-nombre').textContent = p.nombre;
+    document.getElementById('mp-sub').textContent = estado;
+
+    const opcion = (q, letra) => letra && q ? `${letra.toUpperCase()}) ${esc(q['opcion_' + letra])}` : '';
+    const lista = edificios.map(ed => {
+      const e = escaneos.find(x => x.edificio_id === ed.edificio_id);
+      const info = obtenerEdificioInfo(ed.edificio_id);
+      if (!e) {
+        return `<li class="mp-edificio"><div class="mp-fila"><div class="mp-ed-nombre">${esc(info?.nombre || ed.nombre)}<div class="mp-ed-estado">Pendiente</div></div></div></li>`;
+      }
+      const q = e.pregunta_id != null ? preguntas.get(String(e.pregunta_id)) : null;
+      const acierto = e.respondio_correctamente;
+      let detalle = '';
+      if (q) {
+        const elegida = e.respuesta_elegida;
+        detalle = `
+          <div class="mp-detalle">
+            <div class="mp-pregunta">${esc(q.pregunta)}</div>
+            ${elegida
+              ? `<div class="mp-dato"><span class="etq">Respondió</span><span class="${acierto ? 'ok' : 'mal'}">${opcion(q, elegida)}</span></div>`
+              : `<div class="mp-dato"><span class="etq">Resultado</span><span class="${acierto ? 'ok' : 'mal'}">${acierto ? 'Respuesta correcta' : 'Respuesta incorrecta'}</span></div>`}
+            ${!acierto || !elegida ? `<div class="mp-dato"><span class="etq">Correcta</span><span class="ok">${opcion(q, q.respuesta_correcta)}</span></div>` : ''}
+            ${acierto === false ? '<div class="mp-nota">Se restaron 100 puntos por la respuesta incorrecta.</div>' : ''}
+          </div>`;
+      } else if (e.pregunta_id == null) {
+        detalle = '<div class="mp-detalle"><div class="mp-nota">Este edificio no tenía preguntas: se registró sin trivia.</div></div>';
+      }
+      return `
+        <li class="mp-edificio hecho">
+          <div class="mp-fila">
+            <div class="mp-ed-nombre">${esc(info?.nombre || ed.nombre)}
+              <div class="mp-ed-estado">Escaneado a las ${formatearHora(e.escaneado_en)}</div>
+            </div>
+            <span class="mp-ed-pts">${formatearPuntos(e.puntos)} pts</span>
+          </div>
+          ${detalle}
+        </li>`;
+    }).join('');
+
+    document.getElementById('mp-cuerpo').innerHTML = `
+      <div class="mp-total"><strong>${formatearPuntos(puntos)}</strong> puntos</div>
+      <div class="mp-progreso">
+        <div class="mp-progreso-etq"><span>Progreso</span><span>${hechos} / ${total} edificios</span></div>
+        <div class="mp-barra"><span style="width:${total ? Math.min(100, hechos / total * 100) : 0}%"></span></div>
+      </div>
+      ${correctas + incorrectas > 0 ? `
+        <div class="mp-resumen">
+          <span class="mp-chip ok">${correctas} ${correctas === 1 ? 'correcta' : 'correctas'}</span>
+          <span class="mp-chip mal">${incorrectas} ${incorrectas === 1 ? 'incorrecta' : 'incorrectas'}</span>
+          ${incorrectas ? `<span class="mp-chip">−${formatearPuntos(incorrectas * 100)} por errores</span>` : ''}
+        </div>` : ''}
+      <ul class="mp-lista">${lista || '<li class="ranking-vacio">Esta carrera no tiene edificios.</li>'}</ul>`;
+
+    const btnEliminar = document.getElementById('mp-eliminar');
+    btnEliminar.hidden = false;
+    btnEliminar.disabled = false;
+    btnEliminar.onclick = () => this._eliminarParticipante(p, hechos);
+  }
+
+  /** Quita a un participante de la carrera tras confirmarlo. */
+  async _eliminarParticipante(p, hechos) {
+    const ok = await confirmar({
+      titulo: `¿Eliminar a ${p.nombre}?`,
+      texto: hechos
+        ? `Se borrarán sus ${hechos} ${hechos === 1 ? 'edificio registrado' : 'edificios registrados'} y sus puntos. Esta acción no se puede deshacer.`
+        : 'Saldrá del ranking de esta carrera. Esta acción no se puede deshacer.',
+      aceptar: 'Eliminar',
+      peligro: true
+    });
+    if (!ok) return;
+
+    const btn = document.getElementById('mp-eliminar');
+    if (btn) btn.disabled = true;
+    try {
+      await eliminarParticipante(p.id, p.sesion_id);
+      this._origenDetalle = null;   // su fila ya no existe
+      this._cerrarDetalleParticipante();
+      mostrarAviso({ tipo: 'exito', titulo: 'Participante eliminado', texto: `${p.nombre} ya no está en la carrera.` });
+      // Refrescar donde se esté viendo la carrera
+      if (this.sesionActual?.id === p.sesion_id) this._cargarRanking();
+      if (document.getElementById('detalle-sesion')?.classList.contains('visible')) {
+        window.verDetalleSesion(p.sesion_id, { forzarDetalle: true });
+      }
+    } catch (e) {
+      console.error('[Admin] Error eliminando participante:', e);
+      if (btn) btn.disabled = false;
+      mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar', texto: 'Revisa tu conexión o vuelve a iniciar sesión e intenta de nuevo.' });
+    }
+  }
+
   _iniciarRanking() {
+    const sesionId = this.sesionActual.id;
+    const recargar = () => this._programarRanking();
     this.suscripcion = supabase
-      .channel('participantes-' + this.sesionActual.id)
+      .channel('ranking-' + sesionId)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'participantes',
-        filter: `sesion_id=eq.${this.sesionActual.id}`
-      }, () => this._cargarRanking())
+        filter: `sesion_id=eq.${sesionId}`
+      }, recargar)
+      // Cada escaneo cambia los puntos parciales (requiere la tabla
+      // escaneos en la publicación supabase_realtime; ver el SQL del 21 oct)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'escaneos',
+        filter: `sesion_id=eq.${sesionId}`
+      }, recargar)
       .subscribe();
+    // Respaldo por si Realtime no envía los escaneos: refresco cada 20 s
+    clearInterval(this._timerRanking);
+    this._timerRanking = setInterval(() => {
+      if (this.sesionActual?.estado === 'activa') this._cargarRanking();
+    }, 20000);
     this._cargarRanking();
   }
 
+  /** Agrupa varios eventos seguidos en una sola recarga del ranking. */
+  _programarRanking() {
+    clearTimeout(this._debounceRanking);
+    this._debounceRanking = setTimeout(() => this._cargarRanking(), 400);
+  }
+
   async _cargarRanking() {
-    const participantes = await obtenerParticipantes(this.sesionActual.id);
-    const completados = participantes.filter(p => p.completado).length;
-    document.getElementById('cnt-unidos').textContent      = participantes.length;
+    if (!this.sesionActual) return;
+    const sesionId = this.sesionActual.id;
+    const total = this.sesionActual.total_edificios || 0;
+    const [participantes, { data: escaneos }] = await Promise.all([
+      obtenerParticipantes(sesionId),
+      supabase.from('escaneos')
+        .select('participante_id, puntos, respondio_correctamente')
+        .eq('sesion_id', sesionId)
+    ]);
+    if (this.sesionActual?.id !== sesionId) return;   // cambió de sesión mientras cargaba
+
+    const lista = clasificarParticipantes(participantes, escaneos || []);
+    const completados = lista.filter(p => p.completado).length;
+    document.getElementById('cnt-unidos').textContent      = lista.length;
     document.getElementById('cnt-completados').textContent = completados;
 
-    const lista = document.getElementById('lista-ranking');
-    if (participantes.length === 0) {
-      lista.innerHTML = '<div class="ranking-vacio">Esperando participantes...</div>';
+    const contenedor = document.getElementById('lista-ranking');
+    if (lista.length === 0) {
+      contenedor.innerHTML = '<div class="ranking-vacio">Esperando participantes...</div>';
       return;
     }
 
-    lista.innerHTML = participantes.map(p => {
-      const pos    = p.posicion;
-      const emoji  = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos || '⏳';
-      const clase  = p.completado ? (pos === 1 ? 'primero' : 'completado') : '';
-      const tiempo = p.tiempo_total ? formatearTiempo(p.tiempo_total) : 'En carrera...';
-      const puntos = p.puntos_total ? `⭐ ${p.puntos_total} pts` : '';
+    const cerrada = this.sesionActual.estado === 'cerrada';
+    contenedor.innerHTML = lista.map(p => this._htmlParticipante(p, total, { cerrada })).join('');
+  }
 
-      return `
-        <div class="participante-item ${clase}">
-          <div class="pos-badge ${pos <= 3 ? 'pos-' + pos : 'pos-n'}">${emoji}</div>
-          <div class="participante-info">
-            <div class="participante-nombre">${p.nombre}</div>
-            <div class="participante-estado">
-              ${p.completado ? '✅ Completó · ' + puntos : '🏃 En carrera'}
-            </div>
-          </div>
-          <div class="participante-tiempo">${tiempo}</div>
+  /**
+   * Fila del ranking (panel en vivo e historial).
+   * Completados: medalla/posición, puntos y tiempo.
+   * Sin terminar: edificios y puntos parciales.
+   */
+  _htmlParticipante(p, total, { cerrada = false } = {}) {
+    const pos = p.completado ? p.posicion : null;
+    const badge = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos ? `#${pos}` : (cerrada ? '—' : '⏳');
+    const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : (cerrada ? 'incompleto' : '');
+    const progreso = `${p.edificios}/${total} edificios`;
+    const pts = `${formatearPuntos(p.puntos)} pts`;
+
+    let estado, derecha;
+    if (p.completado) {
+      estado  = `✅ Completó · ⭐ ${pts}`;
+      derecha = formatearTiempo(p.tiempo_total || 0);
+    } else if (cerrada) {
+      estado  = `Incompleta · ${progreso}`;
+      derecha = pts;
+    } else {
+      estado  = `🏃 En carrera · ${progreso}`;
+      derecha = pts;
+    }
+
+    return `
+      <div class="participante-item clicable ${clase}" title="Ver el progreso de ${esc(p.nombre)}">
+        <div class="pos-badge ${pos && pos <= 3 ? 'pos-' + pos : 'pos-n'}">${badge}</div>
+        <div class="participante-info">
+          <button type="button" class="participante-nombre btn-participante" data-pid="${esc(p.id)}" data-sesion="${esc(p.sesion_id)}"
+            aria-label="Ver las respuestas de ${esc(p.nombre)}">${esc(p.nombre)}</button>
+          <div class="participante-estado">${estado}</div>
         </div>
-      `;
-    }).join('');
+        <div class="participante-tiempo">${derecha}</div>
+      </div>
+    `;
   }
 
   async _cargarHistorial(fechaInicio = null, fechaFin = null) {
-    // Antes de mostrar estados, cerrar las que ya pasaron el tiempo máximo
-    // (por si el job de pg_cron no ha corrido todavía).
-    await cerrarSesionesCaducadas();
-
     let query = supabase
       .from('sesiones')
       .select('*')
@@ -543,8 +964,7 @@ export class AdminController {
       query = query.lte('creada_en', fechaFin + 'T23:59:59Z');
     }
 
-    const { data: datos } = await query;
-    const sesiones = (datos || []).map(conEstadoReal);
+    const { data: sesiones } = await query;
 
     const contenedor = document.getElementById('contenedor-lista-sesiones');
     document.getElementById('detalle-sesion').classList.remove('visible');

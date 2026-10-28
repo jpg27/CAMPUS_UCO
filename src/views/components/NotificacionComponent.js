@@ -14,10 +14,16 @@ export class NotificacionComponent {
         this.tituloEl = document.getElementById('not-titulo');
         this.descEl = document.getElementById('not-desc');
         this.puntosEl = document.getElementById('not-puntos');
+        this.detalleEl = document.getElementById('not-detalle');
         this.timeoutId = null;
     }
 
-    mostrar(titulo, descripcion, puntos, tipo = 'exito') {
+    /**
+     * @param {object} [opciones]
+     * @param {string} [opciones.detalle]  línea pequeña bajo los puntos (p. ej. "800 − 100 penalización")
+     * @param {number} [opciones.duracion] ms visible (5000 por defecto)
+     */
+    mostrar(titulo, descripcion, puntos, tipo = 'exito', opciones = {}) {
         if (!this.container) return;
 
         if (!TIPOS.includes(tipo)) tipo = 'exito';
@@ -26,14 +32,18 @@ export class NotificacionComponent {
 
         if (this.tituloEl) this.tituloEl.textContent = titulo;
         if (this.descEl) this.descEl.textContent = descripcion;
-        if (this.puntosEl) this.puntosEl.textContent = puntos ? `+${puntos} pts` : '';
+        const conDetalle = !!opciones.detalle;
+        if (this.puntosEl) {
+            this.puntosEl.textContent = (puntos || (conDetalle && puntos === 0)) ? `+${puntos.toLocaleString('es-CO')} pts` : '';
+        }
+        if (this.detalleEl) this.detalleEl.textContent = opciones.detalle || '';
 
         this.container.classList.add('visible');
 
         if (this.timeoutId) clearTimeout(this.timeoutId);
         this.timeoutId = setTimeout(() => {
             this.ocultar();
-        }, 5000);
+        }, opciones.duracion || 5000);
     }
 
     ocultar() {
@@ -41,4 +51,4 @@ export class NotificacionComponent {
             this.container.classList.remove('visible');
         }
     }
-}
+}

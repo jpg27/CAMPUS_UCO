@@ -341,9 +341,6 @@
       padding-top: 20px;
     }
 
-    #lista-preguntas-edificio {
-      margin-bottom: 20px;
-    }
 
 
     /* =====================================================
@@ -960,66 +957,388 @@
     .ganador-card .nombre { font-size: 22px; font-weight: 700; color: #1A1A1A; }
     .ganador-card .stats  { font-size: 14px; color: #333; margin-top: 6px; }
 
+    .ranking-nota {
+      margin: 0 0 12px;
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .participante-item.incompleto { opacity: 0.85; }
+
+    /* Toda la fila abre el progreso del participante */
+    .participante-item.clicable {
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .participante-item.clicable:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 14px rgba(18, 61, 42, 0.10);
+    }
+    .participante-item.clicable:hover .btn-participante { color: var(--color-primary); text-decoration-color: var(--color-primary); }
+    .participante-item.clicable:active { transform: scale(0.995); }
+    .participante-item.clicable:focus-within { border-color: var(--color-primary); }
+    .participante-item.clicable .btn-participante:focus-visible { outline: none; }
+    .participante-item.incompleto .participante-tiempo { color: var(--color-text-secondary); }
+
 
     /* =====================================================
-       PREGUNTAS
+       PREGUNTAS (acordeón por edificio)
        ===================================================== */
+
+    .preg-ayuda {
+      margin: -6px 0 16px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+    }
+
+    .preg-cargando {
+      padding: 16px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .preg-acordeon {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .acc-item {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
+      overflow: hidden;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .acc-item.abierto {
+      border-color: var(--color-green-light);
+      box-shadow: 0 4px 14px rgba(18, 61, 42, 0.08);
+    }
+
+    .acc-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 56px;
+      padding: 12px 16px;
+
+      background: none;
+      border: none;
+      color: var(--color-text);
+
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .acc-header:hover { background: #F6FAF7; }
+    .acc-header:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+    .acc-item.abierto .acc-header { background: var(--color-green-tint); }
+
+    .acc-icono { font-size: 18px; line-height: 1; }
+    .acc-nombre { flex: 1; min-width: 0; }
+
+    .acc-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      padding: 4px 10px;
+
+      background: var(--color-green-tint);
+      color: var(--color-primary-dark);
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .acc-item.abierto .acc-badge { background: var(--color-surface); }
+
+    .acc-badge.vacio {
+      background: #FFF6E5;
+      color: #8A5A00;
+    }
+
+    .acc-badge svg { width: 14px; height: 14px; }
+
+    .acc-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--color-text-secondary);
+      transition: transform 0.2s ease;
+    }
+
+    .acc-item.abierto .acc-chevron { transform: rotate(180deg); }
+
+    .acc-panel {
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--color-border);
+      animation: accAbrir 0.2s ease;
+    }
+
+    .acc-panel[hidden] { display: none; }
+
+    @keyframes accAbrir {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .acc-vacio {
+      margin: 0 0 12px;
+      padding: 12px;
+      background: #FFF6E5;
+      color: #8A5A00;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
 
     .pregunta-item {
       background: var(--color-background);
       border: 1px solid var(--color-border);
       border-left: 4px solid var(--color-primary);
       border-radius: 14px;
-
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
     }
 
-    .pregunta-item .preg-texto     { font-weight: 600; color: var(--color-text); font-size: 15px; margin-bottom: 8px; }
-    .pregunta-item .preg-opciones  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.8; }
-    .pregunta-item .preg-opciones span.correcta { color: var(--color-primary); font-weight: 700; }
+    .pregunta-item.oculta-por-edicion { display: none; }
+
+    .pregunta-item .preg-texto { font-weight: 600; color: var(--color-text); font-size: 15px; line-height: 1.4; }
 
     .pregunta-item-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .preg-edificio-selector {
+    .preg-opciones {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-top: 4px;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
     }
 
-    .preg-edificio-btn {
-      padding: 12px;
+    .preg-opciones li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.5;
+    }
 
+    .preg-opciones li.correcta { color: var(--color-primary); font-weight: 700; }
+
+    .op-letra {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
       background: var(--color-surface);
-      color: var(--color-text);
-
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-input);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+    }
 
+    .preg-opciones li.correcta .op-letra {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+    }
+
+    .op-check { width: 16px; height: 16px; }
+
+    .preg-acciones {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-editar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      background: var(--color-surface);
+      color: var(--color-primary);
+      border: 1px solid var(--color-primary);
+      border-radius: 12px;
       font-family: inherit;
       font-size: 13px;
-      font-weight: 500;
-      text-align: center;
+      font-weight: 600;
       cursor: pointer;
+      transition: background 0.15s ease;
+    }
 
+    .btn-editar:hover { background: var(--color-green-tint); }
+    .btn-editar svg { width: 17px; height: 17px; }
+    .btn-editar:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+    .btn-nueva-pregunta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 48px;
+
+      background: var(--color-surface);
+      color: var(--color-primary);
+      border: 1.5px dashed var(--color-green-light);
+      border-radius: var(--radius-button);
+
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn-nueva-pregunta:hover { background: var(--color-green-tint); border-color: var(--color-primary); }
+    .btn-nueva-pregunta:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .btn-nueva-pregunta svg { width: 18px; height: 18px; }
+    .btn-nueva-pregunta[hidden] { display: none; }
+
+    /* Formulario de pregunta (se mueve dentro del edificio abierto) */
+    .form-pregunta {
+      margin-bottom: 10px;
+      padding: 16px;
+      background: var(--color-green-tint);
+      border: 1px solid var(--color-green-light);
+      border-radius: 14px;
+      animation: accAbrir 0.2s ease;
+    }
+
+    .form-pregunta[hidden] { display: none; }
+
+    .form-pregunta-titulo {
+      margin: 0 0 12px;
+      color: var(--color-primary-dark);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .form-pregunta .campo { margin-bottom: 12px; }
+
+    .opciones-ayuda {
+      margin: -2px 0 8px;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+    }
+
+    .opcion-fila {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      padding: 4px 4px 4px 10px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-input);
       transition: border-color 0.15s ease, background 0.15s ease;
     }
 
-    .preg-edificio-btn:hover {
-      border-color: var(--color-green-light);
-      background: #F6FAF7;
+    .opcion-fila.es-correcta {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px var(--color-primary);
     }
 
-    .preg-edificio-btn.activo {
-      border-color: var(--color-primary);
-      background: var(--color-green-tint);
-      color: var(--color-primary-dark);
+    .opcion-fila input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      margin: 0;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    .opcion-fila .op-letra { width: 26px; height: 26px; font-size: 12px; }
+    .opcion-fila.es-correcta .op-letra { background: var(--color-primary); border-color: var(--color-primary); color: #FFFFFF; }
+
+    .form-pregunta .campo .opcion-fila input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .form-pregunta .campo .opcion-fila input[type="text"]:focus {
+      border: none;
+      box-shadow: none;
+    }
+
+    .opcion-fila:focus-within { border-color: var(--color-primary); }
+
+    .form-error {
+      margin: 4px 0 12px;
+      padding: 10px 12px;
+      background: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid var(--color-error-border);
+      border-radius: 12px;
+      font-size: 13px;
       font-weight: 600;
+    }
+
+    .form-error[hidden] { display: none; }
+
+    .aviso-edicion {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      background: #FFF6E5;
+      color: #8A5A00;
+      border: 1px solid #F3D9A4;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .aviso-edicion[hidden] { display: none; }
+    .aviso-edicion svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 1px; }
+
+    .form-pregunta-acciones {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .form-pregunta-acciones .btn { flex: 1; height: 48px; margin: 0; }
+    .form-pregunta-acciones .btn-secundario { flex: 1; height: 48px; }
+
+    @media (max-width: 520px) {
+      .pregunta-item-header { flex-direction: column; gap: 10px; }
+      .preg-acciones { width: 100%; }
+      .preg-acciones button { flex: 1; justify-content: center; height: 42px; }
+      .form-pregunta { padding: 14px 12px; }
+      .form-pregunta-acciones { flex-direction: column-reverse; }
+      .form-pregunta-acciones .btn,
+      .form-pregunta-acciones .btn-secundario { flex: none; width: 100%; }
     }
 
 
@@ -1103,11 +1422,421 @@
     }
 
     @media (max-width: 420px) {
-      /* Las tres pestañas caben sin scroll si se ocultan sus íconos */
+      /* Las cuatro pestañas caben sin scroll si se ocultan sus íconos */
       .tab svg {
         display: none;
       }
+      .tab {
+        padding: 11px 6px;
+        font-size: 13px;
+      }
     }
+
+    /* =====================================================
+       MAPA (vista de consulta dentro del panel)
+       ===================================================== */
+
+    /* Solo el mapa, sin título ni bordes extra */
+    .card-mapa {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .mapa-admin {
+      display: block;
+      width: 100%;
+      /* Móvil: llena la pantalla debajo de las pestañas */
+      height: calc(100vh - 88px);
+      height: calc(100dvh - 88px);
+      min-height: 420px;
+      border: 0;
+      background: var(--color-background);
+    }
+
+
+    /* =====================================================
+       ESCRITORIO (≥ 900px): MENÚ LATERAL IZQUIERDO
+       ===================================================== */
+
+    @media (min-width: 900px) {
+
+      .lateral {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2;
+        width: 260px;
+
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px 16px 20px;
+        overflow-y: auto;
+
+        background: var(--color-surface);
+        border-right: 1px solid var(--color-border);
+      }
+
+      /* El encabezado se reparte dentro del menú: logo y título arriba,
+         botones de salida al final */
+      .lateral .header { display: contents; }
+
+      .header-logo {
+        flex: none;
+        justify-content: flex-start;
+        margin: 0 0 4px;
+      }
+
+      .logo-img { height: 38px; }
+
+      .header-marca { padding: 0 6px; }
+      .header h1 { font-size: 19px; }
+      .header-sub { font-size: 13px; }
+
+      .tabs {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+
+        flex-direction: column;
+        gap: 4px;
+        overflow: visible;
+        background: none;
+      }
+
+      .tab {
+        flex: none;
+        justify-content: flex-start;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+
+      .tab:hover { background: var(--color-background); }
+
+      .tab.activo {
+        background: var(--color-green-tint);
+        color: var(--color-primary);
+        box-shadow: inset 3px 0 0 var(--color-primary);
+      }
+
+      .header-btns {
+        order: 99;
+        margin-top: auto;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+
+      .header-btns a,
+      .header-btns button {
+        justify-content: flex-start;
+        box-shadow: none;
+      }
+
+      /* Área de trabajo a la derecha del menú */
+      .contenido {
+        max-width: none;
+        margin: 0 0 0 260px;
+        padding: 32px 40px 48px;
+      }
+
+      .pantalla {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      /* Pestaña Mapa: el mapa ocupa todo el espacio a la derecha del menú */
+      body.en-mapa { overflow: hidden; }
+      body.en-mapa .contenido { padding: 0; }
+      body.en-mapa #pantalla-mapa { max-width: none; }
+
+      body.en-mapa .card-mapa {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      body.en-mapa .mapa-admin {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+      }
+
+      body.en-mapa .hojas-superior { display: none; }
+
+      .lateral,
+      .contenido { transition: width 0.2s ease, margin-left 0.2s ease, padding 0.2s ease; }
+
+      /* ── Menú contraído: íconos con el nombre debajo (como la barra de los estudiantes) ── */
+      body.menu-contraido .lateral {
+        width: 92px;
+        gap: 6px;
+        padding: 16px 8px;
+      }
+
+      body.menu-contraido .contenido { margin-left: 92px; }
+
+      body.menu-contraido .header-marca,
+      body.menu-contraido .logo-img { display: none; }
+
+      body.menu-contraido .header-logo {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      body.menu-contraido .lateral-emblema {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      body.menu-contraido .tabs { gap: 4px; }
+
+      body.menu-contraido .tab,
+      body.menu-contraido .header-btns a,
+      body.menu-contraido .header-btns button {
+        flex-direction: column;
+        justify-content: center;
+        gap: 4px;
+        min-height: 64px;
+        height: auto;
+        padding: 8px 4px;
+        border: 0;
+        background: none;
+        font-size: 12px;
+        line-height: 1.2;
+        text-align: center;
+        white-space: normal;
+      }
+
+      body.menu-contraido .tab svg,
+      body.menu-contraido .header-btns svg { width: 20px; height: 20px; }
+
+      body.menu-contraido .tab.activo {
+        background: var(--color-green-tint);
+        box-shadow: none;
+      }
+
+      body.menu-contraido .header-btns { gap: 2px; }
+      body.menu-contraido .header-btns a:hover,
+      body.menu-contraido .header-btns button:hover { background: var(--color-background); }
+
+      body.menu-contraido .ico-contraer { display: none; }
+      body:not(.menu-contraido) .ico-expandir { display: none; }
+
+      /* Logo y botón de contraer en la misma fila */
+      .header-logo {
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-contraer {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: 9px;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      }
+
+      .btn-contraer:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: var(--color-green-tint);
+      }
+
+      .btn-contraer:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+      .btn-contraer svg { width: 17px; height: 17px; stroke-width: 2; }
+    }
+
+    /* Los íconos no capturan el clic: siempre llega al botón o pestaña que los contiene */
+    .tab svg, .tab i,
+    button svg, button i,
+    a svg, a i,
+    [onclick] svg, [onclick] i { pointer-events: none; }
+
+    /* El emblema y el botón de contraer solo existen en el menú de escritorio */
+    .lateral-emblema { display: none; }
+    .lateral-emblema img { width: 100%; height: 100%; display: block; }
+    @media (max-width: 899px) {
+      .btn-contraer { display: none !important; }
+      .lateral-emblema { display: none !important; }
+    }
+
+    /* =====================================================
+       DETALLE DE PARTICIPANTE
+       ===================================================== */
+
+    .btn-participante {
+      padding: 0;
+      background: none;
+      border: none;
+      font-family: inherit;
+      text-align: left;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: var(--color-green-soft);
+      text-underline-offset: 3px;
+    }
+
+    .btn-participante:hover { color: var(--color-primary); text-decoration-color: var(--color-primary); }
+    .btn-participante:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 4px; }
+
+    .mp-capa {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(18, 61, 42, 0.45);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    .mp-capa[hidden] { display: none; }
+
+    .mp-hoja {
+      width: 100%;
+      max-width: 560px;
+      max-height: 88vh;
+      max-height: 88dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 30px rgba(18, 61, 42, 0.2);
+      animation: mpSubir 0.25s ease;
+    }
+
+    @media (min-width: 640px) {
+      .mp-capa { align-items: center; padding: 24px; }
+      .mp-hoja { border-radius: 24px; }
+    }
+
+    @keyframes mpSubir {
+      from { transform: translateY(24px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
+    }
+
+    .mp-cabecera {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px 20px 12px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .mp-titulos h2 { font-size: 19px; font-weight: 700; color: var(--color-text); }
+    .mp-titulos p { margin-top: 4px; font-size: 13px; color: var(--color-text-secondary); }
+
+    .mp-cerrar {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+
+    .mp-cerrar svg { width: 18px; height: 18px; }
+
+    .mp-cuerpo {
+      padding: 16px 20px 24px;
+      overflow-y: auto;
+    }
+
+    .mp-botones {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .mp-eliminar {
+      height: 38px;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    .mp-eliminar[hidden] { display: none; }
+    .mp-eliminar:disabled { opacity: 0.6; cursor: wait; }
+
+    /* En pantallas angostas solo queda el ícono */
+    @media (max-width: 480px) {
+      .mp-eliminar { width: 38px; padding: 0; justify-content: center; }
+      .mp-eliminar span { display: none; }
+    }
+
+    .mp-total {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 14px 16px;
+      background: #FFF3CD;
+      border-radius: 16px;
+      color: #6B5100;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .mp-total strong { font-size: 30px; font-weight: 800; color: #6B5100; font-variant-numeric: tabular-nums; }
+
+    .mp-progreso { margin: 14px 0 10px; }
+    .mp-progreso-etq { display: flex; justify-content: space-between; font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+    .mp-barra { height: 8px; border-radius: 999px; background: var(--color-border); overflow: hidden; }
+    .mp-barra span { display: block; height: 100%; background: var(--color-primary); border-radius: inherit; }
+
+    .mp-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+    .mp-chip { padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F1F4F2; color: var(--color-text); }
+    .mp-chip.ok  { background: var(--color-green-tint); color: var(--color-primary); }
+    .mp-chip.mal { background: var(--color-error-bg); color: var(--color-error); }
+
+    .mp-lista { list-style: none; display: grid; gap: 8px; padding: 0; margin: 0; }
+
+    .mp-edificio {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--color-background);
+      border: 1.5px solid var(--color-border);
+    }
+
+    .mp-edificio.hecho { background: #FFF8E1; border-color: rgba(200, 150, 12, 0.4); }
+
+    .mp-fila { display: flex; align-items: center; gap: 10px; }
+    .mp-ed-nombre { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; color: var(--color-text); }
+    .mp-ed-estado { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; font-weight: 500; }
+    .mp-ed-pts { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; color: var(--color-text); }
+
+    .mp-detalle { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(200, 150, 12, 0.45); font-size: 13px; line-height: 1.45; }
+    .mp-pregunta { font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
+    .mp-dato { display: flex; gap: 8px; align-items: baseline; margin-top: 3px; }
+    .mp-dato .etq { flex: none; min-width: 92px; color: var(--color-text-secondary); }
+    .mp-dato .ok  { color: var(--color-primary); font-weight: 600; }
+    .mp-dato .mal { color: var(--color-error); font-weight: 600; }
+    .mp-nota { margin-top: 6px; font-size: 12px; color: var(--color-text-secondary); }
 
   </style>
   <link rel="stylesheet" href="styles/avisos.css">
@@ -1115,6 +1844,26 @@
 
 
 <body>
+  <script>
+    // Menú lateral contraído (solo escritorio): se aplica antes de pintar
+    try { if (localStorage.getItem('adminMenuContraido') === '1') document.body.classList.add('menu-contraido'); } catch (e) {}
+    window.alternarMenu = () => {
+      const contraido = document.body.classList.toggle('menu-contraido');
+      const btn = document.querySelector('.btn-contraer');
+      if (btn) {
+        btn.setAttribute('aria-expanded', String(!contraido));
+        btn.setAttribute('aria-label', contraido ? 'Expandir menú' : 'Contraer menú');
+        btn.title = contraido ? 'Expandir menú' : 'Contraer menú';
+      }
+      try { localStorage.setItem('adminMenuContraido', contraido ? '1' : '0'); } catch (e) {}
+    };
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.body.classList.contains('menu-contraido')) {
+        document.body.classList.remove('menu-contraido');
+        window.alternarMenu();   // reaplica para dejar textos y aria al día
+      }
+    });
+  </script>
 
   <!-- DECORACIÓN: hojas suaves arriba a la derecha -->
   <svg class="hojas-superior" viewBox="0 0 200 200" aria-hidden="true">
@@ -1123,6 +1872,9 @@
     <path d="M200 60 C185 100 150 130 110 135 C115 95 150 65 200 60 Z" fill="#C2DDCC" opacity="0.6"/>
   </svg>
 
+
+  <!-- LATERAL: encabezado + pestañas (arriba en móvil, menú izquierdo en escritorio) -->
+  <aside class="lateral">
 
   <!-- ENCABEZADO -->
   <header class="header">
@@ -1134,6 +1886,13 @@
         alt="Universidad Católica de Oriente"
         class="logo-img"
       >
+      <!-- Emblema: solo se ve con el menú contraído -->
+      <span class="lateral-emblema" aria-hidden="true"><img src="img/uco-emblema.webp" alt=""></span>
+      <!-- Contraer / expandir el menú (solo escritorio) -->
+      <button type="button" class="btn-contraer" onclick="alternarMenu()" aria-expanded="true" aria-label="Contraer menú" title="Contraer menú">
+        <i data-lucide="panel-left-close" class="ico-contraer" aria-hidden="true"></i>
+        <i data-lucide="panel-left-open" class="ico-expandir" aria-hidden="true"></i>
+      </button>
     </div>
 
     <div class="header-marca">
@@ -1150,10 +1909,6 @@
         <i data-lucide="log-out" aria-hidden="true"></i>
         Cerrar sesión
       </button>
-      <a href="index.html">
-        <i data-lucide="arrow-left" aria-hidden="true"></i>
-        Salir
-      </a>
     </div>
 
   </header>
@@ -1173,7 +1928,13 @@
       <i data-lucide="clipboard-list" aria-hidden="true"></i>
       Historial
     </div>
+    <div class="tab" id="tab-mapa" onclick="cambiarTab('mapa')">
+      <i data-lucide="map" aria-hidden="true"></i>
+      Mapa
+    </div>
   </div>
+
+  </aside>
 
 
   <div class="contenido">
@@ -1217,7 +1978,7 @@
       <div class="card seccion-oculta" id="card-control">
         <h2>
           <i data-lucide="gamepad-2" aria-hidden="true"></i>
-          Sesión actual
+          Carrera actual
           <span class="estado-badge estado-borrador" id="badge-estado">Borrador</span>
         </h2>
 
@@ -1230,11 +1991,11 @@
         <div class="btn-fila">
           <button class="btn btn-activar" id="btn-activar" onclick="activarSesion()">
             <i data-lucide="play" aria-hidden="true"></i>
-            Activar sesión
+            Iniciar carrera
           </button>
           <button class="btn btn-cerrar" id="btn-cerrar" onclick="cerrarSesion()" disabled>
             <i data-lucide="square" aria-hidden="true"></i>
-            Cerrar sesión
+            Finalizar carrera
           </button>
         </div>
       </div>
@@ -1276,56 +2037,65 @@
           <i data-lucide="circle-help" aria-hidden="true"></i>
           Gestionar preguntas por edificio
         </h2>
+        <p class="preg-ayuda">Toca un edificio para ver, crear o editar sus preguntas.</p>
 
-        <div class="campo">
-          <label>Selecciona el edificio</label>
-          <div class="preg-edificio-selector" id="preg-edificio-selector"></div>
-        </div>
+        <div class="preg-acordeon" id="preg-acordeon"></div>
 
-        <div id="seccion-preguntas-edificio" style="display:none;">
-          <div id="lista-preguntas-edificio"></div>
+        <!-- El formulario se mueve dentro del edificio abierto; aquí queda guardado mientras no se usa -->
+        <div id="form-pregunta-estacion" hidden>
+          <form class="form-pregunta" id="form-pregunta" novalidate hidden>
+            <h3 class="form-pregunta-titulo">Nueva pregunta</h3>
 
-          <div class="bloque-nueva">
-            <h3 class="subtitulo-seccion">
-              <i data-lucide="circle-plus" aria-hidden="true"></i>
-              Nueva pregunta
-            </h3>
+            <p class="aviso-edicion" hidden>
+              <i data-lucide="triangle-alert" aria-hidden="true"></i>
+              Hay una carrera activa: los cambios se aplican de inmediato a quienes saquen esta pregunta.
+            </p>
 
             <div class="campo">
-              <label for="nueva-pregunta">Pregunta</label>
-              <textarea id="nueva-pregunta" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-a">Opción A</label>
-              <input type="text" id="nueva-opcion-a" placeholder="Ingeniería">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-b">Opción B</label>
-              <input type="text" id="nueva-opcion-b" placeholder="Agronomía">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-c">Opción C</label>
-              <input type="text" id="nueva-opcion-c" placeholder="Enfermería">
-            </div>
-            <div class="campo">
-              <label for="nueva-opcion-d">Opción D</label>
-              <input type="text" id="nueva-opcion-d" placeholder="Deportes">
-            </div>
-            <div class="campo">
-              <label for="nueva-respuesta-correcta">Respuesta correcta</label>
-              <select id="nueva-respuesta-correcta">
-                <option value="a">A</option>
-                <option value="b">B</option>
-                <option value="c">C</option>
-                <option value="d">D</option>
-              </select>
+              <label for="preg-texto">Pregunta</label>
+              <textarea id="preg-texto" maxlength="300" placeholder="¿Qué facultad se encuentra en este bloque?"></textarea>
             </div>
 
-            <button class="btn btn-crear" onclick="guardarPregunta()">
-              <i data-lucide="save" aria-hidden="true"></i>
-              Guardar pregunta
-            </button>
-          </div>
+            <div class="campo">
+              <label id="preg-opciones-label">Opciones</label>
+              <p class="opciones-ayuda">Marca el círculo de la respuesta correcta.</p>
+              <div role="radiogroup" aria-labelledby="preg-opciones-label">
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="a" aria-label="La opción A es la correcta">
+                  <span class="op-letra" aria-hidden="true">A</span>
+                  <input type="text" id="preg-op-a" maxlength="120" placeholder="Opción A" aria-label="Opción A">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="b" aria-label="La opción B es la correcta">
+                  <span class="op-letra" aria-hidden="true">B</span>
+                  <input type="text" id="preg-op-b" maxlength="120" placeholder="Opción B" aria-label="Opción B">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="c" aria-label="La opción C es la correcta">
+                  <span class="op-letra" aria-hidden="true">C</span>
+                  <input type="text" id="preg-op-c" maxlength="120" placeholder="Opción C" aria-label="Opción C">
+                </div>
+                <div class="opcion-fila">
+                  <input type="radio" name="preg-correcta" value="d" aria-label="La opción D es la correcta">
+                  <span class="op-letra" aria-hidden="true">D</span>
+                  <input type="text" id="preg-op-d" maxlength="120" placeholder="Opción D" aria-label="Opción D">
+                </div>
+              </div>
+            </div>
+
+            <p class="form-error" role="alert" hidden></p>
+
+            <div class="form-pregunta-acciones">
+              <button type="button" class="btn-secundario" data-accion="cancelar">
+                <i data-lucide="x" aria-hidden="true"></i>
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-crear btn-guardar">
+                <i data-lucide="save" aria-hidden="true"></i>
+                <span class="btn-guardar-texto">Guardar pregunta</span>
+              </button>
+            </div>
+          </form>
         </div>
 
       </div>
@@ -1372,7 +2142,7 @@
             <!-- Solo visible si la sesión está en borrador o activa -->
             <button class="btn-secundario btn-cerrar-historial" id="btn-cerrar-sesion-historial" style="display: none;">
               <i data-lucide="square" aria-hidden="true"></i>
-              Cerrar sesión
+              Finalizar carrera
             </button>
             <button class="btn-peligro" id="btn-eliminar-sesion" style="display: none;">
               <i data-lucide="trash-2" aria-hidden="true"></i>
@@ -1385,6 +2155,14 @@
 
     </div>
 
+
+    <!-- ═══ TAB: MAPA ═══ -->
+    <div class="pantalla" id="pantalla-mapa">
+      <div class="card card-mapa">
+        <iframe id="mapa-admin" class="mapa-admin" title="Mapa del campus"></iframe>
+      </div>
+    </div>
+
   </div>
 
 
@@ -1394,6 +2172,27 @@
     const app = new AdminController();
     app.init();
   </script>
+
+  <!-- DETALLE DE UN PARTICIPANTE (lo que vio en "Mis logros") -->
+  <div class="mp-capa" id="modal-participante" hidden>
+    <div class="mp-hoja" role="dialog" aria-modal="true" aria-labelledby="mp-nombre">
+      <div class="mp-cabecera">
+        <div class="mp-titulos">
+          <h2 id="mp-nombre">Participante</h2>
+          <p id="mp-sub"></p>
+        </div>
+        <div class="mp-botones">
+          <button type="button" class="btn-peligro mp-eliminar" id="mp-eliminar" hidden
+            title="Eliminar de la carrera (útil para duplicados o pruebas)" aria-label="Eliminar de la carrera">
+            <i data-lucide="user-x" aria-hidden="true"></i>
+            <span>Eliminar de la carrera</span>
+          </button>
+          <button type="button" class="mp-cerrar" id="mp-cerrar" aria-label="Cerrar"><i data-lucide="x" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div class="mp-cuerpo" id="mp-cuerpo"></div>
+    </div>
+  </div>
 
   <!-- ACTIVAR LUCIDE (también en el contenido que genera el JS) -->
   <script>

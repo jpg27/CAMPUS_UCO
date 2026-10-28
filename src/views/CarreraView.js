@@ -43,11 +43,63 @@ export class CarreraView {
     else btn.textContent = 'Unirse a la carrera';
   }
 
-  mostrarEspera(nombre, sesion) {
+  mostrarEspera(nombre, sesion, { reconectado = false } = {}) {
     document.getElementById('pantalla-form').classList.add('oculto');
     document.getElementById('pantalla-espera').classList.add('visible');
-    document.getElementById('espera-nombre').textContent = '👋 Hola, ' + nombre;
+    document.getElementById('espera-nombre').textContent = (reconectado ? '👋 De nuevo, ' : '👋 Hola, ') + nombre;
     document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
+    if (reconectado) {
+      const titulo = document.querySelector('.espera-titulo');
+      if (titulo) titulo.textContent = '¡Te reconectamos!';
+      const sub = document.querySelector('.espera-subtitulo');
+      if (sub) sub.textContent = sesion.estado === 'activa'
+        ? 'Sigues en la carrera con tu progreso. Abriendo la cámara...'
+        : 'Sigues en la carrera. Esperando que el administrador la inicie...';
+    }
+  }
+
+  // ── Reconexión ("Continuar como …") ──
+  mostrarReconexion(nombre, sesion, { completado = false } = {}) {
+    const caja = document.getElementById('reconexion');
+    if (!caja) return;
+    document.getElementById('reconexion-titulo').textContent =
+      completado ? 'Ya terminaste esta carrera' : 'Tienes una carrera en curso';
+    document.getElementById('reconexion-nombre').textContent = nombre;
+    document.getElementById('reconexion-sesion').textContent =
+      `${sesion.nombre} · ${sesion.codigo}` + (sesion.estado === 'activa' ? ' · en curso' : ' · por iniciar');
+    const primerNombre = String(nombre || '').split(' ')[0];
+    document.getElementById('btn-reconectar-texto').textContent =
+      completado ? 'Ver mi resultado' : `Continuar como ${primerNombre}`;
+    caja.hidden = false;
+    document.getElementById('pantalla-form').classList.add('modo-reconexion');
+    document.getElementById('btn-reconectar')?.focus();
+  }
+
+  ocultarReconexion() {
+    const caja = document.getElementById('reconexion');
+    if (caja) caja.hidden = true;
+    document.getElementById('pantalla-form').classList.remove('modo-reconexion');
+    document.getElementById('input-nombre')?.focus();
+  }
+
+  deshabilitarBotonReconectar(texto) {
+    const btn = document.getElementById('btn-reconectar');
+    if (!btn) return;
+    btn.disabled = true;
+    document.getElementById('btn-reconectar-texto').textContent = texto;
+  }
+
+  habilitarBotonReconectar() {
+    const btn = document.getElementById('btn-reconectar');
+    if (btn) btn.disabled = false;
+  }
+
+  onReconectar(callback) {
+    document.getElementById('btn-reconectar')?.addEventListener('click', callback);
+  }
+
+  onNoSoyYo(callback) {
+    document.getElementById('btn-no-soy-yo')?.addEventListener('click', callback);
   }
 
   mostrarSesionActivada() {

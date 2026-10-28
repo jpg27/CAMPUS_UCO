@@ -9,6 +9,13 @@
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // Service Worker: guarda la app en caché para que el Modo Libre y el mapa funcionen sin conexión (BP-04).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
 
   <!-- TIPOGRAFÍA INTER -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -234,6 +241,82 @@
     #pantalla-form.oculto {
       display: none;
     }
+
+    /* Reconexión: mientras se ofrece "Continuar como…", el formulario se oculta */
+    #pantalla-form.modo-reconexion .campo,
+    #pantalla-form.modo-reconexion #btn-unirse {
+      display: none;
+    }
+
+    .reconexion {
+      margin-bottom: 20px;
+      padding: 18px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-green-light);
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(18, 61, 42, 0.08);
+    }
+
+    .reconexion[hidden] { display: none; }
+
+    .reconexion-fila {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .reconexion-icono {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--color-green-tint);
+      color: var(--color-primary);
+    }
+
+    .reconexion-icono svg { width: 24px; height: 24px; }
+
+    .reconexion-texto { min-width: 0; }
+
+    .reconexion-texto h2 {
+      margin: 0 0 4px;
+      color: var(--color-text);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .reconexion-texto p {
+      margin: 0;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .reconexion-texto p strong { color: var(--color-primary); font-weight: 600; }
+
+    .reconexion .btn-unirse { margin-top: 0; }
+
+    .reconexion-otro {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .reconexion-otro:hover { color: var(--color-primary); }
+    .reconexion-otro:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 8px; }
 
     .encabezado {
       text-align: center;
@@ -686,6 +769,25 @@
         <p class="subtitulo">Ingresa tus datos para participar</p>
 
       </header>
+
+      <!-- Reconexión: este navegador ya está en una carrera abierta -->
+      <section class="reconexion" id="reconexion" hidden aria-labelledby="reconexion-titulo">
+        <div class="reconexion-fila">
+          <div class="reconexion-icono"><i data-lucide="rotate-ccw" aria-hidden="true"></i></div>
+          <div class="reconexion-texto">
+            <h2 id="reconexion-titulo">Tienes una carrera en curso</h2>
+            <p><strong id="reconexion-nombre"></strong></p>
+            <p id="reconexion-sesion"></p>
+          </div>
+        </div>
+        <button class="btn-unirse" id="btn-reconectar" type="button">
+          <i data-lucide="play" aria-hidden="true"></i>
+          <span id="btn-reconectar-texto">Continuar</span>
+        </button>
+        <button class="reconexion-otro" id="btn-no-soy-yo" type="button">
+          No soy yo, unirme con otros datos
+        </button>
+      </section>
 
       <div class="campo">
         <label for="input-nombre">Nombre y apellido</label>

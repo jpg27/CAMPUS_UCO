@@ -8,6 +8,13 @@
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // Service Worker: guarda la app en caché para que el Modo Libre y el mapa funcionen sin conexión (BP-04).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/ayuda.css">

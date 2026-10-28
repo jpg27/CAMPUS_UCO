@@ -521,3 +521,17 @@ html, body { height: 100%; overflow: hidden; }
   .capa { align-items: center; }
   .hoja { border-radius: var(--radio-l); }
 }
+
+/* ═══ Vista del administrador (mapa.html?vista=admin, dentro del panel) ═══ */
+.vista-admin .nav { display: none; }
+.vista-admin .app {
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "mapa" "ficha";
+}
+@media (min-width: 900px) {
+  .vista-admin .app {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-rows: 100%;
+    grid-template-areas: "mapa ficha";
+  }
+}
