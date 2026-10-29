@@ -403,6 +403,7 @@ export class AdminController {
       document.getElementById('tab-' + tab).classList.add('activo');
       document.getElementById('pantalla-' + tab).classList.add('visible');
       if (tab === 'historial') {
+        this._vistaHistorial = (this._vistaHistorial || 0) + 1;   // la lista pasa a ser la vista pedida
         document.getElementById('lista-sesiones').style.display = 'block';
         document.getElementById('detalle-sesion').classList.remove('visible');
         this._cargarHistorial();
@@ -491,7 +492,11 @@ export class AdminController {
     };
 
     window.verDetalleSesion = async (sesionId, { forzarDetalle = false } = {}) => {
+      // Cada cambio de vista del historial lleva un turno: si mientras esto
+      // carga se pide otra vista (la lista, otro detalle), esta ya no se pinta.
+      const turno = this._vistaHistorial = (this._vistaHistorial || 0) + 1;
       const { data: sesion } = await supabase.from('sesiones').select('*').eq('id', sesionId).single();
+      if (turno !== this._vistaHistorial) return;
 
       // Una sesión activa o en borrador se abre en el panel de control
       // ("Nueva carrera"), con el ranking en tiempo real y los botones
@@ -503,6 +508,7 @@ export class AdminController {
 
       document.getElementById('lista-sesiones').style.display = 'none';
       document.getElementById('detalle-sesion').classList.add('visible');
+      document.getElementById('detalle-contenido').innerHTML = '<div class="ranking-vacio">Cargando resultados...</div>';
       const [{ data: participantesDB }, { data: escaneosDB }, { data: edificios }] = await Promise.all([
         supabase.from('participantes').select('*').eq('sesion_id', sesionId),
         supabase.from('escaneos').select('participante_id, puntos, respondio_correctamente').eq('sesion_id', sesionId),
@@ -560,6 +566,7 @@ export class AdminController {
         `;
       }
 
+      if (turno !== this._vistaHistorial) return;
       document.getElementById('detalle-contenido').innerHTML = html;
       
       // Cerrar desde el historial (sirve si se salió del panel con la sesión abierta)
@@ -605,6 +612,7 @@ export class AdminController {
     };
 
     window.volverHistorial = () => {
+      this._vistaHistorial = (this._vistaHistorial || 0) + 1;
       document.getElementById('lista-sesiones').style.display = 'block';
       document.getElementById('detalle-sesion').classList.remove('visible');
       document.getElementById('btn-eliminar-sesion').style.display = 'none';
@@ -952,6 +960,7 @@ export class AdminController {
   }
 
   async _cargarHistorial(fechaInicio = null, fechaFin = null) {
+    const turno = this._vistaHistorial;
     let query = supabase
       .from('sesiones')
       .select('*')
@@ -967,7 +976,10 @@ export class AdminController {
     const { data: sesiones } = await query;
 
     const contenedor = document.getElementById('contenedor-lista-sesiones');
-    document.getElementById('detalle-sesion').classList.remove('visible');
+    // Si mientras cargaba se abrió el detalle de una carrera (p. ej. al
+    // finalizarla), solo se actualiza la lista por debajo: antes aquí se
+    // ocultaba ese detalle y el historial quedaba en blanco.
+    if (turno === this._vistaHistorial) document.getElementById('detalle-sesion').classList.remove('visible');
 
     if (!sesiones || sesiones.length === 0) {
       contenedor.innerHTML = '<div class="ranking-vacio">No hay sesiones registradas' + (fechaInicio ? ' en estas fechas' : '') + '</div>';
