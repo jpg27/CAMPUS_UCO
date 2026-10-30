@@ -441,7 +441,7 @@ export class AdminController {
     window.crearSesion = async () => {
       const nombre = document.getElementById('nombre-sesion').value.trim();
       const codigo = document.getElementById('codigo-sesion').value.trim();
-      if (!nombre || !codigo) { mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Escribe el nombre y el código de la sesión.' }); return; }
+      if (!nombre || !codigo) { mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Escribe el nombre y el código de la carrera.' }); return; }
 
       const edificiosSeleccionados = EDIFICIOS.filter(e =>
         document.getElementById('ed-' + e.id)?.checked
@@ -453,7 +453,7 @@ export class AdminController {
         this._mostrarControlSesion();
         this._iniciarRanking();
       } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No se pudo crear la sesión', texto: 'Puede que ese código ya esté en uso. Prueba con otro.' });
+        mostrarAviso({ tipo: 'error', titulo: 'No se pudo crear la carrera', texto: 'Puede que ese código ya esté en uso. Prueba con otro.' });
       }
     };
 
@@ -556,7 +556,7 @@ export class AdminController {
       if (edificios && edificios.length > 0) {
         html += `
           <div class="card">
-            <h2>🏛️ Edificios de la sesión</h2>
+            <h2>🏛️ Edificios de la carrera</h2>
             ${edificios.map(e => `
               <div style="padding:10px; border-bottom:1px solid #f0f0f0; font-size:14px; color:#333;">
                 ${e.orden}. ${e.nombre}
@@ -593,20 +593,20 @@ export class AdminController {
       const btnEliminar = document.getElementById('btn-eliminar-sesion');
       btnEliminar.style.display = 'block';
       btnEliminar.onclick = async () => {
-        const ok = await confirmar({ titulo: '¿Eliminar esta sesión?', texto: `Se borrarán "${sesion.nombre}", sus participantes y sus escaneos. Esta acción no se puede deshacer.`, aceptar: 'Eliminar', peligro: true });
+        const ok = await confirmar({ titulo: '¿Eliminar esta carrera?', texto: `Se borrarán "${sesion.nombre}", sus participantes y sus escaneos. Esta acción no se puede deshacer.`, aceptar: 'Eliminar carrera', peligro: true });
         if (ok) {
           btnEliminar.disabled = true;
           btnEliminar.textContent = 'Eliminando...';
           try {
             await eliminarSesion(sesionId);
-            mostrarAviso({ tipo: 'exito', titulo: 'Sesión eliminada', texto: `"${sesion.nombre}" y sus datos se borraron.` });
+            mostrarAviso({ tipo: 'exito', titulo: 'Carrera eliminada', texto: `"${sesion.nombre}" y sus datos se borraron.` });
             window.volverHistorial();
             this._cargarHistorial();
           } catch(e) {
-            mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la sesión', texto: 'Revisa tu conexión e intenta de nuevo.' });
+            mostrarAviso({ tipo: 'error', titulo: 'No se pudo eliminar la carrera', texto: 'Revisa tu conexión e intenta de nuevo.' });
           }
           btnEliminar.disabled = false;
-          btnEliminar.textContent = '🗑️ Eliminar sesión';
+          btnEliminar.innerHTML = '<i data-lucide="trash-2" aria-hidden="true"></i> Eliminar carrera';
         }
       };
     };
@@ -982,7 +982,7 @@ export class AdminController {
     if (turno === this._vistaHistorial) document.getElementById('detalle-sesion').classList.remove('visible');
 
     if (!sesiones || sesiones.length === 0) {
-      contenedor.innerHTML = '<div class="ranking-vacio">No hay sesiones registradas' + (fechaInicio ? ' en estas fechas' : '') + '</div>';
+      contenedor.innerHTML = '<div class="ranking-vacio">No hay carreras registradas' + (fechaInicio ? ' en estas fechas' : '') + '</div>';
       return;
     }
 

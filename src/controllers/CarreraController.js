@@ -108,7 +108,7 @@ export class CarreraController {
       return;
     }
 
-    this.view.deshabilitarBoton('Buscando sesión...');
+    this.view.deshabilitarBoton('Buscando carrera...');
 
     try {
       const sesion = await obtenerSesionPorCodigo(codigo);

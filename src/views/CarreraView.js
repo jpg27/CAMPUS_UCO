@@ -47,7 +47,7 @@ export class CarreraView {
     document.getElementById('pantalla-form').classList.add('oculto');
     document.getElementById('pantalla-espera').classList.add('visible');
     document.getElementById('espera-nombre').textContent = (reconectado ? '👋 De nuevo, ' : '👋 Hola, ') + nombre;
-    document.getElementById('espera-sesion').textContent = 'Sesión: ' + sesion.nombre + ' · ' + sesion.codigo;
+    document.getElementById('espera-sesion').textContent = 'Carrera: ' + sesion.nombre + ' · ' + sesion.codigo;
     if (reconectado) {
       const titulo = document.querySelector('.espera-titulo');
       if (titulo) titulo.textContent = '¡Te reconectamos!';
@@ -109,7 +109,7 @@ export class CarreraView {
 
   mostrarSesionCerrada() {
     document.querySelector('.espera-estado').innerHTML =
-      '<span style="color: var(--color-error, #B42318); font-weight: 600;">La sesión fue cerrada</span>';
+      '<span style="color: var(--color-error, #B42318); font-weight: 600;">La carrera fue cerrada</span>';
   }
 
   onUnirse(callback) {
