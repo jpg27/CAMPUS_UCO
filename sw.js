@@ -12,7 +12,7 @@
  * Al cambiar archivos de la app, sube VERSION para que los teléfonos descarguen
  * la nueva versión.
  */
-const VERSION = 'v13-2026-10-29';
+const VERSION = 'v14-2026-10-30';
 const CACHE = `campus-uco-${VERSION}`;
 
 // Archivos propios (rutas relativas a la carpeta donde está sw.js).
