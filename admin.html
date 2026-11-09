@@ -1120,7 +1120,9 @@
 
     .pregunta-item.oculta-por-edicion { display: none; }
 
-    .pregunta-item .preg-texto { font-weight: 600; color: var(--color-text); font-size: 15px; line-height: 1.4; }
+    .pregunta-item { min-width: 0; }
+    /* Textos largos sin espacios se parten: nunca empujan los botones fuera */
+    .pregunta-item .preg-texto { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; color: var(--color-text); font-size: 15px; line-height: 1.4; }
 
     .pregunta-item-header {
       display: flex;
@@ -1142,10 +1144,14 @@
 
     .preg-opciones li {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       line-height: 1.5;
+      min-width: 0;
     }
+
+    .preg-opciones .op-texto { min-width: 0; overflow-wrap: anywhere; padding-top: 1px; }
+    .preg-opciones .op-check { flex-shrink: 0; margin-top: 3px; }
 
     .preg-opciones li.correcta { color: var(--color-primary); font-weight: 700; }
 
@@ -1839,8 +1845,9 @@
     .mp-ed-pts { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--color-surface); font-size: 13px; font-weight: 700; color: var(--color-text); }
 
     .mp-detalle { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(200, 150, 12, 0.45); font-size: 13px; line-height: 1.45; }
-    .mp-pregunta { font-weight: 600; color: var(--color-text); margin-bottom: 6px; }
-    .mp-dato { display: flex; gap: 8px; align-items: baseline; margin-top: 3px; }
+    .mp-pregunta { font-weight: 600; color: var(--color-text); margin-bottom: 6px; overflow-wrap: anywhere; }
+    .mp-dato { display: flex; gap: 8px; align-items: baseline; margin-top: 3px; min-width: 0; }
+    .mp-dato > span:last-child { min-width: 0; overflow-wrap: anywhere; }
     .mp-dato .etq { flex: none; min-width: 92px; color: var(--color-text-secondary); }
     .mp-dato .ok  { color: var(--color-primary); font-weight: 600; }
     .mp-dato .mal { color: var(--color-error); font-weight: 600; }

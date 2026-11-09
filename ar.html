@@ -367,8 +367,9 @@
       font-size: 13px; line-height: 1.45;
     }
     .ar-logro-detalle[hidden] { display: none; }
-    .ar-logro-detalle .det-pregunta { font-weight: 600; margin-bottom: 6px; }
-    .ar-logro-detalle .det-fila { display: flex; gap: 6px; align-items: baseline; margin-top: 3px; }
+    .ar-logro-detalle .det-pregunta { font-weight: 600; margin-bottom: 6px; overflow-wrap: anywhere; }
+    .ar-logro-detalle .det-fila { display: flex; gap: 6px; align-items: baseline; margin-top: 3px; min-width: 0; }
+    .ar-logro-detalle .det-fila > span:last-child { min-width: 0; overflow-wrap: anywhere; }
     .ar-logro-detalle .det-etq { flex: none; color: var(--color-text-secondary); min-width: 96px; }
     .ar-logro-detalle .det-ok  { color: #087A45; font-weight: 600; }
     .ar-logro-detalle .det-mal { color: #B3261E; font-weight: 600; }

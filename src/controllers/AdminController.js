@@ -187,7 +187,7 @@ export class AdminController {
   _htmlPregunta(p) {
     const op = (letra, texto) => `
       <li class="${p.respuesta_correcta === letra ? 'correcta' : ''}">
-        <span class="op-letra">${letra.toUpperCase()}</span>${esc(texto)}
+        <span class="op-letra">${letra.toUpperCase()}</span><span class="op-texto">${esc(texto)}</span>
         ${p.respuesta_correcta === letra ? '<i data-lucide="check" class="op-check" aria-label="Respuesta correcta"></i>' : ''}
       </li>`;
     return `

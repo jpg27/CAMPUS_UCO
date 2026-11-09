@@ -90,7 +90,18 @@ function trazarRectRedondeado(ctx, x, y, w, h, r) {
 }
 
 function partirEnLineas(ctx, texto, anchoMax) {
-  const palabras = String(texto ?? '').split(' ');
+  // Una "palabra" más ancha que la línea (p. ej. un texto sin espacios) se
+  // corta en trozos; antes se dibujaba aplastada o se salía de la tarjeta.
+  const palabras = [];
+  String(texto ?? '').split(' ').forEach(palabra => {
+    if (ctx.measureText(palabra).width <= anchoMax) { palabras.push(palabra); return; }
+    let trozo = '';
+    for (const ch of palabra) {
+      if (trozo && ctx.measureText(trozo + ch).width > anchoMax) { palabras.push(trozo); trozo = ''; }
+      trozo += ch;
+    }
+    if (trozo) palabras.push(trozo);
+  });
   const lineas = [];
   let actual = '';
   palabras.forEach(palabra => {
