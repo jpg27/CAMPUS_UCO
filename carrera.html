@@ -642,7 +642,11 @@
       color: var(--color-text-secondary);
       font-size: 14px;
       margin-bottom: 20px;
+      overflow-wrap: anywhere;
     }
+
+    /* Nombres o códigos muy largos se parten en líneas en vez de salirse */
+    .espera-card, .reconexion-texto p, #espera-nombre { overflow-wrap: anywhere; min-width: 0; }
 
     .espera-estado {
       display: flex;

@@ -5,6 +5,7 @@ import { CarreraView } from '../views/CarreraView.js';
 import { obtenerSesionPorCodigo, obtenerSesionAbiertaPorId } from '../models/SesionModel.js';
 import { unirseASesion, obtenerParticipanteDeSesion, horaUltimoEscaneo, nombreEnUso, normalizarNombre } from '../models/ParticipanteModel.js';
 import { avisoConexion, esErrorDeRed } from '../views/components/AvisoConexion.js';
+import { SUPABASE_URL } from '../config.js';
 import {
   guardarParticipante, guardarSesion, asegurarTramo, obtenerTramo, crearTramo,
   obtenerParticipante, obtenerSesion, limpiarTodo,
@@ -35,7 +36,7 @@ export class CarreraController {
     this.view.onReconectar(() => this.reconectar());
     this.view.onNoSoyYo(() => this.descartarReconexion());
 
-    avisoConexion.activar({ abajo: 24 });
+    avisoConexion.activar({ abajo: 24 }).vigilar(SUPABASE_URL + '/rest/v1/');
     await this._buscarCarreraPendiente();
   }
 

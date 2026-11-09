@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════
 // MapaController.js — Orquestador del mapa del campus (mapa.html)
 // ═══════════════════════════════════════════
-import { PUNTOS, supabase, obtenerEdificioInfo } from '../config.js';
+import { PUNTOS, supabase, obtenerEdificioInfo, SUPABASE_URL } from '../config.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
 import { obtenerParticipante, obtenerSesion, limpiarTodo, guardarCacheLogros, leerCacheLogros } from '../utils/storage.js';
 import { avisoConexion, esErrorDeRed } from '../views/components/AvisoConexion.js';
@@ -47,7 +47,7 @@ export class MapaController {
     // ── Sistema de puntos ──
     if (this.enCarrera) {
       // Sin internet: aviso arriba de la barra inferior y reintento al volver
-      avisoConexion.activar({ abajo: 84 });
+      avisoConexion.activar({ abajo: 84 }).vigilar(SUPABASE_URL + '/rest/v1/');
       avisoConexion.alReconectar(() => this.actualizarEstadosCarrera());
       const display = new PuntosDisplay('display-puntos-mapa');
       this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);

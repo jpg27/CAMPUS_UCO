@@ -44,6 +44,41 @@ class AvisoConexionImpl {
     return this;
   }
 
+  /**
+   * Revisa la conexión de verdad cada cierto tiempo, consultando el servidor.
+   * Hace falta porque el celular no siempre avisa que perdió internet: con el
+   * Wi-Fi conectado pero sin internet, o con los datos apagados en algunos
+   * Android, el navegador sigue diciendo "en línea" y no salía ningún aviso.
+   */
+  vigilar(url, { cadaMs = 8000, limiteMs = 5000 } = {}) {
+    if (this._vigilando || !url) return this;
+    this._vigilando = true;
+    let fallos = 0;
+    const revisar = async () => {
+      if (document.hidden) return;   // con la app en segundo plano no se gasta datos
+      if (navigator.onLine === false) { this.mostrar(); return; }
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), limiteMs);
+      try {
+        // no-cors: basta con que el servidor responda (cualquier respuesta = hay red)
+        await fetch(url, { method: 'HEAD', mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });
+        fallos = 0;
+        if (this.visible) this._volvio();
+      } catch (e) {
+        fallos += 1;
+        // Un fallo suelto puede ser un bache: se confirma a los 2,5 s
+        if (fallos === 1) setTimeout(revisar, 2500);
+        if (fallos >= 2 || navigator.onLine === false) this.mostrar();
+      } finally {
+        clearTimeout(t);
+      }
+    };
+    setInterval(revisar, cadaMs);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) revisar(); });
+    setTimeout(revisar, 1500);
+    return this;
+  }
+
   /** Registra qué hacer cuando vuelve la conexión (p. ej. reintentar). */
   alReconectar(fn) {
     this.callbacks.add(fn);
@@ -51,6 +86,7 @@ class AvisoConexionImpl {
   }
 
   mostrar(texto = TEXTO_SIN_RED) {
+    if (this.visible && this.el?.dataset.estado === 'sin-red') return;
     this._crear();
     clearTimeout(this._timer);
     this.el.dataset.estado = 'sin-red';
@@ -59,7 +95,7 @@ class AvisoConexionImpl {
     this.visible = true;
     // Algunos celulares no avisan "online" al volver: se revisa cada 15 s
     clearInterval(this._sondeo);
-    this._sondeo = setInterval(() => { if (navigator.onLine !== false) this._volvio(); }, 15000);
+    if (!this._vigilando) this._sondeo = setInterval(() => { if (navigator.onLine !== false) this._volvio(); }, 15000);
   }
 
   ocultar() {

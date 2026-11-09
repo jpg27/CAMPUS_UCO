@@ -685,6 +685,10 @@
     .fin-validacion strong { display: block; font-size: 15px; margin-bottom: 2px; color: #5C4500; }
     .fin-validacion p { margin: 0; font-size: 13px; line-height: 1.45; }
     .fin-meta { margin-top: 8px; font-size: 12px; font-weight: 600; color: #6B5100; font-variant-numeric: tabular-nums; }
+    /* Nombres o códigos muy largos se parten en líneas en vez de salirse */
+    .fin-validacion > div { min-width: 0; }
+    .fin-meta, .finalizacion-header .nombre-jugador, .fin-subtitulo,
+    #sin-sesion-texto, .ar-logro-nombre { overflow-wrap: anywhere; }
 
     .finalizacion-stats {
       display: grid;

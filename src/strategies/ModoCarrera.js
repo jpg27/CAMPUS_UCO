@@ -9,7 +9,7 @@ import { registrarEscaneo } from '../models/EscaneoModel.js';
 import { obtenerPreguntaAleatoria, obtenerPreguntasPorIds } from '../models/PreguntaModel.js';
 import { resumirEscaneos } from '../utils/clasificacion.js';
 import { obtenerEdificiosSesion } from '../models/EdificioModel.js';
-import { supabase, PUNTOS } from '../config.js';
+import { supabase, PUNTOS, SUPABASE_URL } from '../config.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
 import { SesionObserver } from '../observers/SesionObserver.js';
 import { limpiarTodo, guardarCookieCarrera, vencimientoCarrera, guardarCacheLogros, leerCacheLogros } from '../utils/storage.js';
@@ -54,7 +54,7 @@ export class ModoCarrera extends GameStrategy {
     this.edificiosHabilitados = edificiosSesion.map(e => e.edificio_id);
 
     // Aviso de "sin conexión": una falla de red nunca se muestra como fin de carrera
-    avisoConexion.activar({ abajo: 24 });
+    avisoConexion.activar({ abajo: 24 }).vigilar(SUPABASE_URL + '/rest/v1/');
     avisoConexion.alReconectar(() => {
       if (!this._cerrada && !this._finalizado) this._revisarEstadoAlAbrir(view);
     });
