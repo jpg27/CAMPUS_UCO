@@ -22,8 +22,26 @@ const escapar = (t = '') => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', 
 let toastActual = null;
 let timerToast = null;
 
+// ── La notificación sigue a la parte visible de la pantalla ──
+// Al abrirse el teclado del celular, la página se desplaza para mostrar el
+// campo y una notificación fija arriba quedaba fuera de la vista. Con el
+// "visual viewport" se recoloca siempre en el borde superior de lo que se ve.
+const MARGEN_SUPERIOR = 12;
+function recolocarAviso() {
+  const el = toastActual;
+  const vv = window.visualViewport;
+  if (!el || !vv) return;
+  el.style.top = `${Math.max(0, vv.offsetTop) + MARGEN_SUPERIOR}px`;
+}
+if (typeof window !== 'undefined' && window.visualViewport) {
+  window.visualViewport.addEventListener('resize', recolocarAviso);
+  window.visualViewport.addEventListener('scroll', recolocarAviso);
+}
+
 /** Notificación arriba de la pantalla que se cierra sola. */
-export function mostrarAviso({ tipo = 'exito', titulo = '', texto = '', duracion = 4500 } = {}) {
+export function mostrarAviso({ tipo = 'exito', titulo = '', texto = '', duracion } = {}) {
+  // Los errores y avisos duran más: dan tiempo de leerlos mientras se corrige el dato
+  duracion ??= tipo === 'exito' ? 4500 : 8000;
   ocultarAviso(true);
 
   const el = document.createElement('div');
@@ -39,9 +57,10 @@ export function mostrarAviso({ tipo = 'exito', titulo = '', texto = '', duracion
     <button type="button" class="aviso-cerrar" aria-label="Cerrar aviso">${svg('cerrar')}</button>`;
   el.querySelector('.aviso-cerrar').addEventListener('click', () => ocultarAviso());
   document.body.appendChild(el);
+  toastActual = el;
+  recolocarAviso();
   requestAnimationFrame(() => el.classList.add('visible'));
 
-  toastActual = el;
   if (duracion > 0) timerToast = setTimeout(() => ocultarAviso(), duracion);
   return el;
 }

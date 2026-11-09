@@ -18,14 +18,44 @@ export class CarreraView {
     mostrarAviso({ tipo, titulo, texto });
     if (campo) {
       const input = document.getElementById(campo);
-      input?.setAttribute('aria-invalid', 'true');
-      input?.focus();
+      if (!input) return;
+      input.setAttribute('aria-invalid', 'true');
+      // El mensaje también queda debajo del campo: aunque el teclado tape o
+      // desplace la notificación, se sigue viendo qué hay que corregir.
+      this._mensajeEnCampo(input, titulo, texto);
+      input.focus();
     }
+  }
+
+  _mensajeEnCampo(input, titulo, texto) {
+    const id = 'error-' + input.id;
+    let msg = document.getElementById(id);
+    if (!msg) {
+      msg = document.createElement('p');
+      msg.id = id;
+      msg.className = 'campo-error';
+      msg.setAttribute('role', 'alert');
+      (input.closest('.input-icono') || input).insertAdjacentElement('afterend', msg);
+      // Se quita apenas la persona empieza a corregir
+      input.addEventListener('input', () => {
+        input.removeAttribute('aria-invalid');
+        msg.remove();
+        input.removeAttribute('aria-describedby');
+      }, { once: true });
+    }
+    msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>';
+    const span = document.createElement('span');
+    span.innerHTML = `<strong></strong> `;
+    span.querySelector('strong').textContent = titulo + '.';
+    span.append(texto);
+    msg.append(span);
+    input.setAttribute('aria-describedby', id);
   }
 
   ocultarError() {
     ocultarAviso();
     document.querySelectorAll('[aria-invalid]').forEach(el => el.removeAttribute('aria-invalid'));
+    document.querySelectorAll('.campo-error').forEach(el => el.remove());
   }
 
   deshabilitarBoton(texto) {

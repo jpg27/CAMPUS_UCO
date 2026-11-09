@@ -726,6 +726,20 @@
       box-shadow: 0 0 0 3px #FDF0EF;
     }
 
+    /* Mensaje de error debajo del campo (se ve aunque se abra el teclado) */
+    .campo-error {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 8px 2px 0;
+      color: #B3261E;
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: left;
+    }
+    .campo-error svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+    .campo-error strong { font-weight: 700; }
+
   </style>
   <link rel="stylesheet" href="styles/avisos.css">
 </head>
@@ -811,7 +825,7 @@
           <input
             type="text"
             id="input-codigo"
-            placeholder="Ej: UCO-2025"
+            placeholder="Ej: UCO-2026"
             maxlength="20"
             autocomplete="off"
             style="text-transform: uppercase;"
