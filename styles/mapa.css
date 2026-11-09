@@ -453,6 +453,11 @@ html, body { height: 100%; overflow: hidden; }
 .logro-nombre { font-weight: 700; }
 .logro-estado { font-size: var(--t-xs); color: var(--tinta-suave); margin-top: 2px; }
 .logros-vacio { text-align: center; color: var(--tinta-suave); padding: 16px 0; }
+.logros-aviso {
+  list-style: none; margin: 0 0 10px; padding: 10px 12px;
+  background: #FFF3CD; color: #6B5104; border: 1px solid #F1DE9A; border-radius: 12px;
+  font-size: 13px; line-height: 1.4; font-weight: 500;
+}
 
 .aviso {
   width: 100%; max-width: 340px; padding: 28px 24px;

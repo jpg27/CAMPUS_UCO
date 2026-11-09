@@ -5,6 +5,10 @@
  */
 import { iniciarSesionAdmin, obtenerSesionAdmin } from '../models/AuthModel.js';
 import { mostrarAviso, ocultarAviso } from '../views/components/Avisos.js';
+import { esErrorDeRed } from '../views/components/AvisoConexion.js';
+
+const MAX_CORREO = 254;
+const MAX_CLAVE  = 64;
 
 export class LoginAdminController {
   async init() {
@@ -35,6 +39,10 @@ export class LoginAdminController {
         (email ? document.getElementById('input-password') : document.getElementById('input-usuario')).focus();
         return;
       }
+      if (email.length > MAX_CORREO || password.length > MAX_CLAVE) {
+        mostrarAviso({ tipo: 'aviso', titulo: 'Datos demasiado largos', texto: `La contraseña puede tener hasta ${MAX_CLAVE} caracteres.` });
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = 'Verificando...';
@@ -43,7 +51,11 @@ export class LoginAdminController {
         await iniciarSesionAdmin(email, password);
         window.location.href = 'admin.html';
       } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No pudimos iniciar sesión', texto: 'El correo o la contraseña no son correctos.' });
+        if (esErrorDeRed(e)) {
+          mostrarAviso({ tipo: 'error', titulo: 'No hay conexión a internet', texto: 'Revisa tu conexión e intenta de nuevo.' });
+        } else {
+          mostrarAviso({ tipo: 'error', titulo: 'No pudimos iniciar sesión', texto: 'El correo o la contraseña no son correctos.' });
+        }
         btn.disabled = false;
         btn.textContent = 'Ingresar';
       }

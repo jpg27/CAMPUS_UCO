@@ -12,7 +12,8 @@ import { obtenerEdificiosSesion } from '../models/EdificioModel.js';
 import { supabase, PUNTOS } from '../config.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
 import { SesionObserver } from '../observers/SesionObserver.js';
-import { limpiarTodo, guardarCookieCarrera, vencimientoCarrera } from '../utils/storage.js';
+import { limpiarTodo, guardarCookieCarrera, vencimientoCarrera, guardarCacheLogros, leerCacheLogros } from '../utils/storage.js';
+import { avisoConexion, esErrorDeRed } from '../views/components/AvisoConexion.js';
 import { PuntosDisplay } from '../views/components/PuntosDisplay.js';
 import { PuntosController } from '../controllers/PuntosController.js';
 
@@ -47,8 +48,16 @@ export class ModoCarrera extends GameStrategy {
   async init(contexto) {
     const { view } = contexto;
 
-    const edificiosSesion = await obtenerEdificiosSesion(this.sesion.id);
+    let edificiosSesion = await obtenerEdificiosSesion(this.sesion.id);
+    // Sin conexión: se usan los edificios de la última carga guardada
+    if (!edificiosSesion.length) edificiosSesion = leerCacheLogros(this.participante.id, this.sesion.id)?.edificiosSesion || [];
     this.edificiosHabilitados = edificiosSesion.map(e => e.edificio_id);
+
+    // Aviso de "sin conexión": una falla de red nunca se muestra como fin de carrera
+    avisoConexion.activar({ abajo: 24 });
+    avisoConexion.alReconectar(() => {
+      if (!this._cerrada && !this._finalizado) this._revisarEstadoAlAbrir(view);
+    });
 
     const display = new PuntosDisplay('display-puntos');
     this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);
@@ -67,10 +76,18 @@ export class ModoCarrera extends GameStrategy {
 
   async _revisarEstadoAlAbrir(view) {
     try {
-      const [{ data: sesion }, { data: yo }] = await Promise.all([
+      const [resSesion, resYo] = await Promise.all([
         supabase.from('sesiones').select('estado, activada_en, creada_en, codigo').eq('id', this.sesion.id).maybeSingle(),
         supabase.from('participantes').select('completado').eq('id', this.participante.id).maybeSingle()
       ]);
+      // Si alguna consulta falló (sin internet, servidor caído) NO se sabe el
+      // estado real de la carrera: antes un "sin datos" se tomaba como
+      // "carrera eliminada" y se mostraba "Carrera finalizada".
+      if (resSesion.error || resYo.error) {
+        if (esErrorDeRed(resSesion.error || resYo.error)) avisoConexion.mostrar();
+        return;
+      }
+      const sesion = resSesion.data, yo = resYo.data;
       if (sesion && !yo) {
         this._retirado(view);
       } else if (yo?.completado) {
@@ -92,9 +109,12 @@ export class ModoCarrera extends GameStrategy {
           { s: ses.id, p: this.participante.id, n: this.participante.nombre, c: ses.codigo },
           vencimientoCarrera(ses)
         );
+        avisoConexion.ocultar();
+        this._cargarLogros().catch(() => {});   // deja los logros guardados por si se va la señal
       }
     } catch (e) {
-      // Sin conexión: se sigue normal y el observer avisará cuando vuelva
+      // Sin conexión: se sigue normal y se reintenta cuando vuelva
+      avisoConexion.mostrar();
     }
   }
 
@@ -265,10 +285,16 @@ export class ModoCarrera extends GameStrategy {
 
     try {
       if (fallo) {
+        if (!navigator.onLine) {
+          avisoConexion.mostrar();
+          notificacion.mostrar('Sin conexión', 'No se pudo registrar el edificio. Cuando vuelva la señal, escanea el marcador otra vez.', null, 'error');
+          return;
+        }
         if (!(await this._sigoEnLaCarrera())) { this._retirado(view); return; }
         notificacion.mostrar('Error', 'No se pudo registrar el edificio. Vuelve a escanear el marcador.', null, 'error');
         return;
       }
+      this._cargarLogros().catch(() => {});   // actualiza los logros guardados
       if (resultado.duplicado) {
         notificacion.mostrar(edificio.nombre, 'Ya completaste este edificio', null, 'aviso');
         return;
@@ -374,26 +400,47 @@ export class ModoCarrera extends GameStrategy {
     return true;
   }
 
+  /**
+   * Trae los logros del servidor y los deja guardados en el celular.
+   * Si no hay conexión lanza el error (quien llama decide qué mostrar).
+   */
+  async _cargarLogros() {
+    // select('*') para incluir respuesta_elegida si la columna ya existe
+    const [resEsc, resEd] = await Promise.all([
+      supabase.from('escaneos').select('*')
+        .eq('participante_id', this.participante.id)
+        .eq('sesion_id', this.sesion.id),
+      supabase.from('edificios_sesion').select('*')
+        .eq('sesion_id', this.sesion.id)
+        .order('orden')
+    ]);
+    if (resEsc.error || resEd.error) throw (resEsc.error || resEd.error);
+    const escaneos = resEsc.data || [];
+    const edificiosSesion = resEd.data || [];
+    const anterior = leerCacheLogros(this.participante.id, this.sesion.id);
+    let preguntas = await obtenerPreguntasPorIds(escaneos.map(e => e.pregunta_id));
+    if (!preguntas.length && anterior?.preguntas?.length) preguntas = anterior.preguntas;
+    const datos = { escaneos, edificiosSesion, preguntas };
+    guardarCacheLogros(this.participante.id, this.sesion.id, datos);
+    return datos;
+  }
+
   async mostrarLogros(contexto) {
     const { view } = contexto;
-
-    // select('*') para incluir respuesta_elegida si la columna ya existe
-    const { data: escaneos } = await supabase
-      .from('escaneos')
-      .select('*')
-      .eq('participante_id', this.participante.id)
-      .eq('sesion_id', this.sesion.id);
-
-    const { data: edificiosSesion } = await supabase
-      .from('edificios_sesion')
-      .select('*')
-      .eq('sesion_id', this.sesion.id)
-      .order('orden');
-
+    let datos, sinRed = false;
+    try {
+      datos = await this._cargarLogros();
+    } catch (e) {
+      // Sin conexión: se muestran los últimos logros guardados, nunca ceros
+      sinRed = true;
+      if (esErrorDeRed(e)) avisoConexion.mostrar();
+      datos = leerCacheLogros(this.participante.id, this.sesion.id);
+      if (!datos) { view.mostrarLogrosSinConexion(); return; }
+    }
+    const { escaneos, edificiosSesion, preguntas } = datos;
     const puntosAcumulados = (escaneos || []).reduce((sum, e) => sum + (e.puntos || 0), 0);
-    const preguntas = await obtenerPreguntasPorIds((escaneos || []).map(e => e.pregunta_id));
-    const mapa = new Map(preguntas.map(p => [String(p.id), p]));
-    view.renderizarLogros(edificiosSesion, escaneos, puntosAcumulados, mapa);
+    const mapa = new Map((preguntas || []).map(p => [String(p.id), p]));
+    view.renderizarLogros(edificiosSesion, escaneos, puntosAcumulados, mapa, { sinRed });
   }
 
   estaActivo() {

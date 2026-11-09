@@ -3,10 +3,11 @@
 // ═══════════════════════════════════════════
 import { CarreraView } from '../views/CarreraView.js';
 import { obtenerSesionPorCodigo, obtenerSesionAbiertaPorId } from '../models/SesionModel.js';
-import { unirseASesion, obtenerParticipanteDeSesion, horaUltimoEscaneo } from '../models/ParticipanteModel.js';
+import { unirseASesion, obtenerParticipanteDeSesion, horaUltimoEscaneo, nombreEnUso, normalizarNombre } from '../models/ParticipanteModel.js';
+import { avisoConexion, esErrorDeRed } from '../views/components/AvisoConexion.js';
 import {
   guardarParticipante, guardarSesion, asegurarTramo, obtenerTramo, crearTramo,
-  obtenerParticipante, obtenerSesion,
+  obtenerParticipante, obtenerSesion, limpiarTodo,
   guardarCookieCarrera, leerCookieCarrera, borrarCookieCarrera, vencimientoCarrera
 } from '../utils/storage.js';
 import { SesionObserver } from '../observers/SesionObserver.js';
@@ -34,6 +35,7 @@ export class CarreraController {
     this.view.onReconectar(() => this.reconectar());
     this.view.onNoSoyYo(() => this.descartarReconexion());
 
+    avisoConexion.activar({ abajo: 24 });
     await this._buscarCarreraPendiente();
   }
 
@@ -57,7 +59,9 @@ export class CarreraController {
       // unirse como participante nuevo a la misma carrera desde este navegador)
       this.view.mostrarReconexion(participante.nombre, sesion, { completado: !!participante.completado });
     } catch (e) {
-      // Sin conexión: se deja el formulario normal
+      // Sin conexión: se deja el formulario normal (y la cookie, para
+      // poder reconectarse cuando vuelva la señal)
+      if (esErrorDeRed(e)) avisoConexion.mostrar();
     }
   }
 
@@ -81,10 +85,26 @@ export class CarreraController {
     }
   }
 
+  /**
+   * "No soy yo": el celular lo va a usar otra persona. Se borra TODO lo del
+   * participante anterior (datos, cronómetro, logros y cookie); antes solo se
+   * borraba la cookie y al unirse se volvía a entrar como la persona anterior.
+   */
   descartarReconexion() {
-    borrarCookieCarrera();
+    limpiarTodo();
     this.reconexion = null;
     this.view.ocultarReconexion();
+  }
+
+  /** Mensaje cuando una consulta falla: sin red, o un error del servidor. */
+  _errorDeConexion(e, titulo = 'No pudimos unirte') {
+    if (esErrorDeRed(e)) {
+      avisoConexion.mostrar();
+      this.view.mostrarError('Comprueba tu red e inténtalo de nuevo.', { titulo: 'No hay conexión a internet', tipo: 'error' });
+    } else {
+      this.view.mostrarError('Ocurrió un problema al conectar con el servidor. Intenta de nuevo en un momento.', { titulo, tipo: 'error' });
+    }
+    this.view.habilitarBoton();
   }
 
   async unirse() {
@@ -108,6 +128,11 @@ export class CarreraController {
       return;
     }
 
+    if (navigator.onLine === false) {
+      this._errorDeConexion(new Error('offline'));
+      return;
+    }
+
     this.view.deshabilitarBoton('Buscando carrera...');
 
     try {
@@ -119,23 +144,35 @@ export class CarreraController {
         return;
       }
 
-      // Si este navegador ya se había unido a ESTA carrera, se reutiliza el
-      // mismo participante en lugar de crear un duplicado.
+      // Si este navegador ya se había unido a ESTA carrera CON ESE MISMO
+      // NOMBRE, se reutiliza el participante en lugar de crear un duplicado.
+      // Con otro nombre es otra persona: se borra lo del anterior.
       const previo = this._datosGuardados();
-      if (previo && String(previo.s) === String(sesion.id)) {
-        const existente = await obtenerParticipanteDeSesion(previo.p, sesion.id);
-        if (existente) {
-          await this._entrar(existente, sesion, { reconectado: true });
-          return;
+      if (previo) {
+        const mismaPersona = String(previo.s) === String(sesion.id)
+          && normalizarNombre(previo.n) === normalizarNombre(nombre);
+        if (mismaPersona) {
+          const existente = await obtenerParticipanteDeSesion(previo.p, sesion.id);
+          if (existente) {
+            await this._entrar(existente, sesion, { reconectado: true });
+            return;
+          }
         }
+        limpiarTodo();
+      }
+
+      // Dos personas con el mismo nombre no se pueden distinguir en el ranking
+      if (await nombreEnUso(sesion.id, nombre)) {
+        this.view.mostrarError('Ya hay alguien con ese nombre en esta carrera. Agrega tu segundo apellido o una inicial, por ejemplo: ' + nombre + ' R.', { titulo: 'Ese nombre ya está en uso', campo: 'input-nombre' });
+        this.view.habilitarBoton();
+        return;
       }
 
       const participante = await unirseASesion(sesion.id, nombre);
       await this._entrar(participante, sesion, { reconectado: false });
 
     } catch (e) {
-      this.view.mostrarError('Revisa tu conexión a internet e intenta de nuevo.', { titulo: 'No pudimos unirte', tipo: 'error' });
-      this.view.habilitarBoton();
+      this._errorDeConexion(e);
     }
   }
 

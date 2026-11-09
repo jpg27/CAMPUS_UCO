@@ -3,7 +3,8 @@
 // ═══════════════════════════════════════════
 import { PUNTOS, supabase, obtenerEdificioInfo } from '../config.js';
 import { eventBus, EVENTOS } from '../observers/EventBus.js';
-import { obtenerParticipante, obtenerSesion, limpiarTodo } from '../utils/storage.js';
+import { obtenerParticipante, obtenerSesion, limpiarTodo, guardarCacheLogros, leerCacheLogros } from '../utils/storage.js';
+import { avisoConexion, esErrorDeRed } from '../views/components/AvisoConexion.js';
 import { formatearHora } from '../utils/formatters.js';
 import { MapaView } from '../views/MapaView.js';
 import { PuntosDisplay } from '../views/components/PuntosDisplay.js';
@@ -45,6 +46,9 @@ export class MapaController {
 
     // ── Sistema de puntos ──
     if (this.enCarrera) {
+      // Sin internet: aviso arriba de la barra inferior y reintento al volver
+      avisoConexion.activar({ abajo: 84 });
+      avisoConexion.alReconectar(() => this.actualizarEstadosCarrera());
       const display = new PuntosDisplay('display-puntos-mapa');
       this.puntosController = new PuntosController(display, PUNTOS.MS_POR_TICK);
       this.puntosController.iniciar(this.sesion.id);
@@ -88,11 +92,15 @@ export class MapaController {
   }
 
   // ── Datos de la carrera ──
+  /**
+   * Edificios de la carrera y los que ya registró. Sin conexión devuelve los
+   * últimos datos guardados (sinRed: true) en lugar de listas vacías.
+   */
   async cargarProgreso() {
-    const [{ data: escaneos }, { data: edificiosSesion }] = await Promise.all([
+    const [resEsc, resEd] = await Promise.all([
       supabase
         .from('escaneos')
-        .select('edificio_id, escaneado_en')
+        .select('*')
         .eq('participante_id', this.participante.id)
         .eq('sesion_id', this.sesion.id),
       supabase
@@ -101,22 +109,36 @@ export class MapaController {
         .eq('sesion_id', this.sesion.id)
         .order('orden')
     ]);
-    return { escaneos: escaneos || [], edificiosSesion: edificiosSesion || [] };
+    const anterior = leerCacheLogros(this.participante.id, this.sesion.id);
+    if (resEsc.error || resEd.error) {
+      if (esErrorDeRed(resEsc.error || resEd.error)) avisoConexion.mostrar();
+      return {
+        escaneos: anterior?.escaneos || [],
+        edificiosSesion: anterior?.edificiosSesion || [],
+        sinRed: true,
+        sinDatos: !anterior
+      };
+    }
+    const escaneos = resEsc.data || [], edificiosSesion = resEd.data || [];
+    guardarCacheLogros(this.participante.id, this.sesion.id, { escaneos, edificiosSesion, preguntas: anterior?.preguntas || [] });
+    return { escaneos, edificiosSesion, sinRed: false };
   }
 
   async actualizarEstadosCarrera() {
-    const { escaneos, edificiosSesion } = await this.cargarProgreso();
+    const progreso = await this.cargarProgreso();
+    const { escaneos, edificiosSesion } = progreso;
     this.escaneados = new Set(escaneos.map(e => e.edificio_id));
     this.idsCarrera = new Set(edificiosSesion.map(e => e.edificio_id));
     this.view.marcarEstados({ escaneados: this.escaneados, enCarrera: this.idsCarrera });
-    return { escaneos, edificiosSesion };
+    return progreso;
   }
 
   async verProgreso() {
     this.view.abrirCapa('panel-progreso');
     if (!this.enCarrera) return;
 
-    const { escaneos, edificiosSesion } = await this.actualizarEstadosCarrera();
+    const { escaneos, edificiosSesion, sinRed, sinDatos } = await this.actualizarEstadosCarrera();
+    if (sinDatos) { this.view.renderLogrosSinConexion(); return; }
     const total       = edificiosSesion.length;
     const completados = Math.min(this.escaneados.size, total);
 
@@ -130,7 +152,8 @@ export class MapaController {
           escaneado: !!escaneo,
           hora: escaneo ? formatearHora(escaneo.escaneado_en) : null
         };
-      })
+      }),
+      sinRed
     });
   }
 }

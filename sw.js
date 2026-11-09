@@ -12,7 +12,7 @@
  * Al cambiar archivos de la app, sube VERSION para que los teléfonos descarguen
  * la nueva versión.
  */
-const VERSION = 'v14-2026-10-30';
+const VERSION = 'v15-2026-11-08';
 const CACHE = `campus-uco-${VERSION}`;
 
 // Archivos propios (rutas relativas a la carpeta donde está sw.js).
@@ -61,6 +61,7 @@ const ARCHIVOS_APP = [
   'src/views/MapaView.js',
   'src/views/components/Avisos.js',
   'src/views/components/NotificacionComponent.js',
+  'src/views/components/AvisoConexion.js',
   'src/views/components/PuntosDisplay.js',
   'src/views/components/Tutorial.js',
   'src/views/mapa/PanZoom.js',

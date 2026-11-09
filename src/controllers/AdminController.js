@@ -17,8 +17,35 @@ import { formatearTiempo, formatearHora } from '../utils/formatters.js';
 import { clasificarParticipantes, formatearPuntos } from '../utils/clasificacion.js';
 import { obtenerSesionAdmin, cerrarSesionAdmin } from '../models/AuthModel.js';
 import { mostrarAviso, confirmar } from '../views/components/Avisos.js';
+import { esErrorDeRed } from '../views/components/AvisoConexion.js';
+import { normalizarNombre } from '../models/ParticipanteModel.js';
 
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+/** 'AAAA-MM-DD' → medianoche de ese día en la hora local del equipo. */
+function inicioDelDiaLocal(fecha) {
+  const [a, m, d] = fecha.split('-').map(Number);
+  return new Date(a, m - 1, d, 0, 0, 0, 0);
+}
+
+/**
+ * Participantes con el mismo nombre en una carrera: a cada uno se le asigna
+ * (1), (2)… y un código corto para poder diferenciarlos en el ranking.
+ */
+function etiquetasDuplicados(lista) {
+  const grupos = new Map();
+  (lista || []).forEach(p => {
+    const k = normalizarNombre(p.nombre);
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(p);
+  });
+  const etiquetas = new Map();
+  grupos.forEach(g => {
+    if (g.length < 2) return;
+    g.forEach((p, i) => etiquetas.set(String(p.id), { n: i + 1, codigo: String(p.id).replace(/-/g, '').slice(-4).toUpperCase() }));
+  });
+  return etiquetas;
+}
 
 export class AdminController {
   constructor() {
@@ -429,6 +456,10 @@ export class AdminController {
     window.filtrarHistorial = () => {
       const inicio = document.getElementById('filtro-fecha-inicio').value;
       const fin = document.getElementById('filtro-fecha-fin').value;
+      if (inicio && fin && inicio > fin) {
+        mostrarAviso({ tipo: 'aviso', titulo: 'Fechas al revés', texto: 'La fecha "Desde" debe ser anterior o igual a la fecha "Hasta".' });
+        return;
+      }
       this._cargarHistorial(inicio, fin);
     };
 
@@ -439,9 +470,21 @@ export class AdminController {
     };
 
     window.crearSesion = async () => {
-      const nombre = document.getElementById('nombre-sesion').value.trim();
-      const codigo = document.getElementById('codigo-sesion').value.trim();
+      const nombre = document.getElementById('nombre-sesion').value.trim().replace(/\s+/g, ' ');
+      const codigo = document.getElementById('codigo-sesion').value.trim().toUpperCase();
       if (!nombre || !codigo) { mostrarAviso({ tipo: 'aviso', titulo: 'Faltan datos', texto: 'Escribe el nombre y el código de la carrera.' }); return; }
+      // El código se escribe en el celular y se muestra en grande: solo letras
+      // sin tilde, números y guion, de 3 a 15 caracteres (sin emojis ni símbolos)
+      if (!/^[A-Z0-9-]{3,15}$/.test(codigo)) {
+        mostrarAviso({ tipo: 'aviso', titulo: 'Código no válido', texto: 'Usa de 3 a 15 caracteres: letras sin tilde, números o guion. Ejemplo: UCO-2026.' });
+        document.getElementById('codigo-sesion').focus();
+        return;
+      }
+      if (nombre.length > 60 || /\p{Extended_Pictographic}/u.test(nombre)) {
+        mostrarAviso({ tipo: 'aviso', titulo: 'Nombre no válido', texto: 'El nombre de la carrera puede tener hasta 60 caracteres y no puede llevar emojis.' });
+        document.getElementById('nombre-sesion').focus();
+        return;
+      }
 
       const edificiosSeleccionados = EDIFICIOS.filter(e =>
         document.getElementById('ed-' + e.id)?.checked
@@ -453,7 +496,14 @@ export class AdminController {
         this._mostrarControlSesion();
         this._iniciarRanking();
       } catch (e) {
-        mostrarAviso({ tipo: 'error', titulo: 'No se pudo crear la carrera', texto: 'Puede que ese código ya esté en uso. Prueba con otro.' });
+        // Antes cualquier error se mostraba como "código en uso", incluso sin internet
+        if (esErrorDeRed(e)) {
+          mostrarAviso({ tipo: 'error', titulo: 'No hay conexión a internet', texto: 'No se pudo crear la carrera. Revisa tu conexión e intenta de nuevo.' });
+        } else if (e?.code === '23505') {
+          mostrarAviso({ tipo: 'error', titulo: 'Ese código ya está en uso', texto: 'Hay otra carrera abierta con ese código. Prueba con otro.' });
+        } else {
+          mostrarAviso({ tipo: 'error', titulo: 'No se pudo crear la carrera', texto: 'Ocurrió un problema con el servidor. Intenta de nuevo en un momento.' });
+        }
       }
     };
 
@@ -548,7 +598,8 @@ export class AdminController {
       if (participantes.length === 0) {
         html += '<div class="ranking-vacio">Sin participantes</div>';
       } else {
-        html += participantes.map(p => this._htmlParticipante(p, sesion.total_edificios || 0, { cerrada: true })).join('');
+        const dups = etiquetasDuplicados(participantes);
+        html += participantes.map(p => this._htmlParticipante(p, sesion.total_edificios || 0, { cerrada: true, dup: dups.get(String(p.id)) })).join('');
       }
 
       html += '</div>';
@@ -919,7 +970,8 @@ export class AdminController {
     }
 
     const cerrada = this.sesionActual.estado === 'cerrada';
-    contenedor.innerHTML = lista.map(p => this._htmlParticipante(p, total, { cerrada })).join('');
+    const dups = etiquetasDuplicados(lista);
+    contenedor.innerHTML = lista.map(p => this._htmlParticipante(p, total, { cerrada, dup: dups.get(String(p.id)) })).join('');
   }
 
   /**
@@ -927,7 +979,7 @@ export class AdminController {
    * Completados: medalla/posición, puntos y tiempo.
    * Sin terminar: edificios y puntos parciales.
    */
-  _htmlParticipante(p, total, { cerrada = false } = {}) {
+  _htmlParticipante(p, total, { cerrada = false, dup = null } = {}) {
     const pos = p.completado ? p.posicion : null;
     const badge = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos ? `#${pos}` : (cerrada ? '—' : '⏳');
     const clase = p.completado ? (pos === 1 ? 'primero' : 'completado') : (cerrada ? 'incompleto' : '');
@@ -951,7 +1003,8 @@ export class AdminController {
         <div class="pos-badge ${pos && pos <= 3 ? 'pos-' + pos : 'pos-n'}">${badge}</div>
         <div class="participante-info">
           <button type="button" class="participante-nombre btn-participante" data-pid="${esc(p.id)}" data-sesion="${esc(p.sesion_id)}"
-            aria-label="Ver las respuestas de ${esc(p.nombre)}">${esc(p.nombre)}</button>
+            aria-label="Ver las respuestas de ${esc(p.nombre)}">${esc(p.nombre)}${dup ? ` (${dup.n})` : ''}</button>${dup ? `
+          <span class="dup-tag" title="Hay otro participante con este nombre. Este código lo identifica.">#${dup.codigo}</span>` : ''}
           <div class="participante-estado">${estado}</div>
         </div>
         <div class="participante-tiempo">${derecha}</div>
@@ -966,20 +1019,30 @@ export class AdminController {
       .select('*')
       .order('creada_en', { ascending: false });
 
+    // Los días se cuentan en la hora del equipo (Colombia, UTC−5), igual que
+    // la fecha que se muestra en cada tarjeta. Antes se usaba UTC: una carrera
+    // creada después de las 7 p. m. caía en el día siguiente.
     if (fechaInicio) {
-      query = query.gte('creada_en', fechaInicio + 'T00:00:00Z');
+      query = query.gte('creada_en', inicioDelDiaLocal(fechaInicio).toISOString());
     }
     if (fechaFin) {
-      query = query.lte('creada_en', fechaFin + 'T23:59:59Z');
+      const siguiente = inicioDelDiaLocal(fechaFin);
+      siguiente.setDate(siguiente.getDate() + 1);
+      query = query.lt('creada_en', siguiente.toISOString());
     }
 
-    const { data: sesiones } = await query;
+    const { data: sesiones, error } = await query;
 
     const contenedor = document.getElementById('contenedor-lista-sesiones');
     // Si mientras cargaba se abrió el detalle de una carrera (p. ej. al
     // finalizarla), solo se actualiza la lista por debajo: antes aquí se
     // ocultaba ese detalle y el historial quedaba en blanco.
     if (turno === this._vistaHistorial) document.getElementById('detalle-sesion').classList.remove('visible');
+
+    if (error) {
+      contenedor.innerHTML = `<div class="ranking-vacio">${esErrorDeRed(error) ? 'No hay conexión a internet. No se pudo cargar el historial.' : 'No se pudo cargar el historial. Intenta de nuevo.'}</div>`;
+      return;
+    }
 
     if (!sesiones || sesiones.length === 0) {
       contenedor.innerHTML = '<div class="ranking-vacio">No hay carreras registradas' + (fechaInicio ? ' en estas fechas' : '') + '</div>';
@@ -991,8 +1054,8 @@ export class AdminController {
            onclick="verDetalleSesion('${s.id}')">
         <div class="sesion-card-header">
           <div>
-            <div class="sesion-nombre">${s.nombre}</div>
-            <div class="sesion-codigo">Código: ${s.codigo}</div>
+            <div class="sesion-nombre">${esc(s.nombre)}</div>
+            <div class="sesion-codigo">Código: ${esc(s.codigo)}</div>
           </div>
           <span class="estado-badge estado-${s.estado}">${s.estado}</span>
         </div>

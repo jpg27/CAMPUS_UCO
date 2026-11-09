@@ -292,7 +292,14 @@ export class MapaView {
   mostrarSesionCerrada() { this.abrirCapa('sesion-cerrada'); }
 
   /** progreso: { completados, total, items: [{ nombre, escaneado, hora }] } */
-  renderLogros({ completados, total, items }) {
+  /** Sin conexión y sin logros guardados: un aviso en lugar de 0 / 0. */
+  renderLogrosSinConexion() {
+    this.$('texto-progreso').textContent = 'Sin conexión';
+    this.$('barra-progreso').style.width = '0%';
+    this.$('lista-logros').innerHTML = '<li class="logros-aviso">Sin conexión: no se pudieron cargar tus logros. Tu progreso sigue guardado; vuelve a abrir esta ventana cuando tengas señal.</li>';
+  }
+
+  renderLogros({ completados, total, items, sinRed = false }) {
     this.$('texto-progreso').textContent = `${completados} / ${total} edificios`;
     this.$('barra-progreso').style.width = (total > 0 ? (completados / total) * 100 : 0) + '%';
 
@@ -301,7 +308,8 @@ export class MapaView {
       lista.innerHTML = '<li class="logros-vacio">Esta carrera todavía no tiene edificios.</li>';
       return;
     }
-    lista.innerHTML = items.map(it => `
+    const aviso = sinRed ? '<li class="logros-aviso">Sin conexión: no se pudieron actualizar los logros. Estos son los últimos datos guardados.</li>' : '';
+    lista.innerHTML = aviso + items.map(it => `
       <li class="logro ${it.escaneado ? 'hecho' : ''}">
         <span class="logro-icono">${icono(it.escaneado ? 'check' : 'candado')}</span>
         <div>

@@ -77,7 +77,8 @@ export async function obtenerSesionAbiertaPorId(sesionId) {
     .select('*')
     .eq('id', sesionId)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) throw error;          // sin conexión: no es lo mismo que "no existe"
+  if (!data) return null;
   if (!['borrador', 'activa'].includes(data.estado) || estaCaducada(data)) return null;
   return data;
 }
@@ -89,8 +90,11 @@ export async function obtenerSesionPorCodigo(codigo) {
     .eq('codigo', codigo.toUpperCase())
     .in('estado', ['borrador', 'activa'])
     .maybeSingle();
-    
-  if (error || !data) return null;
+
+  // Un error (p. ej. sin internet) se lanza: antes se devolvía null y la app
+  // decía "No encontramos esa carrera" aunque el código fuera correcto.
+  if (error) throw error;
+  if (!data) return null;
   
   // Si está activa pero ya pasaron 3 horas, no dejar entrar. (No se intenta
   // cerrarla desde aquí: el participante es anónimo y RLS no le permite
@@ -125,7 +129,12 @@ export async function crearSesion(nombre, codigo, edificios) {
     orden: i + 1
   }));
 
-  await supabase.from('edificios_sesion').insert(edificiosData);
+  const { error: errorEdificios } = await supabase.from('edificios_sesion').insert(edificiosData);
+  if (errorEdificios) {
+    // Sin edificios la carrera no sirve: se borra para no dejarla a medias
+    await supabase.from('sesiones').delete().eq('id', data.id);
+    throw errorEdificios;
+  }
   return data;
 }
 

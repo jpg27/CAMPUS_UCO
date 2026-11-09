@@ -82,3 +82,20 @@ export async function eliminarParticipante(participanteId, sesionId) {
     await supabase.rpc('finalizar_participante', { p_participante_id: completado.id });
   }
 }
+
+/** Nombre normalizado para comparar: sin tildes, sin mayúsculas, sin espacios dobles. */
+export function normalizarNombre(nombre) {
+  return String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/** ¿Ya hay alguien con ese nombre en la carrera? (lanza el error si no hay conexión) */
+export async function nombreEnUso(sesionId, nombre) {
+  const { data, error } = await supabase
+    .from('participantes')
+    .select('id, nombre')
+    .eq('sesion_id', sesionId);
+  if (error) throw error;
+  const buscado = normalizarNombre(nombre);
+  return (data || []).some(p => normalizarNombre(p.nombre) === buscado);
+}

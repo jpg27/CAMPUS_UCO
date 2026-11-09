@@ -224,6 +224,9 @@
 
     .campo input {
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      text-overflow: ellipsis;
       height: 50px;
       padding: 0 16px;
 
@@ -472,6 +475,7 @@
         id="input-usuario"
         placeholder="admin@uco.edu.co"
         autocomplete="username"
+        maxlength="254"
       >
     </div>
 
@@ -482,6 +486,7 @@
         id="input-password"
         placeholder="••••••••"
         autocomplete="current-password"
+        maxlength="64"
       >
     </div>
 

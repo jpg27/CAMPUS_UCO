@@ -131,10 +131,29 @@ export function borrarCookieCarrera() {
   document.cookie = `${COOKIE_CARRERA}=; Max-Age=0; Path=${rutaCookie()}; SameSite=Lax`;
 }
 
+// ── Últimos logros cargados (para mostrarlos si se pierde la conexión) ──
+const CLAVE_LOGROS = 'logros_cache';
+
+export function guardarCacheLogros(participanteId, sesionId, datos) {
+  try {
+    localStorage.setItem(CLAVE_LOGROS, JSON.stringify({
+      p: String(participanteId), s: String(sesionId), t: Date.now(), ...datos
+    }));
+  } catch { /* sin almacenamiento: no pasa nada */ }
+}
+
+export function leerCacheLogros(participanteId, sesionId) {
+  try {
+    const c = JSON.parse(localStorage.getItem(CLAVE_LOGROS));
+    return c && c.p === String(participanteId) && c.s === String(sesionId) ? c : null;
+  } catch { return null; }
+}
+
 // ── Limpiar todo al cerrar sesión ──
 export function limpiarTodo() {
   limpiarParticipante();
   limpiarSesion();
   limpiarPuntos();
   borrarCookieCarrera();
+  try { localStorage.removeItem(CLAVE_LOGROS); } catch { /* nada */ }
 }

@@ -443,6 +443,8 @@ function crearPanelInteresCanvas(punto) {
   return { canvas, anchoM: anchoPx * t.metrosPorPx, altoM: altoPx * t.metrosPorPx };
 }
 
+const AVISO_LOGROS_SIN_RED = '<li class="ar-logros-aviso">Sin conexión: no se pudieron actualizar los logros. Estos son los últimos datos guardados.</li>';
+
 export class ARView {
   constructor() {
     this._responderCallback = null;
@@ -726,7 +728,18 @@ export class ARView {
    * edificio, la pregunta con la respuesta elegida y la correcta.
    * @param {Map} preguntas  id → pregunta (puede venir vacío)
    */
-  renderizarLogros(edificiosSesion, escaneos, puntosTotal, preguntas = new Map()) {
+  /** Sin conexión y sin logros guardados: un aviso en lugar de ceros. */
+  mostrarLogrosSinConexion() {
+    document.getElementById('logros-puntos').textContent = '—';
+    document.getElementById('logros-texto-progreso').textContent = 'Sin conexión';
+    document.getElementById('logros-barra').style.width = '0%';
+    const resumen = document.getElementById('logros-resumen');
+    if (resumen) { resumen.innerHTML = ''; resumen.hidden = true; }
+    document.getElementById('logros-lista').innerHTML =
+      '<li class="ar-logros-aviso">Sin conexión: no se pudieron cargar tus logros. Tu progreso sigue guardado en el servidor; vuelve a abrir esta ventana cuando tengas señal.</li>';
+  }
+
+  renderizarLogros(edificiosSesion, escaneos, puntosTotal, preguntas = new Map(), { sinRed = false } = {}) {
     const esc = (t) => String(t ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     const lista_esc     = escaneos || [];
     const escaneadosIds = lista_esc.map(e => e.edificio_id);
@@ -814,6 +827,9 @@ export class ARView {
           </div>
         </li>`;
     }).join('');
+
+    // Sin conexión: se avisa que son los últimos datos guardados
+    if (sinRed) lista.insertAdjacentHTML('afterbegin', AVISO_LOGROS_SIN_RED);
 
     // Abrir / cerrar el detalle de cada edificio
     lista.querySelectorAll('.ar-logro-boton').forEach(btn => {
